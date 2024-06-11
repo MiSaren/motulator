@@ -11,7 +11,7 @@ import numpy as np
 
 from motulator.common.utils._utils import abc2complex
 from motulator.common.control import (PWM, ComplexFFPICtrl, Clock)
-from motulator.grid.control._common import (Ctrl, DCBusVoltCtrl)
+from motulator.grid.control._common import (GridConverterCtrl, DCBusVoltCtrl)
 
 
 # %%

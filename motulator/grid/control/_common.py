@@ -47,12 +47,11 @@ class GridConverterCtrl(Ctrl, ABC):
     """
     Base class for control of grid-connected converters.
     """
-    def __init__(self, par, T_s, sensorless):
+    def __init__(self, par, T_s, on_u_dc):
         super().__init__(T_s)
         self.par = par
-        self.sensorless = sensorless
-        self.speed_ctrl = None
-        self.observer = None
+        self.on_u_dc = on_u_dc
+        self.dc_bus_volt_ctrl = None
         self.ref = SimpleNamespace()
 
     def get_electrical_measurements(self, fbk, mdl):
@@ -73,43 +72,17 @@ class GridConverterCtrl(Ctrl, ABC):
 
                 u_dc : float
                     DC-bus voltage (V).
-                i_ss : complex
-                    Stator current (A) in stator coordinates.
+                i_cs : complex
+                    Converter current (A) in stator coordinates.
                 u_ss : complex
                     Realized stator voltage (V) in stator coordinates. This
                     signal is obtained from the PWM.
 
         """
         fbk.u_dc = mdl.converter.meas_dc_voltage()
-        fbk.i_ss = abc2complex(mdl.machine.meas_currents())
-        fbk.u_ss = self.pwm.get_realized_voltage()
-
-        return fbk
-
-    def get_mechanical_measurements(self, fbk, mdl):
-        """
-        Measure the speed and position.
-        
-        Parameters
-        ----------
-        fbk : SimpleNamespace
-            Measured signals are added to this object.
-        mdl : Model
-            Continuous-time system model.
-
-        Returns
-        -------
-        fbk : SimpleNamespace
-            Measured signals, containing the following fields:
-
-                w_m : float
-                    Rotor speed (electrical rad/s).
-                theta_m : float
-                    Rotor position (electrical rad).
-    
-        """
-        fbk.w_m = self.par.n_p*mdl.mechanics.meas_speed()
-        fbk.theta_m = wrap(self.par.n_p*mdl.mechanics.meas_position())
+        fbk.i_cs = abc2complex(mdl.grid_filter.meas_currents())
+        fbk.u_cs = self.pwm.get_realized_voltage()
+        fbk.u_gs = mdl.grid_filter.u_gs
 
         return fbk
 
@@ -117,51 +90,49 @@ class GridConverterCtrl(Ctrl, ABC):
         """Get the feedback signals."""
         fbk = super().get_feedback_signals(mdl)
         fbk = self.get_electrical_measurements(fbk, mdl)
-        if not self.sensorless:
-            fbk = self.get_mechanical_measurements(fbk, mdl)
-        if self.observer:
-            fbk = self.observer.output(fbk)
 
         return fbk
 
-    def get_torque_reference(self, fbk, ref):
+    def get_power_reference(self, fbk, ref):
         """
-        Get the torque reference in vector control.
-
-        This method can be used in vector control to get the torque reference 
-        from the speed controller. If the speed controller method `speed_ctrl` 
-        is None, the torque reference is obtained directly from the reference.
+        Get the active power reference in DC bus voltage control mode.
 
         Parameters
         ----------
         fbk : SimpleNamespace
-            Feedback signals. In speed-control mode, the measured or estimated
-            rotor speed `w_m` is used to compute the torque reference.
+            Feedback signals.
         ref : SimpleNamespace
-            Reference signals, containing the digital time `t`. The speed and 
-            torque references are added to this object.
+            Reference signals, containing the digital time `t`.
 
         Returns
         -------
         ref : SimpleNamespace
             Reference signals, containing the following fields:
                 
-                w_m : float
-                    Speed reference (electrical rad/s).
-                tau_M : float
-                    Torque reference (Nm).  
+                u_dc : float
+                    DC-bus voltage reference (V).
+                p_g : float
+                    Active power reference (W).
+                q_g : float
+                    Reactive power reference (VAr).  
 
         """
-        if self.speed_ctrl:
-            # Speed-control mode
-            ref.w_m = self.ref.w_m(ref.t)
-            ref_w_M = ref.w_m/self.par.n_p
-            w_M = fbk.w_m/self.par.n_p
-            ref.tau_M = self.speed_ctrl.output(ref_w_M, w_M)
+        if self.on_u_dc:
+            # DC-bus voltage control mode
+
+            # Definition of capacitance energy variables for the DC-bus controller
+            ref.u_dc = self.ref.u_dc(ref.t)
+            ref_W_dc = 0.5*self.par.C_dc*ref.u_dc**2
+            W_dc = 0.5*self.par.C_dc*fbk.u_dc**2
+            # Define the active and reactive power references
+            ref.p_g = self.dc_bus_volt_ctrl.output(ref_W_dc, W_dc)
+            ref.q_g = self.ref.q_g(ref.t)
+
         else:
-            # Torque-control mode
-            ref.w_m = None
-            ref.tau_M = self.ref.tau_M(ref.t)
+            # Power control mode
+            ref.u_dc = None
+            ref.p_g = self.ref.p_g(ref.t)
+            ref.q_g = self.ref.q_g(ref.t)
 
         return ref
 
