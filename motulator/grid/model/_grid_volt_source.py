@@ -178,7 +178,15 @@ class FlexSource(Subsystem):
         self.w_g0 = w_N
         self.err_w_g0, self.p_gov0, self.x_turb0, self.theta_g0 = 0, 0, 0, 0
 
-    def f(self, t, err_w_g, p_gov, x_turb):
+        # states
+        self.state = SimpleNamespace(
+            err_w_g=self.err_w_g0, p_gov=self.p_gov0, x_turb=self.x_turb0,
+            theta_g=self.theta_g0)
+        # Store the solutions in these lists
+        self.sol_states = SimpleNamespace(
+            err_w_g=[], p_gov=[], x_turb=[], theta_g=[])
+
+    def rhs(self, t, err_w_g, p_gov, x_turb):
         """
         Compute the state derivatives.
         
@@ -201,16 +209,16 @@ class FlexSource(Subsystem):
             
         """
         # calculation of mechanical power from the turbine output
-        p_m = (self.T_N/self.T_D)*p_gov + (1-(self.T_N/self.T_D))*x_turb
+        p_m = (self.par.T_N/self.par.T_D)*p_gov + (1-(self.par.T_N/self.par.T_D))*x_turb
         # swing equation
-        p_diff = (p_m - self.p_e(t))/self.S_grid # in per units
-        derr_w_g = self.w_N*(p_diff - self.D_g*err_w_g)/(2*self.H_g)
+        p_diff = (p_m - self.par.p_e(t))/self.par.S_grid # in per units
+        derr_w_g = self.par.w_N*(p_diff - self.par.D_g*err_w_g)/(2*self.par.H_g)
         # governor dynamics
-        dp_gov = (self.p_m_ref(t) - (1/self.r_d)*err_w_g - p_gov) / self.T_gov
+        dp_gov = (self.par.p_m_ref(t) - (1/self.par.r_d)*err_w_g - p_gov) / self.par.T_gov
         # turbine dynamics (lead-lag)
-        dx_turb = (p_gov - x_turb)/self.T_D
+        dx_turb = (p_gov - x_turb)/self.par.T_D
         # integration of the angle
-        dtheta_g = self.w_N + err_w_g
+        dtheta_g = self.par.w_N + err_w_g
         return [derr_w_g, dp_gov, dx_turb, dtheta_g]
 
     def voltages(self, t, theta_g):
@@ -231,9 +239,9 @@ class FlexSource(Subsystem):
 
         """
         # Calculation of the three-phase voltage
-        e_g_a = self.e_g_abs(t)*np.cos(theta_g)
-        e_g_b = self.e_g_abs(t)*np.cos(theta_g-2*np.pi/3)
-        e_g_c = self.e_g_abs(t)*np.cos(theta_g-4*np.pi/3)
+        e_g_a = self.par.e_g_abs(t)*np.cos(theta_g)
+        e_g_b = self.par.e_g_abs(t)*np.cos(theta_g-2*np.pi/3)
+        e_g_c = self.par.e_g_abs(t)*np.cos(theta_g-4*np.pi/3)
 
 
         e_gs = abc2complex([e_g_a, e_g_b, e_g_c])
@@ -251,7 +259,7 @@ class FlexSource(Subsystem):
 
         """
         # Grid voltage
-        e_g_abc = complex2abc(self.voltages(t))
+        e_g_abc = complex2abc(self.voltages(t, self.state.theta_g))
         return e_g_abc
 
 
@@ -283,3 +291,15 @@ class FlexSource(Subsystem):
             
         """
         return self.theta_g0
+
+    def set_outputs(self, t):
+        """Set output variables."""
+        self.out.e_gs = self.voltages(t, self.state.theta_g)
+        self.out.w_g0 = self.w_g0
+        self.out.theta_g0 = self.state.theta_g
+
+    def post_process_states(self):
+        """Post-process the solution."""
+        self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)
+        self.data.w_g0 = self.w_g0
+        self.data.theta_g0 = self.data.theta_g
