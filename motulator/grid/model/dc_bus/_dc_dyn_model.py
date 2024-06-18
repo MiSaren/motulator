@@ -57,6 +57,7 @@ class DCBusAndLFilterModel(Model):
         self.converter.data.u_dc = self.dc_model.data.u_dc
         self.converter.data.u_cs = self.converter.data.q_cs*self.converter.data.u_dc
         self.converter.data.i_cs = self.grid_filter.data.i_cs
+        self.converter.data.i_dc = 1.5*np.real(self.converter.data.q_cs*np.conj(self.converter.data.i_cs))
         self.grid_filter.data.u_cs = self.converter.data.u_cs
         self.grid_filter.data.e_gs = self.grid_model.data.e_gs
         self.dc_model.data.i_dc = self.converter.data.i_dc
