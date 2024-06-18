@@ -87,10 +87,11 @@ mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
 if on_v_dc:
     ctrl.u_dc_ref = lambda t: 600 + (t > .02)*(50)
 
-
+    
 # %%
 # Create the simulation object and simulate it.
 
+#mdl.pwm = model.CarrierComparison()  # Enable the PWM model
 sim = model.Simulation(mdl, ctrl)
 sim.simulate(t_stop = .1)
 
