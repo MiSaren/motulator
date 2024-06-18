@@ -39,7 +39,17 @@ grid_filter = model.LFilter(U_gN=400*np.sqrt(2/3) ,R_f=0 ,L_f=10e-3, L_g=0, R_g=
 grid_model = model.StiffSource(w_N=2*np.pi*50)
 converter = model.Inverter(u_dc=650)
 
-mdl = model.StiffSourceAndLFilterModel(converter, grid_filter, grid_model)
+#dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
+dc_model = None
+
+if dc_model is None:
+    mdl = model.StiffSourceAndLFilterModel(
+        converter, grid_filter, grid_model)
+    on_v_dc=False
+else:
+    mdl = model.dc_bus.DCBusAndLFilterModel(
+        converter, grid_filter, grid_model, dc_model)
+    on_v_dc=True
 
 
 # %%
@@ -48,9 +58,12 @@ mdl = model.StiffSourceAndLFilterModel(converter, grid_filter, grid_model)
 # Control parameters
 pars = control.GridFollowingCtrlPars(
             L_f=10e-3,
-            f_sw = 5e3,
-            T_s = 1/(10e3),
+            C_dc = 1e-3,
+            f_sw = 8e3,
+            T_s = 1/(16e3),
+            on_v_dc=on_v_dc,
             i_max = 1.5*base.i,
+            p_max = base.p,
             )
 ctrl = control.GridFollowingCtrl(pars)
 
@@ -59,13 +72,22 @@ ctrl = control.GridFollowingCtrl(pars)
 # Set the time-dependent reference and disturbance signals.
 
 # Set the active and reactive power references
-ctrl.p_g_ref = lambda t: (t > .02)*(5e3)
+if on_v_dc:
+    mdl.dc_model.i_ext = lambda t: (t > .06)*(10)
+else:
+    ctrl.p_g_ref = lambda t: (t > .02)*(5e3)
 ctrl.q_g_ref = lambda t: (t > .04)*(4e3)
+
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var =  lambda t: np.sqrt(2/3)*400
 mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
 
+# DC voltage reference
+if on_v_dc:
+    ctrl.u_dc_ref = lambda t: 600 + (t > .02)*(50)
+
+    
 # %%
 # Create the simulation object and simulate it.
 
