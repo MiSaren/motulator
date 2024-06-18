@@ -327,6 +327,12 @@ class Model(ABC):
             if hasattr(subsystem, "set_outputs"):
                 subsystem.set_outputs(t)
 
+    def set_inputs(self, t):
+        """Compute the input variables."""
+        for subsystem in self.subsystems:
+            if hasattr(subsystem, "set_inputs"):
+                subsystem.set_inputs(t)
+
     @abstractmethod
     def interconnect(self, t):
         """Interconnect the subsystems."""
@@ -338,6 +344,9 @@ class Model(ABC):
 
         # Set the outputs for the interconnections and for the rhs
         self.set_outputs(t)
+
+        # Set the inputs for the interconnections and for the rhs
+        self.set_inputs(t)
 
         # Interconnections
         self.interconnect(t)
