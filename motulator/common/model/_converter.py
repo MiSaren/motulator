@@ -70,7 +70,7 @@ class InverterWithVariableDC(Inverter):
     u_dc : float
         DC-bus voltage (V).
     """
-     
+
     def __init__(self, u_dc0):
         super().__init__(None)
         self.inp = SimpleNamespace(u_dc=u_dc0, q_cs=None, i_cs=0j)
@@ -79,7 +79,7 @@ class InverterWithVariableDC(Inverter):
     def i_dc(self):
         """DC-side current (A)."""
         return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
-        
+
     def set_outputs(self, t):
         """Set output variables."""
         super().set_outputs(t)
@@ -89,11 +89,15 @@ class InverterWithVariableDC(Inverter):
     def u_cs(self):
         """AC-side voltage (V)."""
         return self.inp.q_cs*self.inp.u_dc
-        
+
     def meas_dc_voltage(self):
         """Measure the DC-bus voltage."""
         return self.inp.u_dc
-    
+
+    def post_process_states(self):
+        """Post-process data."""
+
+
 # %%
 class FrequencyConverter(Inverter):
     """

@@ -6,8 +6,6 @@ considering an equivalent circuit comprising a capacitor and parallel resistor.
 """
 from types import SimpleNamespace
 
-from motulator.common.utils import complex2abc
-
 from motulator.common.model import Subsystem
 
 # %%
@@ -40,7 +38,7 @@ class DCBus(Subsystem):
         self.inp = SimpleNamespace(i_dc = 0, i_ext = i_ext(0))
         self.sol_states = SimpleNamespace(u_dc = [])
 
-    def set_outputs(self, t):
+    def set_outputs(self, _):
         """Set output variables."""
         state, out = self.state, self.out
         out.u_dc = state.u_dc
@@ -48,7 +46,7 @@ class DCBus(Subsystem):
     def set_inputs(self, t):
         """Set input variables."""
         self.inp.i_ext = self.i_ext(t)
-    
+
     def rhs(self):
         """
         Compute the state derivatives.
@@ -69,7 +67,7 @@ class DCBus(Subsystem):
         """
         # State derivative
         du_dc = (self.inp.i_ext - self.inp.i_dc - self.par.G_dc*self.state.u_dc)/self.par.C_dc
-        return du_dc
+        return [du_dc]
 
     def meas_dc_voltage(self):
         """
@@ -82,7 +80,3 @@ class DCBus(Subsystem):
     
         """
         return self.state.u_dc
-
-    def post_process_states(self):
-        """Post-process the solution."""
-        self.data.u_dc = self.state.u_dc
