@@ -21,7 +21,7 @@ class Inverter(Subsystem):
 
     Parameters
     ----------
-    u_dc : float
+    u_dc0 : float
         DC-bus voltage (V).
 
     """
@@ -59,6 +59,41 @@ class Inverter(Subsystem):
         self.data.u_cs = self.data.q_cs*self.par.u_dc
 
 
+# %%
+class InverterWithVariableDC(Inverter):
+    """
+    Lossless three-phase inverter with variable DC-bus voltage. This extends the
+    Inverter class
+
+    Parameters
+    ----------
+    u_dc : float
+        DC-bus voltage (V).
+    """
+     
+    def __init__(self, u_dc0):
+        super().__init__(None)
+        self.inp = SimpleNamespace(u_dc=u_dc0, q_cs=None, i_cs=0j)
+
+    @property
+    def i_dc(self):
+        """DC-side current (A)."""
+        return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
+        
+    def set_outputs(self, t):
+        """Set output variables."""
+        super().set_outputs(t)
+        self.out.i_dc = self.i_dc
+
+    @property
+    def u_cs(self):
+        """AC-side voltage (V)."""
+        return self.inp.q_cs*self.inp.u_dc
+        
+    def meas_dc_voltage(self):
+        """Measure the DC-bus voltage."""
+        return self.inp.u_dc
+    
 # %%
 class FrequencyConverter(Inverter):
     """
