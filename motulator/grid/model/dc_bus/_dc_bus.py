@@ -9,6 +9,8 @@ from types import SimpleNamespace
 from motulator.common.model import Subsystem
 
 # %%
+# TODO: implement a model with constant DC voltage, where the voltage could also
+# be given as a function of time
 class DCBus(Subsystem):
     """
     DC bus model
