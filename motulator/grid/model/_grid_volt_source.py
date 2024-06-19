@@ -7,6 +7,11 @@ frequency and a dynamic model with the electromechanical dynamics of a
 synchronous generator are considered. In this module, all space vectors are in
 stationary coordinates.
 
+The grid angle theta_g is used 
+    as state variables.
+
+        theta_g = w_N * t
+
 """
 from types import SimpleNamespace
 
@@ -16,6 +21,7 @@ from motulator.common.model import Subsystem
 from motulator.common.utils._utils import (complex2abc, abc2complex)
 
 # %%
+# TODO: add ability to give frequency as a function, implement simulation of harmonics, negative sequence
 class StiffSource(Subsystem):
     """
     Grid subsystem.
@@ -34,15 +40,32 @@ class StiffSource(Subsystem):
                  e_g_abs=lambda t: 400*np.sqrt(2/3)):
         super().__init__()
         self.par = SimpleNamespace(w_N=w_N, e_g_abs=e_g_abs)
-
+        # states
+        self.state = SimpleNamespace(exp_j_theta_g=complex(1))
+        # Store the solutions in these lists
+        self.sol_states = SimpleNamespace(exp_j_theta_g=[])
 
     @property
     def w_N(self):
         """Grid constant frequency (rad/s)."""
+        if callable(self.par.w_N):
+            return self.par.w_N()
         return self.par.w_N
 
+    def rhs(self):
+        """
+        Compute the state derivatives.
+        
+        Returns
+        -------
+        list, length 1
+            Time derivatives of the state vector.
+            
+        """
+        d_exp_j_theta_g = 1j*self.par.w_N*self.state.exp_j_theta_g
+        return [d_exp_j_theta_g]
 
-    def voltages(self, t):
+    def voltages(self, t, theta_g):
         """
         Compute the grid voltage in stationary frame.
            
@@ -50,6 +73,8 @@ class StiffSource(Subsystem):
         ----------
         t : float
             Time (s).
+        theta_g : float
+            Grid voltage angle (rad)
 
         Returns
         -------
@@ -57,22 +82,18 @@ class StiffSource(Subsystem):
             grid complex voltage (V).
 
         """
-        # Calculation of theta angle based on time and grid fixed frequency
-        theta = self.w_N*t
 
-        # Calculation of the three-phase voltage
-        e_g_a = self.par.e_g_abs(t)*np.cos(theta)
-        e_g_b = self.par.e_g_abs(t)*np.cos(theta-2*np.pi/3)
-        e_g_c = self.par.e_g_abs(t)*np.cos(theta-4*np.pi/3)
+        # Calculation of the three-phase voltages
+        e_g_a = self.par.e_g_abs(t)*np.cos(theta_g)
+        e_g_b = self.par.e_g_abs(t)*np.cos(theta_g-2*np.pi/3)
+        e_g_c = self.par.e_g_abs(t)*np.cos(theta_g-4*np.pi/3)
 
         e_gs = abc2complex([e_g_a, e_g_b, e_g_c])
         return e_gs
 
-
     def set_outputs(self, t):
         """Set output variables."""
-        self.out.e_gs = self.voltages(t)
-
+        self.out.e_gs = self.voltages(t, np.angle(self.state.exp_j_theta_g))
 
     def meas_voltages(self, t):
         """
@@ -90,10 +111,17 @@ class StiffSource(Subsystem):
 
         """
         # Grid voltage
-        e_g_abc = complex2abc(self.voltages(t))
+        e_g_abc = complex2abc(self.voltages(t, np.angle(self.state.exp_j_theta_g)))
         return e_g_abc
 
+    def post_process_states(self):
+        """Post-process the solution."""
+        self.data.theta_g = np.angle(self.data.exp_j_theta_g)
+        self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)
+
+
 # %%
+# TODO: migrate AC flex source to a separate example
 class FlexSource(Subsystem):
     """
     Grid subsystem.

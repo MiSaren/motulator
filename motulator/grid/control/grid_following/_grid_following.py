@@ -5,13 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from types import SimpleNamespace
-#from motulator._utils import Bunch
+#from types import SimpleNamespace
+from motulator.grid.utils import Bunch
 import numpy as np
 
 from motulator.common.utils._utils import abc2complex
-from motulator.common.control import (PWM, ComplexFFPICtrl, Clock)
-from motulator.grid.control._common import (GridConverterCtrl, DCBusVoltCtrl)
+from motulator.common.control import (PWM, ComplexFFPIController, Clock)
+from motulator.grid.control._common import (GridConverterControlSystem, DCBusVoltageController)
 
 
 # %%
@@ -67,7 +67,9 @@ class GridFollowingCtrlPars:
 
 
 # %%
-class GridFollowingCtrl(GridConverterCtrl):
+# TODO: change GFL control system to use packages from motulator/common and
+# the ControlSystem base class
+class GridFollowingCtrl(Ctrl):
     """
     Grid following control for power converters.
 
@@ -202,12 +204,12 @@ class GridFollowingCtrl(GridConverterCtrl):
                                            self.theta_p, self.w_g)
 
         # Data logging
-        data = SimpleNamespace(
+        data = Bunch(
             w_c = w_pll, theta_c = self.theta_p, u_c_ref = u_c_ref,
             u_c = u_c, i_c = i_c, abs_u_g = abs_u_g,
             d_abc_ref = d_abc_ref, i_c_ref = i_c_ref, u_dc = u_dc,
             t = self.clock.t, p_g_ref = p_g_ref, u_dc_ref = u_dc_ref,
-            q_g_ref=q_g_ref, u_g = u_g,
+            q_g_ref=q_g_ref, u_g = u_g, u_g_abc=u_g_abc,
                      )
         self.save(data)
 
