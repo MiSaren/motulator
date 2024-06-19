@@ -41,7 +41,7 @@ class DCBus(Subsystem):
     def set_outputs(self, _):
         """Set output variables."""
         state, out = self.state, self.out
-        out.u_dc = state.u_dc
+        out.u_dc = state.u_dc.real
 
     def set_inputs(self, t):
         """Set input variables."""
@@ -80,3 +80,7 @@ class DCBus(Subsystem):
     
         """
         return self.state.u_dc
+
+    def post_process_states(self):
+        """Post-process data."""
+        self.data.u_dc = self.data.u_dc.real

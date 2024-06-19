@@ -77,11 +77,6 @@ class InverterWithVariableDC(Subsystem):
         self.sol_q_cs = []
 
     @property
-    def u_dc(self):
-        """DC-bus voltage (V)."""
-        return self.inp.u_dc
-
-    @property
     def i_dc(self):
         """DC-side current (A)."""
         return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
@@ -99,9 +94,6 @@ class InverterWithVariableDC(Subsystem):
     def meas_dc_voltage(self):
         """Measure the DC-bus voltage."""
         return self.inp.u_dc
-
-    #def post_process_states(self):
-        """Post-process data."""
 
 
 # %%
