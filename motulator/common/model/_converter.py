@@ -60,41 +60,47 @@ class Inverter(Subsystem):
 
 
 # %%
-class InverterWithVariableDC(Inverter):
+class InverterWithVariableDC(Subsystem):
     """
     Lossless three-phase inverter with variable DC-bus voltage. This extends the
     Inverter class
 
     Parameters
     ----------
-    u_dc : float
-        DC-bus voltage (V).
+    u_dc0 : float
+        DC-bus initial voltage (V).
     """
 
     def __init__(self, u_dc0):
-        super().__init__(None)
+        super().__init__()
         self.inp = SimpleNamespace(u_dc=u_dc0, q_cs=None, i_cs=0j)
+        self.sol_q_cs = []
+
+    @property
+    def u_dc(self):
+        """DC-bus voltage (V)."""
+        return self.inp.u_dc
 
     @property
     def i_dc(self):
         """DC-side current (A)."""
         return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
-
-    def set_outputs(self, t):
-        """Set output variables."""
-        super().set_outputs(t)
-        self.out.i_dc = self.i_dc
-
+    
     @property
     def u_cs(self):
         """AC-side voltage (V)."""
         return self.inp.q_cs*self.inp.u_dc
 
+    def set_outputs(self, t):
+        """Set output variables."""
+        self.out.u_cs = self.u_cs
+        self.out.i_dc = self.i_dc
+
     def meas_dc_voltage(self):
         """Measure the DC-bus voltage."""
         return self.inp.u_dc
 
-    def post_process_states(self):
+    #def post_process_states(self):
         """Post-process data."""
 
 
