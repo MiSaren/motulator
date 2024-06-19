@@ -37,10 +37,13 @@ base = BaseValues.from_nominal(nom)
 grid_filter = model.LFilter(U_gN=400*np.sqrt(2/3) ,R_f=0 ,L_f=10e-3, L_g=0, R_g=0)
 # AC grid model (either constant frequency or dynamic electromechanical model)
 grid_model = model.StiffSource(w_N=2*np.pi*50)
-#converter = model.Inverter(u_dc=650)
-converter = model.InverterWithVariableDC(u_dc0=650)
 
+# Uncomment the following two lines to use a dynamic grid model, with a variable DC voltage
+converter = model.InverterWithVariableDC(u_dc0=650)
 dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
+
+# Uncomment the following two lines to use a static grid model, with a fixed DC voltage
+#converter = model.Inverter(u_dc=650)
 #dc_model = None
 
 if dc_model is None:
