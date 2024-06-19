@@ -67,6 +67,8 @@ class GridFollowingCtrlPars:
 
 
 # %%
+# TODO: change GFL control system to use packages from motulator/common and
+# the ControlSystem base class
 class GridFollowingCtrl(Ctrl):
     """
     Grid following control for power converters.

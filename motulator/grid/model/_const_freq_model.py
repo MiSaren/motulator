@@ -14,6 +14,8 @@ import numpy as np
 from motulator.common.model import Model
 
 # %%
+# TODO: combine models to a single class (e.g. GridConverterSystem) which can
+# be used with constant or dynamic dc voltage, different filters, ac models
 class StiffSourceAndLFilterModel(Model):
     """
     Continuous-time model for a stiff grid model with an RL impedance model.

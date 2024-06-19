@@ -15,6 +15,8 @@ from motulator.common.utils import abc2complex
 
 
 # %%
+# TODO: combine the two Inverter classes to a single class which can be used
+# with constant or varying DC bus voltage
 class Inverter(Subsystem):
     """
     Lossless three-phase inverter with constant DC-bus voltage.
