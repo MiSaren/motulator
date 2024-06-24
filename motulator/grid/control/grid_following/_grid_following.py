@@ -148,7 +148,7 @@ class GridFollowingCtrl(Ctrl):
         # Measure the feedback signals
         i_c_abc = mdl.grid_filter.meas_currents()
         #u_dc = mdl.converter.meas_dc_voltage()
-        u_dc = mdl.dc_model.meas_dc_voltage()
+        u_dc = mdl.dc_model.meas_dc_voltage().real
         if self.on_u_cap == True:
             u_g_abc = mdl.grid_filter.meas_cap_voltage()
         else:

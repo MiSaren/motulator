@@ -45,6 +45,7 @@ converter = model.InverterWithVariableDC()
 # Uncomment the following two lines to use a static grid model, with a fixed DC voltage
 #converter = model.Inverter(u_dc=650)
 dc_model = model.DCBusVoltageSource(u_dc=650)
+
 if dc_model is None:
     mdl = model.StiffSourceAndLFilterModel(
         converter, grid_filter, grid_model)
@@ -58,7 +59,6 @@ else:
     mdl = model.dc_bus.DCBusAndLFilterModel(
         converter, grid_filter, grid_model, dc_model)
     on_v_dc=True
-
 
 # %%
 # Configure the control system.

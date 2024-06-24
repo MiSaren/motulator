@@ -18,7 +18,7 @@ class DCBusVoltageSource(Subsystem):
     This model is used when the DC bus voltage is constant. The voltage is given 
     as a parameter and the DC current is an input to the model.
     """
-    def __init__(self, u_dc=650):
+    def __init__(self, u_dc):
         super().__init__()
         self.u_dc = u_dc
         self.out = SimpleNamespace(u_dc = [])
@@ -32,7 +32,7 @@ class DCBusVoltageSource(Subsystem):
     def set_outputs(self,t):
         """Set input variables."""
         if callable(self.u_dc):
-            self.state = self.u_dc(t)
+            self.state.u_dc = self.u_dc(t).real
         self.out.u_dc = self.state.u_dc.real
 
     def rhs(self):
