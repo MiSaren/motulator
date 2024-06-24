@@ -16,7 +16,7 @@ from motulator.common.utils import wrap
 class PSCControlCfg:
     """Power synchronization control configuration"""
 
-    par: GridModelPars # TODO: implement
+    par: GridModelPars
     T_s: float = 1/(16e3)
     gain: SimpleNamespace = field(init=False)
     R_a: InitVar[float] = 4.6
@@ -89,7 +89,7 @@ class PSCControl(GridConverterControlSystem):
             # Calculation of power droop
             fbk.w_c = par.w_g + (gain.k_p_psc)*(ref.p_g - fbk.p_g)
             # Estimated phase angle
-            theta_c = fbk.theta_c + par.T_s*fbk.w_c
+            theta_c = fbk.theta_c + ref.T_s*fbk.w_c
             # Limit to [-pi, pi]
             fbk.theta_c = wrap(theta_c)
 
@@ -149,7 +149,7 @@ class CurrentController:
         # Calculated maximum current in A
         self.i_max = cfg.i_max
         #initial states
-        self.i_c_filt = 0j 
+        self.i_c_filt = 0j
 
     def output(self, fbk, ref, par):
         """Compute the converter voltage reference signal."""

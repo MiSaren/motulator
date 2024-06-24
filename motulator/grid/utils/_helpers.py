@@ -103,3 +103,24 @@ class BaseValues:
         L = Z/w
 
         return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L)
+
+
+# %%
+@dataclass
+class GridModelPars(ABC):
+    """
+    Class for grid parameters
+    
+    Parameters
+    ----------
+    u_gN : float
+        Nominal grid voltage, phase-to-ground peak value (V).
+    w_g : float
+        Nominal grid angular frequency (rad/s).
+    L_f : float
+        Filter inductance (H).
+    
+    """
+    u_gN: float = None
+    w_g: float = None
+    L_f: float = None
