@@ -1,7 +1,7 @@
 """Continuous-time DC-bus models."""
 
-from motulator.grid.model.dc_bus._dc_bus import DCBus
-
+from motulator.grid.model.dc_bus._dc_bus import (
+    DCBus, DCBusVoltageSource,)
 from motulator.grid.model.dc_bus._dc_dyn_model import (
     DCBusAndLFilterModel,
     DCBusAndLCLFilterModel,
@@ -9,6 +9,7 @@ from motulator.grid.model.dc_bus._dc_dyn_model import (
 
 __all__ = [
     "DCBus",
+    "DCBusVoltageSource",
     "DCBusAndLFilterModel",
     "DCBusAndLCLFilterModel",
 ]

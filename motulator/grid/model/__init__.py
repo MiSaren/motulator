@@ -15,6 +15,11 @@ from motulator.grid.model._grid_volt_source import (
     FlexSource,
 )
 
+from motulator.grid.model.dc_bus import (
+    DCBus,
+    DCBusVoltageSource,
+)
+
 import motulator.grid.model.dc_bus as dc_bus
 
 from motulator.common.model._converter import (
@@ -41,4 +46,6 @@ __all__ = [
     "CarrierComparison",
     "Simulation",
     "dc_bus",
+    "DCBus",
+    "DCBusVoltageSource",
 ]

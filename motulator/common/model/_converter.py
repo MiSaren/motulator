@@ -73,9 +73,10 @@ class InverterWithVariableDC(Subsystem):
         DC-bus initial voltage (V).
     """
 
-    def __init__(self, u_dc0):
+    
+    def __init__(self):
         super().__init__()
-        self.inp = SimpleNamespace(u_dc=u_dc0, q_cs=None, i_cs=0j)
+        self.inp = SimpleNamespace(u_dc=0, q_cs=None, i_cs=0j)
         self.sol_q_cs = []
 
     @property
@@ -97,7 +98,13 @@ class InverterWithVariableDC(Subsystem):
         """Measure the DC-bus voltage."""
         return self.inp.u_dc
 
+    def ac_voltage(self, q_cs, u_dc):
+        """Compute the AC voltage."""
+        return q_cs*u_dc
 
+    def dc_current(self, q_cs, i_cs):
+        """Compute the DC current."""
+        return 1.5*np.real(q_cs*np.conj(i_cs))
 # %%
 class FrequencyConverter(Inverter):
     """

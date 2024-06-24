@@ -66,9 +66,9 @@ class DCBusAndLFilterModel(Model):
         # Add the input data to the subsystems for post-processing
         # TODO: move calculation of u_cs and i_dc to a method inside the Inverter class
         self.converter.data.u_dc = self.dc_model.data.u_dc
-        self.converter.data.u_cs = self.converter.data.q_cs*self.converter.data.u_dc
+        self.converter.data.u_cs = self.converter.ac_voltage(self.converter.data.q_cs, self.converter.data.u_dc)
         self.converter.data.i_cs = self.grid_filter.data.i_cs
-        self.converter.data.i_dc = 1.5*np.real(self.converter.data.q_cs*np.conj(self.converter.data.i_cs))
+        self.converter.data.i_dc = self.converter.dc_current(self.converter.data.q_cs, self.converter.data.i_cs)
         self.grid_filter.data.u_cs = self.converter.data.u_cs
         self.grid_filter.data.e_gs = self.grid_model.data.e_gs
         self.dc_model.data.i_dc = self.converter.data.i_dc
@@ -95,7 +95,7 @@ class DCBusAndLCLFilterModel:
     """
     
     def __init__(
-            self, grid_filter=None, grid_model=None, 
+            self, grid_filter=None, grid_model=None,
             dc_model=None, converter=None):
         self.grid_filter = grid_filter
         self.grid_model = grid_model
@@ -111,9 +111,9 @@ class DCBusAndLCLFilterModel:
         self.data.i_gs = []
         self.data.i_cs = []
         self.data.u_fs = []
-        self.data.u_dc = [] 
+        self.data.u_dc = []
         self.data.i_dc = []
-        
+
     def get_initial_values(self):
         """
         Get the initial values.
