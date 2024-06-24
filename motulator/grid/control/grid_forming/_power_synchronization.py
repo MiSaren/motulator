@@ -18,17 +18,21 @@ class PSCControlCfg:
 
     par: GridModelPars
     T_s: float = 1/(16e3)
+    on_rf: bool = False
+    on_u_dc: bool = False
+    on_u_g: bool = False
+    i_max: float = 20
     gain: SimpleNamespace = field(init=False)
     R_a: InitVar[float] = 4.6
     k_scal: InitVar[float] = 3/2
     w_0_cc: InitVar[float] = 2*np.pi*5
     K_cc: InitVar[float] = 1
 
-    def __post_init__(self, R_a, k_scal):
+    def __post_init__(self, R_a, k_scal, w_0_cc, K_cc):
         par = self.par
-        k_p_psc = par.w_g*R_a/(k_scal*par.u_gN*par.u_gN)
+        k_p_psc = par.w_g*R_a/(k_scal*par.U_gN*par.U_gN)
         self.gain = SimpleNamespace(
-            R_a=R_a, k_scal=k_scal, k_p_psc=k_p_psc)
+            R_a=R_a, k_scal=k_scal, k_p_psc=k_p_psc, w_0_cc=w_0_cc, K_cc=K_cc)
 
 
 # %%
@@ -62,6 +66,7 @@ class PSCControl(GridConverterControlSystem):
         self.gain = cfg.gain
         self.pwm = PWM()
         self.current_ctrl = CurrentController(cfg)
+        self.ref.q_g = 0
         # Initialize the states
         self.theta_c = 0
 
@@ -120,7 +125,7 @@ class PSCControl(GridConverterControlSystem):
     def update(self, fbk, ref):
         """Extend the base class method."""
         super().update(fbk, ref)
-        self.current_ctrl.update(fbk)
+        self.current_ctrl.update(fbk, ref)
 
 
 class CurrentController:
@@ -137,11 +142,7 @@ class CurrentController:
     """
 
     def __init__(self, cfg):
-        self.T_s = cfg.T_s
-        self.R_a = cfg.gain.R_a
-        self.k_scal = cfg.gain.k_scal
-        self.w_0_cc = cfg.w_0_cc
-        self.K_cc = cfg.K_cc
+        self.gain = cfg.gain
         # activation/deactivation of reference feedforward action
         self.on_rf = cfg.on_rf
         # activation/deactivation of PCC voltage control option
@@ -158,7 +159,7 @@ class CurrentController:
 
         # Use of reference feedforward for d-axis current
         if self.on_rf:
-            i_c_ref = ref.p_g/(ref.U*self.k_scal) + 1j*np.imag(i_c_filt)
+            i_c_ref = ref.p_g/(ref.U*self.gain.k_scal) + 1j*np.imag(i_c_filt)
         else:
             i_c_ref = i_c_filt
 
@@ -174,15 +175,17 @@ class CurrentController:
                 [i_ratio*np.abs(i_cd_ref),np.abs(i_cd_ref)])
             i_cq_ref = np.sign(i_cq_ref)*np.min(
                 [i_ratio*np.abs(i_cq_ref),np.abs(i_cq_ref)])
-            ref.i_c = i_cd_ref + 1j*i_cq_ref
+            i_c_ref = i_cd_ref + 1j*i_cq_ref
+
+        ref.i_c = i_c_ref
 
         # Calculation of converter voltage output (reference sent to PWM)
-        ref.u_c = ((ref.U + 0j) + self.R_a*(ref.i_c - fbk.i_c) +
+        ref.u_c = ((ref.U + 0j) + self.gain.R_a*(ref.i_c - fbk.i_c) +
            self.on_u_g*1j*par.L_f*par.w_g*fbk.i_c)
 
         return ref
 
-    def update(self, fbk):
+    def update(self, fbk, ref):
         """Update the integral state for the current low pass filter."""
-        self.i_c_filt = (1 - self.T_s*self.w_0_cc)*self.i_c_filt + (
-            self.K_cc*self.T_s*self.w_0_cc*fbk.i_c)
+        self.i_c_filt = (1 - ref.T_s*self.gain.w_0_cc)*self.i_c_filt + (
+            self.gain.K_cc*ref.T_s*self.gain.w_0_cc*fbk.i_c)

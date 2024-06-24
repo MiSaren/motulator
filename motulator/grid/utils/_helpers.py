@@ -113,14 +113,17 @@ class GridModelPars(ABC):
     
     Parameters
     ----------
-    u_gN : float
+    U_gN : float
         Nominal grid voltage, phase-to-ground peak value (V).
     w_g : float
         Nominal grid angular frequency (rad/s).
     L_f : float
         Filter inductance (H).
+    C_dc : float
+        DC bus capacitance (F).
     
     """
-    u_gN: float = None
+    U_gN: float = None
     w_g: float = None
     L_f: float = None
+    C_dc: float = None

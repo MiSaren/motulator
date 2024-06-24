@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import numpy as np
 from motulator.common.control import (ControlSystem, PIController)
-from motulator.common.utils import (complex2abc, abc2complex, wrap)
+from motulator.common.utils import (abc2complex)
 
 
 # %%
@@ -74,12 +74,14 @@ class GridConverterControlSystem(ControlSystem, ABC):
                     DC-bus voltage (V).
                 i_cs : complex
                     Converter current (A) in stator coordinates.
-                u_ss : complex
+                u_cs : complex
                     Realized stator voltage (V) in stator coordinates. This
                     signal is obtained from the PWM.
+                u_gs : complex
+                    PCC voltage (V) in stator coordinates.
 
         """
-        fbk.u_dc = mdl.dc_model.meas_dc_voltage()
+        fbk.u_dc = mdl.converter.meas_dc_voltage()
         fbk.i_cs = abc2complex(mdl.grid_filter.meas_currents())
         fbk.u_cs = self.pwm.get_realized_voltage()
         fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
@@ -132,7 +134,7 @@ class GridConverterControlSystem(ControlSystem, ABC):
             # Power control mode
             ref.u_dc = None
             ref.p_g = self.ref.p_g(ref.t)
-            ref.q_g = self.ref.q_g(ref.t)
+            ref.q_g = self.ref.q_g(ref.t) if callable(self.ref.q_g) else self.ref.q_g
 
         return ref
 
