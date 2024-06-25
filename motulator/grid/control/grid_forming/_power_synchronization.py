@@ -61,7 +61,7 @@ class PSCControl(GridConverterControlSystem):
         super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc)
         self.cfg = cfg
         self.pwm = PWM()
-        self.current_ctrl = CurrentController(cfg)
+        self.current_ctrl = PSCCurrentController(cfg)
         self.ref.q_g = 0
         # Initialize the states
         self.theta_c = 0
@@ -124,7 +124,7 @@ class PSCControl(GridConverterControlSystem):
         self.current_ctrl.update(fbk, ref)
 
 
-class CurrentController:
+class PSCCurrentController:
     """
     PSC-based current controller.
     
