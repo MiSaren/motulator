@@ -94,9 +94,9 @@ class PSCControl(GridConverterControlSystem):
             # Calculation of power droop
             fbk.w_c = par.w_g + (gain.k_p_psc)*(ref.p_g - fbk.p_g)
             # Estimated phase angle
-            theta_c = fbk.theta_c + ref.T_s*fbk.w_c
+            self.theta_c = fbk.theta_c + ref.T_s*fbk.w_c
             # Limit to [-pi, pi]
-            fbk.theta_c = wrap(theta_c)
+            self.theta_c = wrap(self.theta_c)
 
             return fbk
 
