@@ -9,8 +9,6 @@ from types import SimpleNamespace
 from motulator.common.model import Subsystem
 
 # %%
-# TODO: implement a model with constant DC voltage, where the voltage could also
-# be given as a function of time
 class DCBusVoltageSource(Subsystem):
     """"
     DC bus model with a constant voltage source.
@@ -42,7 +40,7 @@ class DCBusVoltageSource(Subsystem):
         # State derivative
         du_dc = 0
         return [du_dc]
-    
+
     def meas_dc_voltage(self):
         """
         Measure the DC bus voltage at the end of the sampling period.
@@ -53,12 +51,14 @@ class DCBusVoltageSource(Subsystem):
             DC bus voltage (V)
     
         """
-        return self.state.u_dc
-    
+        return self.state.u_dc.real
+
     def post_process_states(self):
         """Post-process data."""
         self.data.u_dc = self.data.u_dc.real
- 
+
+
+# %%
 class DCBus(Subsystem):
     """
     DC bus model
@@ -129,7 +129,7 @@ class DCBus(Subsystem):
             DC bus voltage (V)
     
         """
-        return self.state.u_dc
+        return self.state.u_dc.real
 
     def post_process_states(self):
         """Post-process data."""
