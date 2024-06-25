@@ -10,8 +10,8 @@ from motulator.grid.utils import Bunch
 import numpy as np
 
 from motulator.common.utils._utils import abc2complex
-#from motulator.common.control import (PWM, ComplexFFPICtrl, Clock)
-from motulator.grid.control._common import (Ctrl, PWM, Clock, ComplexFFPICtrl, DCBusVoltCtrl)
+from motulator.common.control import (PWM, ComplexFFPIController, Clock)
+from motulator.grid.control._common import (GridConverterControlSystem, DCBusVoltageController)
 
 
 # %%
