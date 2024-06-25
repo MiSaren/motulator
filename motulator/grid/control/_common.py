@@ -81,7 +81,7 @@ class GridConverterControlSystem(ControlSystem, ABC):
                     PCC voltage (V) in stator coordinates.
 
         """
-        fbk.u_dc = mdl.converter.meas_dc_voltage()
+        fbk.u_dc = mdl.dc_model.meas_dc_voltage()
         fbk.i_cs = abc2complex(mdl.grid_filter.meas_currents())
         fbk.u_cs = self.pwm.get_realized_voltage()
         fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
@@ -126,15 +126,16 @@ class GridConverterControlSystem(ControlSystem, ABC):
             ref.u_dc = self.ref.u_dc(ref.t)
             ref_W_dc = 0.5*self.par.C_dc*ref.u_dc**2
             W_dc = 0.5*self.par.C_dc*fbk.u_dc**2
-            # Define the active and reactive power references
+            # Define the active power reference
             ref.p_g = self.dc_bus_volt_ctrl.output(ref_W_dc, W_dc)
-            ref.q_g = self.ref.q_g(ref.t)
 
         else:
             # Power control mode
             ref.u_dc = None
             ref.p_g = self.ref.p_g(ref.t)
-            ref.q_g = self.ref.q_g(ref.t) if callable(self.ref.q_g) else self.ref.q_g
+
+        # Define the reactive power reference
+        ref.q_g = self.ref.q_g(ref.t) if callable(self.ref.q_g) else self.ref.q_g
 
         return ref
 
