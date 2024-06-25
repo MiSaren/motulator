@@ -6,11 +6,59 @@ considering an equivalent circuit comprising a capacitor and parallel resistor.
 """
 from types import SimpleNamespace
 
-from motulator.common.utils import complex2abc
-
 from motulator.common.model import Subsystem
 
 # %%
+# TODO: implement a model with constant DC voltage, where the voltage could also
+# be given as a function of time
+class DCBusVoltageSource(Subsystem):
+    """"
+    DC bus model with a constant voltage source.
+
+    This model is used when the DC bus voltage is constant. The voltage is given 
+    as a parameter and the DC current is an input to the model.
+    """
+    def __init__(self, u_dc):
+        super().__init__()
+        self.u_dc = u_dc
+        self.out = SimpleNamespace(u_dc = [])
+        if callable(u_dc):
+            self.state = SimpleNamespace(u_dc = u_dc(0))
+        else:
+            self.state = SimpleNamespace(u_dc = u_dc)
+        self.sol_states = SimpleNamespace(u_dc = [])
+        self.inp = SimpleNamespace(i_dc = 0)
+
+    def set_outputs(self,t):
+        """Set input variables."""
+        if callable(self.u_dc):
+            self.state.u_dc = self.u_dc(t).real
+        self.out.u_dc = self.state.u_dc.real
+
+    def rhs(self):
+        """
+        Set the state derivatives to zero.
+        """
+        # State derivative
+        du_dc = 0
+        return [du_dc]
+    
+    def meas_dc_voltage(self):
+        """
+        Measure the DC bus voltage at the end of the sampling period.
+    
+        Returns
+        -------
+        u_dc: float
+            DC bus voltage (V)
+    
+        """
+        return self.state.u_dc
+    
+    def post_process_states(self):
+        """Post-process data."""
+        self.data.u_dc = self.data.u_dc.real
+ 
 class DCBus(Subsystem):
     """
     DC bus model
@@ -40,15 +88,15 @@ class DCBus(Subsystem):
         self.inp = SimpleNamespace(i_dc = 0, i_ext = i_ext(0))
         self.sol_states = SimpleNamespace(u_dc = [])
 
-    def set_outputs(self, t):
+    def set_outputs(self, _):
         """Set output variables."""
         state, out = self.state, self.out
-        out.u_dc = state.u_dc
+        out.u_dc = state.u_dc.real
 
     def set_inputs(self, t):
         """Set input variables."""
         self.inp.i_ext = self.i_ext(t)
-    
+
     def rhs(self):
         """
         Compute the state derivatives.
@@ -69,7 +117,7 @@ class DCBus(Subsystem):
         """
         # State derivative
         du_dc = (self.inp.i_ext - self.inp.i_dc - self.par.G_dc*self.state.u_dc)/self.par.C_dc
-        return du_dc
+        return [du_dc]
 
     def meas_dc_voltage(self):
         """
@@ -84,5 +132,5 @@ class DCBus(Subsystem):
         return self.state.u_dc
 
     def post_process_states(self):
-        """Post-process the solution."""
-        self.data.u_dc = self.state.u_dc
+        """Post-process data."""
+        self.data.u_dc = self.data.u_dc.real

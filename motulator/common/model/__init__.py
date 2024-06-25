@@ -1,7 +1,7 @@
 """Common functions and classes for continuous-time system models."""
 from motulator.common.model._simulation import (
     CarrierComparison, Delay, Model, Simulation, Subsystem)
-#from motulator.common.model._converter import Inverter, FrequencyConverter
+from motulator.common.model._converter import Inverter, InverterWithVariableDC, FrequencyConverter
 
 __all__ = [
     "CarrierComparison",
@@ -9,6 +9,7 @@ __all__ = [
     "Model",
     "Simulation",
     "Subsystem",
-    #    "Inverter",
-    #    "FrequencyConverter",
+    "Inverter",
+    "InverterWithVariableDC",
+    "FrequencyConverter",
 ]

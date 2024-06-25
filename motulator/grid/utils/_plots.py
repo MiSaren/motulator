@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cycler import cycler
 
-from motulator.common.utils import (complex2abc, wrap)
+from motulator.common.utils import (complex2abc)
 from types import SimpleNamespace
 
 # Plotting parameters
@@ -94,7 +94,7 @@ def plot_grid(
             #ax1.set_ylabel('Grid voltage (V)')
     else:
         # Subplot 1: DC-bus voltage
-        ax1.plot(mdl.converter.data.t, mdl.converter.data.u_dc/base.u, linewidth=LW)
+        ax1.plot(mdl.converter.data.t, mdl.converter.data.u_dc.T/base.u, linewidth=LW)
         ax1.plot(ctrl.t, ctrl.u_dc_ref/base.u, '--', linewidth=LW)
         ax1.legend([r'$u_{dc}$',r'$u_{dc,ref}$'],
                    prop={'size': FL}, loc= 'upper right')

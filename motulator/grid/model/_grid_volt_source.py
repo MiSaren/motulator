@@ -21,6 +21,7 @@ from motulator.common.model import Subsystem
 from motulator.common.utils._utils import (complex2abc, abc2complex)
 
 # %%
+# TODO: add ability to give frequency as a function, implement simulation of harmonics, negative sequence
 class StiffSource(Subsystem):
     """
     Grid subsystem.
@@ -120,6 +121,7 @@ class StiffSource(Subsystem):
 
 
 # %%
+# TODO: migrate AC flex source to a separate example
 class FlexSource(Subsystem):
     """
     Grid subsystem.

@@ -14,6 +14,8 @@ from motulator.common.model import Model
 from motulator.common.utils import complex2abc
 
 # %%
+# TODO: combine models to a single class (e.g. GridConverterSystem) which can
+# be used with constant or dynamic dc voltage, different filters, ac models
 class DCBusAndLFilterModel(Model):
     """
     Continuous-time model for a stiff grid model with an RL impedance model.
@@ -43,6 +45,14 @@ class DCBusAndLFilterModel(Model):
 
     def interconnect(self, _):
         """Interconnect the subsystems."""
+        # TODO: implement a way to connect signals without having to
+        # list them again in post_process() below. Maybe as a SimpleNamespace-
+        # object where the key corresponds to a signal name and the value is a
+        # list with two subsystems, corresponding to the input and output
+        # e.g. interconnects=SimpleNamespace(i_cs=[self.converter,self.grid_filter], u_cs=[self.grid_filter,self.converter])
+
+        # other possibility: in post_process() call interconnect() again but
+        # replace inp and out with data
         self.converter.inp.i_cs = self.grid_filter.out.i_cs
         self.grid_filter.inp.u_cs = self.converter.out.u_cs
         self.grid_filter.inp.e_gs = self.grid_model.out.e_gs
@@ -54,9 +64,11 @@ class DCBusAndLFilterModel(Model):
         # Post-processing based on the states
         super().post_process_states()
         # Add the input data to the subsystems for post-processing
+        # TODO: move calculation of u_cs and i_dc to a method inside the Inverter class
         self.converter.data.u_dc = self.dc_model.data.u_dc
-        self.converter.data.u_cs = self.converter.data.q_cs*self.converter.data.u_dc
+        self.converter.data.u_cs = self.converter.ac_voltage(self.converter.data.q_cs, self.converter.data.u_dc)
         self.converter.data.i_cs = self.grid_filter.data.i_cs
+        self.converter.data.i_dc = self.converter.dc_current(self.converter.data.q_cs, self.converter.data.i_cs)
         self.grid_filter.data.u_cs = self.converter.data.u_cs
         self.grid_filter.data.e_gs = self.grid_model.data.e_gs
         self.dc_model.data.i_dc = self.converter.data.i_dc
@@ -83,7 +95,7 @@ class DCBusAndLCLFilterModel:
     """
     
     def __init__(
-            self, grid_filter=None, grid_model=None, 
+            self, grid_filter=None, grid_model=None,
             dc_model=None, converter=None):
         self.grid_filter = grid_filter
         self.grid_model = grid_model
@@ -99,9 +111,9 @@ class DCBusAndLCLFilterModel:
         self.data.i_gs = []
         self.data.i_cs = []
         self.data.u_fs = []
-        self.data.u_dc = [] 
+        self.data.u_dc = []
         self.data.i_dc = []
-        
+
     def get_initial_values(self):
         """
         Get the initial values.

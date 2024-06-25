@@ -13,6 +13,8 @@ from motulator.common.model import Subsystem
 
 
 # %%
+# TODO: move filter models to motulator/common along with LCFilter from drive,
+# if feasible
 class LFilter(Subsystem):
     """
     Dynamic model for an inductive L filter and an inductive-resistive grid.

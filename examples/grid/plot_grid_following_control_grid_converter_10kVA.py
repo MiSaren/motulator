@@ -34,26 +34,33 @@ base = BaseValues.from_nominal(nom)
 # Create the system model.
 
 # Grid impedance and filter model
-#grid_filter = model.LFilter(U_gN=400*np.sqrt(2/3), R_f=0 ,L_f=10e-3, L_g=0, R_g=0)
-grid_filter = model.LCLFilter(U_gN=400*np.sqrt(2/3), L_fc=3.7e-3, C_f=8e-6, L_fg = 3.7e-3, L_g=0, R_g=0)
+grid_filter = model.LFilter(U_gN=400*np.sqrt(2/3), R_f=0 ,L_f=10e-3, L_g=0, R_g=0)
+#grid_filter = model.LCLFilter(U_gN=400*np.sqrt(2/3), L_fc=3.7e-3, C_f=8e-6, L_fg = 3.7e-3, L_g=0, R_g=0)
 
 # AC grid model (either constant frequency or dynamic electromechanical model)
 grid_model = model.StiffSource(w_N=2*np.pi*50)
-converter = model.Inverter(u_dc=650)
 
-# Optional DC bus model
+# Uncomment the following two lines to use a dynamic grid model, with a variable DC voltage
+converter = model.InverterWithVariableDC()
 #dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
-dc_model = None
+
+# Uncomment the following two lines to use a static grid model, with a fixed DC voltage
+#converter = model.Inverter(u_dc=650)
+dc_model = model.DCBusVoltageSource(u_dc=650)
 
 if dc_model is None:
     mdl = model.StiffSourceAndLFilterModel(
         converter, grid_filter, grid_model)
     on_v_dc=False
+
+if dc_model == model.DCBusVoltageSource:
+    mdl = model.dc_bus.DCBusAndLFilterModel(
+        converter, grid_filter, grid_model, dc_model)
+    on_v_dc=False
 else:
     mdl = model.dc_bus.DCBusAndLFilterModel(
         converter, grid_filter, grid_model, dc_model)
     on_v_dc=True
-
 
 # %%
 # Configure the control system.
