@@ -60,7 +60,6 @@ class PSCControl(GridConverterControlSystem):
     def __init__(self, cfg):
         super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc)
         self.cfg = cfg
-        self.pwm = PWM()
         self.current_ctrl = PSCCurrentController(cfg)
         self.ref.q_g = 0
         # Initialize the states
@@ -85,17 +84,6 @@ class PSCControl(GridConverterControlSystem):
         """Extend the base class method."""
         par, cfg = self.par, self.cfg
 
-        # Define the active power/frequency synchronization
-        def power_synch(fbk, ref):
-            # Calculation of power droop
-            fbk.w_c = par.w_g + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
-            # Estimated phase angle
-            self.theta_c = fbk.theta_c + ref.T_s*fbk.w_c
-            # Limit to [-pi, pi]
-            self.theta_c = wrap(self.theta_c)
-
-            return fbk
-
         # Get the reference signals
         ref = super().output(fbk)
         if self.on_u_dc:
@@ -104,8 +92,8 @@ class PSCControl(GridConverterControlSystem):
         # Voltage magnitude reference
         ref.U = self.ref.U(ref.t)
 
-        # Calculation of converter voltage angle
-        fbk = power_synch(fbk, ref)
+        # Calculation of power droop
+        fbk.w_c = par.w_g + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
 
         # Get voltage reference from current controller
         ref = self.current_ctrl.output(fbk, ref, par)
@@ -121,6 +109,10 @@ class PSCControl(GridConverterControlSystem):
     def update(self, fbk, ref):
         """Extend the base class method."""
         super().update(fbk, ref)
+        # Estimated phase angle
+        self.theta_c = fbk.theta_c + ref.T_s*fbk.w_c
+        # Limit to [-pi, pi]
+        self.theta_c = wrap(self.theta_c)
         self.current_ctrl.update(fbk, ref)
 
 

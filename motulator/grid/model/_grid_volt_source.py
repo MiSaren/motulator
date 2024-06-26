@@ -22,6 +22,7 @@ from motulator.common.utils._utils import (complex2abc, abc2complex)
 
 # %%
 # TODO: add ability to give frequency as a function, implement simulation of harmonics, negative sequence
+# rename class to ACSource?
 class StiffSource(Subsystem):
     """
     Grid subsystem.
@@ -47,7 +48,7 @@ class StiffSource(Subsystem):
 
     @property
     def w_N(self):
-        """Grid constant frequency (rad/s)."""
+        """Grid frequency (rad/s)."""
         if callable(self.par.w_N):
             return self.par.w_N()
         return self.par.w_N
