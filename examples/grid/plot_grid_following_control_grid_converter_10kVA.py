@@ -18,7 +18,8 @@ import numpy as np
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 #import motulator.grid.control.grid_following as control
-from motulator.grid.utils import BaseValues, NominalValues, plot_grid
+from motulator.grid.utils import (
+    BaseValues, NominalValues, plot_grid, GridModelPars)
 
 # To check the computation time of the program
 start_time = time.time()
@@ -64,17 +65,28 @@ else:
 # Configure the control system.
 
 # Control parameters
-pars = control.GridFollowingCtrlPars(
-            L_f=10e-3,
-            C_dc = 1e-3,
-            f_sw = 8e3,
-            T_s = 1/(16e3),
-            on_v_dc=on_v_dc,
-            i_max = 1.5*base.i,
-            p_max = base.p,
-            )
-ctrl = control.GridFollowingCtrl(pars)
-
+# pars = control.GridFollowingCtrlPars(
+#             L_f=10e-3,
+#             C_dc = 1e-3,
+#             f_sw = 8e3,
+#             T_s = 1/(16e3),
+#             on_v_dc=on_v_dc,
+#             i_max = 1.5*base.i,
+#             p_max = base.p,
+#             )
+par = GridModelPars(
+    U_gN=400*np.sqrt(2/3),
+    w_g=2*np.pi*50,
+    L_f=10e-3,
+    C_dc=1e-3)
+#ctrl = control.GridFollowingCtrl(pars)
+cfg = control.GFLControlCfg(
+    par,
+    on_u_dc=True,
+    i_max=1.5*base.i,
+    p_max=base.p,
+)
+ctrl = control.GFLControl(cfg)
 
 # %%
 # Set the time-dependent reference and disturbance signals.
@@ -83,8 +95,8 @@ ctrl = control.GridFollowingCtrl(pars)
 if on_v_dc:
     mdl.dc_model.i_ext = lambda t: (t > .06)*(10)
 else:
-    ctrl.p_g_ref = lambda t: (t > .02)*(5e3)
-ctrl.q_g_ref = lambda t: (t > .04)*(4e3)
+    ctrl.ref.p_g = lambda t: (t > .02)*(5e3)
+ctrl.ref.q_g_ref = lambda t: (t > .04)*(4e3)
 
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
