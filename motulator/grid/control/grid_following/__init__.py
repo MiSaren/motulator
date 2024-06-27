@@ -3,9 +3,13 @@
 from motulator.grid.control.grid_following._grid_following import (
     GridFollowingCtrl,
     GridFollowingCtrlPars,
+    GFLControl,
+    GFLControlCfg
 )
 
 __all__ = [
     "GridFollowingCtrl",
-    "GridFollowingCtrlPars"
+    "GridFollowingCtrlPars",
+    "GFLControl",
+    "GFLControlCfg",
 ]
