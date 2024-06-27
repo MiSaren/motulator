@@ -15,28 +15,46 @@ from motulator.common.utils import abc2complex
 
 
 # %%
-# TODO: combine the two Inverter classes to a single class which can be used
-# with constant or varying DC bus voltage
 class Inverter(Subsystem):
     """
-    Lossless three-phase inverter with constant DC-bus voltage.
+    Lossless three-phase voltage source inverter.
+
+    Capacitive DC-bus dynamics are modeled if C_dc is given as
+    a parameter. In this case, the capacitor voltage u_dc is used as
+    a state variable. Otherwise the DC voltage is constant or a function of
+    time depending on the type of parameter u_dc.
 
     Parameters
     ----------
-    u_dc0 : float
+    u_dc : float | callable
         DC-bus voltage (V).
+    C_dc : float, optional
+        DC-bus capacitance (F)
+    G_dc : float, optional
+        Parallel conductance of the DC-bus capacitor (S)
+    i_ext : callable, optional
+        External DC current, seen as disturbance, `i_ext(t)`.
 
     """
 
-    def __init__(self, u_dc):
+    def __init__(self, u_dc, C_dc=None, G_dc=0, i_ext=lambda t: 0*t):
         super().__init__()
-        self.par = SimpleNamespace(u_dc=u_dc)
+        self.i_ext = i_ext
+        self.par = SimpleNamespace(u_dc=u_dc, C_dc=C_dc, G_dc=G_dc)
+        # Initial values
+        self.u_dc0 = u_dc(0) if callable(u_dc) else u_dc
+        if C_dc is not None:
+            self.state = SimpleNamespace(u_dc = self.u_dc0)
+            self.sol_states = SimpleNamespace(u_dc = [])
+        self.inp = SimpleNamespace(u_dc=self.u_dc0, i_ext=0, q_cs=None, i_cs=0j)
         self.sol_q_cs = []
 
     @property
     def u_dc(self):
         """DC-bus voltage (V)."""
-        return self.par.u_dc
+        if self.par.C_dc is not None:
+            return self.state.u_dc.real
+        return self.inp.u_dc
 
     @property
     def u_cs(self):
@@ -52,13 +70,32 @@ class Inverter(Subsystem):
         """Set output variables."""
         self.out.u_cs = self.u_cs
 
+    def set_inputs(self, t):
+        """Set input variables."""
+        self.inp.u_dc = self.par.u_dc(t) if callable(
+            self.par.u_dc) else self.par.u_dc
+        self.inp.i_ext = self.i_ext(t)
+
+    def rhs(self):
+        """Compute state derivatives."""
+        state, inp, par = self.state, self.inp, self.par
+        if par.C_dc is None:
+            return None
+        du_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
+        return [du_dc]
+
     def meas_dc_voltage(self):
         """Measure the DC-bus voltage."""
         return self.u_dc
 
     def post_process_states(self):
         """Post-process data."""
-        self.data.u_cs = self.data.q_cs*self.par.u_dc
+        if self.par.C_dc is None:
+            self.data.u_dc = self.par.u_dc(self.data.t) if callable(
+                self.par.u_dc) else self.par.u_dc
+        else:
+            self.data.u_dc = self.data.u_dc.real
+        self.data.u_cs = self.data.q_cs*self.data.u_dc
 
 
 # %%
@@ -73,7 +110,7 @@ class InverterWithVariableDC(Subsystem):
         DC-bus initial voltage (V).
     """
 
-    
+
     def __init__(self):
         super().__init__()
         self.inp = SimpleNamespace(u_dc=0, q_cs=None, i_cs=0j)
@@ -105,7 +142,10 @@ class InverterWithVariableDC(Subsystem):
     def dc_current(self, q_cs, i_cs):
         """Compute the DC current."""
         return 1.5*np.real(q_cs*np.conj(i_cs))
+
+
 # %%
+# TODO: implement diode bridge as a separate subsystem
 class FrequencyConverter(Inverter):
     """
     Frequency converter.
