@@ -12,7 +12,6 @@ from motulator.grid.model._grid_filter import (
 
 from motulator.grid.model._grid_volt_source import (
     StiffSource,
-    FlexSource,
 )
 
 from motulator.grid.model.dc_bus import (
@@ -39,7 +38,6 @@ __all__ = [
     "LFilter",
     "LCLFilter",
     "StiffSource",
-    "FlexSource",
     "FrequencyConverter",
     "Inverter",
     "InverterWithVariableDC",
