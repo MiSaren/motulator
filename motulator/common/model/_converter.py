@@ -149,7 +149,7 @@ class InverterWithVariableDC(Subsystem):
 
 # %%
 # TODO: implement diode bridge as a separate subsystem
-class FrequencyConverter(Inverter):
+class FrequencyConverter(Subsystem):
     """
     Frequency converter.
 
@@ -170,17 +170,28 @@ class FrequencyConverter(Inverter):
     """
 
     def __init__(self, L, C, U_g, f_g):
-        super().__init__(None)
+        super().__init__()
         self.par = SimpleNamespace(
             L=L, C=C, w_g=2*np.pi*f_g, u_g=np.sqrt(2/3)*U_g)
         self.state = SimpleNamespace(u_dc=np.sqrt(2)*U_g, i_L=0)
         self.inp = SimpleNamespace(q_cs=None, i_cs=0j)
         self.sol_states = SimpleNamespace(u_dc=[], i_L=[])
+        self.sol_q_cs = []
 
     @property
     def u_dc(self):
         """DC-bus voltage."""
         return self.state.u_dc.real
+
+    @property
+    def u_cs(self):
+        """AC-side voltage (V)."""
+        return self.inp.q_cs*self.u_dc
+
+    @property
+    def i_dc(self):
+        """DC-side current (A)."""
+        return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
 
     def grid_voltages(self, t):
         """
@@ -207,7 +218,7 @@ class FrequencyConverter(Inverter):
 
     def set_outputs(self, t):
         """Set output variables."""
-        super().set_outputs(t)
+        self.out.u_cs = self.u_cs
         self.out.u_dc, self.out.i_L = self.state.u_dc.real, self.state.i_L.real
         self.out.i_dc = self.i_dc.real
         # Grid phase voltages
@@ -226,6 +237,10 @@ class FrequencyConverter(Inverter):
             d_i_L = 0
 
         return [d_u_dc, d_i_L]
+
+    def meas_dc_voltage(self):
+        """Measure the DC-bus voltage."""
+        return self.u_dc
 
     def post_process_states(self):
         """Post-process data."""
