@@ -2,7 +2,6 @@
 
 from motulator.grid.model._const_freq_model import (
     StiffSourceAndLFilterModel,
-    StiffSourceAndLCLFilterModel,
 )
 
 from motulator.grid.model._grid_filter import (
@@ -34,7 +33,6 @@ from motulator.common.model._simulation import (
 
 __all__ = [
     "StiffSourceAndLFilterModel",
-    "StiffSourceAndLCLFilterModel",
     "LFilter",
     "LCLFilter",
     "StiffSource",
