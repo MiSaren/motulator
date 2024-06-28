@@ -1,9 +1,10 @@
 """
 Power converter models.
 
-An inverter with constant DC-bus voltage and a frequency converter with a diode
-front-end rectifier are modeled. Complex space vectors are used also for duty
-ratios and switching states, wherever applicable. 
+An inverter with constant DC-bus voltage or optional dynamic DC model and
+a frequency converter with a diode front-end rectifier are modeled. Complex
+space vectors are used also for duty ratios and switching states, wherever
+applicable. 
 
 """
 from types import SimpleNamespace
@@ -37,16 +38,17 @@ class Inverter(Subsystem):
 
     """
 
-    def __init__(self, u_dc, C_dc=None, G_dc=0, i_ext=lambda t: 0*t):
+    def __init__(self, u_dc, C_dc=None, G_dc=0, i_ext=lambda t: 0):
         super().__init__()
         self.i_ext = i_ext
         self.par = SimpleNamespace(u_dc=u_dc, C_dc=C_dc, G_dc=G_dc)
         # Initial values
         self.u_dc0 = u_dc(0) if callable(u_dc) else u_dc
-        if C_dc is not None:
+        if C_dc is not None: # Only initialize states if dynamic DC model is used
             self.state = SimpleNamespace(u_dc = self.u_dc0)
             self.sol_states = SimpleNamespace(u_dc = [])
-        self.inp = SimpleNamespace(u_dc=self.u_dc0, i_ext=0, q_cs=None, i_cs=0j)
+        self.inp = SimpleNamespace(
+            u_dc=self.u_dc0, i_ext=i_ext(0), q_cs=None, i_cs=0j)
         self.sol_q_cs = []
 
     @property
@@ -79,7 +81,7 @@ class Inverter(Subsystem):
     def rhs(self):
         """Compute state derivatives."""
         state, inp, par = self.state, self.inp, self.par
-        if par.C_dc is None:
+        if par.C_dc is None: # Check whether dynamic DC model is used
             return None
         du_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
         return [du_dc]
@@ -99,6 +101,7 @@ class Inverter(Subsystem):
 
 
 # %%
+# TODO: not used anymore, can be removed
 class InverterWithVariableDC(Subsystem):
     """
     Lossless three-phase inverter with variable DC-bus voltage. This extends the
