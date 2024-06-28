@@ -3,17 +3,6 @@
 
 Peak-valued complex space vectors are used.
 
-Two voltage sources with variable voltage magnitude, to simulate voltage dips
-and symmetrical short circuits are modeled. A stiff model with a constant
-frequency and a dynamic model with the electromechanical dynamics of a
-synchronous generator are considered. In this module, all space vectors are in
-stationary coordinates.
-
-The grid angle theta_g is used 
-    as state variables.
-
-        theta_g = w_N * t
-
 """
 from types import SimpleNamespace
 
@@ -28,7 +17,10 @@ class StiffSource(Subsystem):
     """
     3-phase voltage source model.
 
-    This model is a 3-phase voltage source for the AC grid.
+    This model is a 3-phase voltage source for the AC grid. A stiff grid is
+    modeled, where the frequency is given by the user either as a constant
+    or time-dependent function. Grid voltage magnitude can also be a function,
+    to simulate voltage dips and symmetrical short circuits.
 
     The grid angle theta_g is used as a state variable.
 
@@ -40,10 +32,12 @@ class StiffSource(Subsystem):
         3-phase grid voltage magnitude, phase-to-ground peak value (V).
     w_g : callable, optional
         Grid frequency (rad/s) as a function of time, `w_g(t)`. If given, w_g
-        will be used to compute grid voltage angle instead of w_N.
+        will be used to compute grid voltage angle instead of w_N. The default
+        value is None.
+
     """
 
-    def __init__(self, w_N=2*np.pi*50, e_g_abs=400*np.sqrt(2/3), w_g=None):
+    def __init__(self, w_N, e_g_abs, w_g=None):
         super().__init__()
         self.w_g=w_g
         self.par = SimpleNamespace(w_N=w_N, e_g_abs=e_g_abs)
@@ -61,12 +55,12 @@ class StiffSource(Subsystem):
         t : float
             Time (s).
         theta_g : float
-            Grid voltage angle (rad)
+            Grid voltage angle (rad).
 
         Returns
         -------
         e_gs: complex
-            grid complex voltage (V).
+            Grid complex voltage (V).
 
         """
 
@@ -94,8 +88,8 @@ class StiffSource(Subsystem):
         
         Returns
         -------
-        list, length 1
-            Time derivatives of the state vector.
+        Complex list, length 1
+            Time derivative of the complex state vector, [d_exp_j_theta_g].
             
         """
         d_exp_j_theta_g = 1j*self.inp.w_g*self.state.exp_j_theta_g
