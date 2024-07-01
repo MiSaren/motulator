@@ -1,10 +1,9 @@
 """
 Electromechanical stiff AC grid and converter model interconnectors.
 
-    This interconnects the subsystems of a converter with a grid and provides
-    an interface to the solver. More complicated systems could be modeled using
-    a similar template. Peak-valued complex space vectors are used. The space
-    vector models are implemented in stationary coordinates.
+This interconnects the subsystems of a converter with a grid and provides
+an interface to the solver. More complicated systems could be modeled using
+a similar template. Peak-valued complex space vectors are used.
 
 """
 from motulator.common.model import Model

@@ -53,6 +53,9 @@ autoapi_options = [
     "imported-members",
 ]  # "private-members", "imported-members", "undoc-members", "special-members",
 
+# Add the autoapi_ignore option to exclude specific modules
+#autoapi_ignore = ["common/model/_simulation"]
+
 autoapi_python_class_content = "class"  # "both"
 autoapi_keep_files = True
 autoapi_add_toctree_entry = False

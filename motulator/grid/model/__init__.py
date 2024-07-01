@@ -1,4 +1,4 @@
-"""Continuous-time grid converter interconnector models."""
+"""Continuous-time grid converter models."""
 
 from motulator.grid.model._const_freq_model import (
     StiffSourceAndLFilterModel,
