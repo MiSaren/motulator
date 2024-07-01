@@ -9,6 +9,8 @@ from typing import Callable, Union
 import numpy as np
 
 # %%
+# TODO: combine classes with ones in drive/utils/_helpers.py, or rename to
+# e.g. NominalValuesGrid
 @dataclass
 class NominalValues:
     """

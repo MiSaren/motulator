@@ -30,11 +30,12 @@ class Inverter(Subsystem):
     u_dc : float | callable
         DC-bus voltage (V).
     C_dc : float, optional
-        DC-bus capacitance (F)
+        DC-bus capacitance (F). Default is None.
     G_dc : float, optional
-        Parallel conductance of the DC-bus capacitor (S)
+        Parallel conductance of the DC-bus capacitor (S). Default value is 0.
     i_ext : callable, optional
-        External DC current, seen as disturbance, `i_ext(t)`.
+        External DC current, seen as disturbance, `i_ext(t)`. Default is zero,
+        ``lambda t: 0``.
 
     """
 
@@ -79,15 +80,31 @@ class Inverter(Subsystem):
         self.inp.i_ext = self.i_ext(t)
 
     def rhs(self):
-        """Compute state derivatives."""
+        """
+        Compute the state derivatives.
+
+        Returns
+        -------
+        complex list, length 1
+            Time derivative of the complex state vector, [d_u_dc].
+
+        """
         state, inp, par = self.state, self.inp, self.par
         if par.C_dc is None: # Check whether dynamic DC model is used
             return None
-        du_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
-        return [du_dc]
+        d_u_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
+        return [d_u_dc]
 
     def meas_dc_voltage(self):
-        """Measure the DC-bus voltage."""
+        """
+        Measure the converter DC-bus voltage.
+
+        Returns
+        -------
+        u_dc : float
+            DC-bus voltage (V).
+
+        """
         return self.u_dc
 
     def post_process_states(self):
@@ -225,7 +242,15 @@ class FrequencyConverter(Subsystem):
         self.out.u_g_abc = self.grid_voltages(t)
 
     def rhs(self):
-        """Compute state derivatives."""
+        """
+        Compute the state derivatives.
+
+        Returns
+        -------
+        complex list, length 2
+            Time derivative of the complex state vector, [d_u_dc, d_i_L].
+
+        """
         state, out, par = self.state, self.out, self.par
         # Output voltage of the diode bridge
         u_di = np.amax(out.u_g_abc, axis=0) - np.amin(out.u_g_abc, axis=0)
