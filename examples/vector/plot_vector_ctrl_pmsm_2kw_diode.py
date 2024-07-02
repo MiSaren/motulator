@@ -8,10 +8,12 @@ drive, equipped with a diode bridge rectifier.
 """
 # %%
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, plot_extra, SynchronousMachinePars)
+    plot, plot_extra, SynchronousMachinePars)
 
 # %%
 # Compute base values based on the nominal values (just for figures).

@@ -10,10 +10,13 @@ in the control method (only in the system model).
 # %%
 
 import numpy as np
+
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, Sequence, SynchronousMachinePars)
+    plot, Sequence, SynchronousMachinePars)
 
 # %%
 # Compute base values based on the nominal values (just for figures).

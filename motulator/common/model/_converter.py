@@ -118,54 +118,7 @@ class Inverter(Subsystem):
 
 
 # %%
-# TODO: not used anymore, can be removed
-class InverterWithVariableDC(Subsystem):
-    """
-    Lossless three-phase inverter with variable DC-bus voltage. This extends the
-    Inverter class
-
-    Parameters
-    ----------
-    u_dc0 : float
-        DC-bus initial voltage (V).
-    """
-
-
-    def __init__(self):
-        super().__init__()
-        self.inp = SimpleNamespace(u_dc=0, q_cs=None, i_cs=0j)
-        self.sol_q_cs = []
-
-    @property
-    def i_dc(self):
-        """DC-side current (A)."""
-        return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
-    
-    @property
-    def u_cs(self):
-        """AC-side voltage (V)."""
-        return self.inp.q_cs*self.inp.u_dc
-
-    def set_outputs(self, t):
-        """Set output variables."""
-        self.out.u_cs = self.u_cs
-        self.out.i_dc = self.i_dc
-
-    def meas_dc_voltage(self):
-        """Measure the DC-bus voltage."""
-        return self.inp.u_dc
-
-    def ac_voltage(self, q_cs, u_dc):
-        """Compute the AC voltage."""
-        return q_cs*u_dc
-
-    def dc_current(self, q_cs, i_cs):
-        """Compute the DC current."""
-        return 1.5*np.real(q_cs*np.conj(i_cs))
-
-
-# %%
-# TODO: implement diode bridge as a separate subsystem
+# TODO: implement diode bridge as a separate subsystem and remove this class
 class FrequencyConverter(Subsystem):
     """
     Frequency converter.
