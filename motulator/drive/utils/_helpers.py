@@ -10,6 +10,9 @@ import numpy as np
 
 
 # %%
+# TODO: NominalValues and BaseValues classes have been migrated to common.utils
+# and can be removed from here, also all drive examples need to change the
+# import location to common.utils
 @dataclass
 class NominalValues:
     """

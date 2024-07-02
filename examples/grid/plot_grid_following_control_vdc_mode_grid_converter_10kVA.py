@@ -16,10 +16,11 @@ current controller.
 import time
 import numpy as np
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-#import motulator.grid.control.grid_following as control
-from motulator.grid.utils import BaseValues, NominalValues, plot_grid
+from motulator.grid.utils import plot_grid
 
 # To check the computation time of the program
 start_time = time.time()
@@ -40,8 +41,11 @@ grid_filter = model.LFilter(
     U_gN=400*np.sqrt(2/3), R_f=0 ,L_f=10e-3, L_g=0, R_g=0)
 #grid_filter = model.LCLFilter(U_gN=400*np.sqrt(2/3), L_fc=3.7e-3, C_f=8e-6, L_fg = 3.7e-3, L_g=0, R_g=0)
 
+# AC-voltage magnitude (to simulate voltage dips or short-circuits)
+e_g_abs_var =  lambda t: np.sqrt(2/3)*400
+
 # AC grid model
-grid_model = model.StiffSource(w_N=2*np.pi*50)
+grid_model = model.StiffSource(w_N=2*np.pi*50, e_g_abs = e_g_abs_var)
 
 # Inverter model
 converter = model.Inverter(u_dc=600, C_dc = 1e-3)
@@ -78,10 +82,6 @@ if on_v_dc:
 else:
     ctrl.p_g_ref = lambda t: (t > .02)*(5e3)
 ctrl.q_g_ref = lambda t: (t > .04)*(4e3)
-
-# AC-voltage magnitude (to simulate voltage dips or short-circuits)
-e_g_abs_var =  lambda t: np.sqrt(2/3)*400
-mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
 
 
 # %%
