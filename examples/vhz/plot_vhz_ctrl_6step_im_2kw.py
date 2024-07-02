@@ -13,11 +13,13 @@ frequency and the sampling frequency.
 
 import numpy as np
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    BaseValues, InductionMachinePars, InductionMachineInvGammaPars,
-    NominalValues, plot, plot_extra, Sequence)
+    InductionMachinePars, InductionMachineInvGammaPars,
+    plot, plot_extra, Sequence)
 
 # %%
 # Compute base values based on the nominal values (just for figures).

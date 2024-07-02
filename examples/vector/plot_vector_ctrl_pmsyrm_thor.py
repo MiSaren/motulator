@@ -10,10 +10,12 @@ magnet synchronous reluctance motor. Control look-up tables are also plotted.
 
 import numpy as np
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, SynchronousMachinePars)
+    plot, SynchronousMachinePars)
 
 # %%
 # Compute base values based on the nominal values (just for figures).

@@ -14,10 +14,12 @@ this example.
 import numpy as np
 import matplotlib.pyplot as plt
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, Sequence, SynchronousMachinePars,
+    plot, Sequence, SynchronousMachinePars,
     TwoMassMechanicalSystemPars)
 
 # %%
