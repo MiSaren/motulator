@@ -10,11 +10,13 @@ parameters in this example yield open-loop V/Hz control.
 
 import numpy as np
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    BaseValues, InductionMachinePars, InductionMachineInvGammaPars,
-    NominalValues, plot, plot_extra)
+    InductionMachinePars, InductionMachineInvGammaPars,
+    plot, plot_extra)
 
 # %%
 # Compute base values based on the nominal values (just for figures).

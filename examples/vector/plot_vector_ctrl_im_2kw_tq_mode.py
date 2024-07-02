@@ -9,10 +9,12 @@ in torque-control mode.
 # %%
 import numpy as np
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, InductionMachinePars,
+    plot, InductionMachinePars,
     InductionMachineInvGammaPars)
 
 # %%

@@ -65,6 +65,7 @@ def plot_grid(
     # 3-phase quantities
     i_c_abc = complex2abc(mdl.converter.data.i_cs).T
     e_g_abc = complex2abc(mdl.grid_model.data.e_gs).T
+    u_g_abc = complex2abc(mdl.grid_filter.data.u_gs).T
 
     # Calculation of active and reactive powers
     #p_g = 1.5*np.asarray(np.real(ctrl.fbk.u_g*np.conj(ctrl.fbk.i_c)))
@@ -87,7 +88,7 @@ def plot_grid(
             ax1.set_xticklabels([])
         else:
             # Subplot 1: PCC voltage
-            ax1.plot(ctrl.t, complex2abc(ctrl.fbk.u_gs).T/base.u, linewidth=LW)
+            ax1.plot(mdl.grid_filter.data.t, u_g_abc/base.u, linewidth=LW)
             ax1.legend([r'$u_g^a$',r'$u_g^b$',r'$u_g^c$'],
                        prop={'size': FL}, loc= 'upper right')
             ax1.set_xlim(t_range)

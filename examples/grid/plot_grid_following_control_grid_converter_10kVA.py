@@ -34,8 +34,10 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Create the system model.
 
-# grid impedance and filter model
-grid_filter = model.LFilter(U_gN=400*np.sqrt(2/3) ,R_f=0 ,L_f=10e-3, L_g=0, R_g=0)
+# Grid impedance and filter model
+grid_filter = model.LFilter(U_gN=400*np.sqrt(2/3), R_f=0 ,L_f=10e-3, L_g=0, R_g=0)
+#grid_filter = model.LCLFilter(U_gN=400*np.sqrt(2/3), L_fc=3.7e-3, C_f=8e-6, L_fg = 3.7e-3, L_g=0, R_g=0)
+
 # AC grid model (either constant frequency or dynamic electromechanical model)
 grid_model = model.StiffSource(w_N=2*np.pi*50)
 
@@ -48,7 +50,7 @@ converter = model.InverterWithVariableDC()
 dc_model = model.DCBusVoltageSource(u_dc=650)
 
 if dc_model is None:
-    mdl = model.StiffSourceAndLFilterModel(
+    mdl = model.StiffSourceAndGridFilterModel(
         converter, grid_filter, grid_model)
     on_v_dc=False
 

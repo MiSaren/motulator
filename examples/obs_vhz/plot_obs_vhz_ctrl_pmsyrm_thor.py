@@ -25,10 +25,12 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 from scipy.interpolate import LinearNDInterpolator
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, Sequence, SynchronousMachinePars)
+    plot, Sequence, SynchronousMachinePars)
 from motulator.drive.utils import (
     import_syre_data, plot_flux_vs_current, plot_flux_map)
 

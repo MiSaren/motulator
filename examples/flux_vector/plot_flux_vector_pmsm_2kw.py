@@ -7,10 +7,11 @@ This example simulates sensorless flux-vector control of a 2.2-kW PMSM drive.
 """
 # %%
 
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
-from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, SynchronousMachinePars)
+from motulator.drive.utils import (plot, SynchronousMachinePars)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
