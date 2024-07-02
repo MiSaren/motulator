@@ -1,19 +1,47 @@
-"""Power synchronization control for grid-connected converters"""
+"""Power synchronization control for grid-connected converters."""
 
 # %%
 from dataclasses import dataclass
 
 import numpy as np
 
+from motulator.common.utils import wrap
+
 from motulator.grid.control import GridConverterControlSystem
 from motulator.grid.utils import GridModelPars
-from motulator.common.control import PWM
-from motulator.common.utils import wrap
+
 
 # %%
 @dataclass
 class PSCControlCfg:
-    """Power synchronization control configuration"""
+    """
+    Power synchronization control configuration.
+
+    Parameters
+    ----------
+    par : GridModelPars
+        Grid model parameters.
+    T_s : float, optional
+        Sampling period of the controller (s). Default is 1/(16e3).
+    on_rf : bool, optional
+        Enable reference-feedforward for the control. Default is False.
+    on_u_dc : bool, optional
+        Enable DC-bus voltage control mode. Default is False.
+    on_u_g : bool, optional
+        Enable control of PCC voltage. Default is False (converter output
+        voltage is controlled).
+    i_max : float, optional
+        Maximum current modulus (A). Default is 20.
+    R_a : float, optional
+        Damping resistance (Ω). Default is 4.6.
+    k_scal : float, optional
+        Scaling ratio of the space vector transformation. The default is 3/2.
+    w_0_cc : float, optional
+        Current controller undamped natural frequency (rad/s).
+        Default is 2*pi*5.
+    K_cc : float, optional
+        Current controller low-pass filter gain. Default is 1.
+    """
 
     par: GridModelPars
     T_s: float = 1/(16e3)
