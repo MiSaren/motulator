@@ -50,7 +50,7 @@ grid_model = model.StiffSource(w_N=2*np.pi*50, e_g_abs = e_g_abs_var)
 # Inverter model
 converter = model.Inverter(u_dc=600, C_dc = 1e-3)
 
-mdl = model.StiffSourceAndLFilterModel(
+mdl = model.StiffSourceAndGridFilterModel(
     converter, grid_filter, grid_model)
 
 on_v_dc=True

@@ -1,7 +1,7 @@
 """Continuous-time grid converter models."""
 
-from motulator.grid.model._const_freq_model import (
-    StiffSourceAndLFilterModel,
+from motulator.grid.model._grid_converter_system import (
+    StiffSourceAndGridFilterModel,
 )
 
 from motulator.grid.model._grid_filter import (
@@ -13,17 +13,9 @@ from motulator.grid.model._grid_volt_source import (
     StiffSource,
 )
 
-from motulator.grid.model.dc_bus import (
-    DCBus,
-    DCBusVoltageSource,
-)
-
-import motulator.grid.model.dc_bus as dc_bus
-
 from motulator.common.model._converter import (
     FrequencyConverter,
     Inverter,
-    InverterWithVariableDC,
 )
 
 from motulator.common.model._simulation import (
@@ -32,13 +24,12 @@ from motulator.common.model._simulation import (
 )
 
 __all__ = [
-    "StiffSourceAndLFilterModel",
+    "StiffSourceAndGridFilterModel",
     "LFilter",
     "LCLFilter",
     "StiffSource",
     "FrequencyConverter",
     "Inverter",
-    "InverterWithVariableDC",
     "CarrierComparison",
     "Simulation",
     "dc_bus",

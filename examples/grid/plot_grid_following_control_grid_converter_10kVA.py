@@ -49,7 +49,7 @@ converter = model.InverterWithVariableDC()
 dc_model = model.DCBusVoltageSource(u_dc=650)
 
 if dc_model is None:
-    mdl = model.StiffSourceAndLFilterModel(
+    mdl = model.StiffSourceAndGridFilterModel(
         converter, grid_filter, grid_model)
     on_v_dc=False
 
