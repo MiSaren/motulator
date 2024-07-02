@@ -81,7 +81,7 @@ class GridConverterControlSystem(ControlSystem, ABC):
                     PCC voltage (V) in stator coordinates.
 
         """
-        fbk.u_dc = mdl.dc_model.meas_dc_voltage()
+        fbk.u_dc = mdl.converter.meas_dc_voltage()
         fbk.i_cs = abc2complex(mdl.grid_filter.meas_currents())
         fbk.u_cs = self.pwm.get_realized_voltage()
         fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
