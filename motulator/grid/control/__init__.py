@@ -1,22 +1,11 @@
-"""Controls for grid-connected converters."""
+"""Controllers for grid-connected converters."""
 
 from motulator.grid.control._common import (
-    ComplexFFPICtrl,
-    ComplexPICtrl,
-    RateLimiter,
-    DCBusVoltCtrl,
-    PICtrl,
-    PWM
+    GridConverterControlSystem,
+    DCBusVoltageController,
 )
 
-import motulator.grid.control.grid_following
-
 __all__ = [
-    "ComplexFFPICtrl",
-    "ComplexPICtrl",
-    "RateLimiter",
-    "DCBusVoltCtrl",
-    "PICtrl",
-    "PWM",
-    "grid_following",
+    "GridConverterControlSystem",
+    "DCBusVoltageController",
 ]

@@ -3,15 +3,81 @@
 # %%
 from __future__ import annotations
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
+from types import SimpleNamespace
 
-#from types import SimpleNamespace
-from motulator.grid.utils import Bunch
 import numpy as np
 
+from motulator.grid.utils import GridModelPars
+from motulator.common.control import PWM
+
+from motulator.grid.utils import Bunch
+
 from motulator.common.utils._utils import abc2complex
-#from motulator.common.control import (PWM, ComplexFFPICtrl, Clock)
-from motulator.grid.control._common import (Ctrl, PWM, Clock, ComplexFFPICtrl, DCBusVoltCtrl)
+from motulator.common.control import (ComplexFFPIController)
+from motulator.grid.control._common import (GridConverterControlSystem, DCBusVoltageController)
+
+# %%
+@dataclass
+class GFLControlCfg:
+    """Grid-following control configuration
+    
+    Parameters
+    ----------
+    par : GridModelPars
+        Grid model parameters.
+    T_s : float, optional
+        Sampling period (s). The default is 1/(16e3).
+    on_u_dc : bool, optional
+        to activate dc voltage controller. The default is False.
+    on_u_cap : bool, optional
+        to use the filter capacitance voltage measurement or PCC voltage. The default is False.
+    i_max : float, optional
+        maximum current modulus in A. The default is 20.
+    alpha_c : float, optional
+        current controller bandwidth. The default is 2*np.pi*400.
+    alpha_ff : float, optional
+        low pass filter bandwidth for voltage feedforward term. The default is 2*np.pi*(4*50).
+    k_scal : float, optional
+        scaling ratio of the abc/dq transformation. The default is 3/2.
+        
+    Parameters for the Phase Locked Loop (PLL)
+    w0_pll : float, optional
+        undamped natural frequency of the PLL. The default is 2*np.pi*20.
+    zeta : float, optional
+        damping ratio of the PLL. The default is 1.
+
+    parameters for the DC-voltage controller
+    p_max : float, optional
+        maximum power reference in W. The default is 10e3.
+    zeta_dc : float, optional
+        damping ratio of the DC-voltage controller. The default is 1.
+    w_0_dc : float, optional
+        controller undamped natural frequency in rad/s. The default is 2*np.pi*30.
+    """
+
+    par: GridModelPars
+    T_s: float = 1/(16e3)
+    on_u_dc: bool = False
+    on_u_cap: bool = False
+    i_max: float = 20
+    alpha_c: float = 2*np.pi*400
+    alpha_ff: float = 2*np.pi*(4*50)
+    k_scal: float = 3/2
+
+    w0_pll: float = 2*np.pi*20 
+    zeta: float = 1
+
+    p_max: float = 10e3
+    zeta_dc: float = 1
+    w_0_dc: float = 2*np.pi*30
+
+    def __post_init__(self):
+        self.k_p_i = self.alpha_c*self.par.L_f
+        self.k_i_i = np.power(self.alpha_c,2)*self.par.L_f
+        self.r_i = self.alpha_c*self.par.L_f
+        self.k_p_pll = 2*self.zeta*self.w0_pll/self.par.U_gN
+        self.k_i_pll = self.w0_pll*self.w0_pll/self.par.U_gN
 
 
 # %%
@@ -65,11 +131,75 @@ class GridFollowingCtrlPars:
     L_f: float = 10e-3 # filter inductance, in H.
     C_dc: float = 1e-3 # DC bus capacitance, in F.
 
+# %%
+class GFLControl(GridConverterControlSystem):
+    """
+    Grid-following control for power converters.
+    
+    Parameters
+    ----------
+    cfg : GFLControlCfg
+        Control configuration.
+    
+    """
 
+    def __init__(self, cfg):
+        super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc)
+        self.cfg = cfg
+        self.current_ctrl = CurrentController(cfg)
+        # Initialize the states
+        self.theta_c = 0
+        self.current_reference = CurrentRefCalc(cfg)
+        self.current_ctrl = CurrentController(cfg)
+        # active and reactive power references
+        # self.p_g_ref = self.ref.p_g
+        # self.q_g_ref = self.ref.q_g
+
+    def get_feedback_signals(self, mdl):
+        fbk = super().get_feedback_signals(mdl)
+        fbk.theta_c = self.theta_c
+        # Transform the measured current in dq frame
+        fbk.u_g = np.exp(-1j*fbk.theta_c)*fbk.u_gs
+        fbk.i_c = np.exp(-1j*fbk.theta_c)*fbk.i_cs
+        fbk.u_c = np.exp(-1j*fbk.theta_c)*fbk.u_cs
+
+        # Calculating of active and reactive powers
+        fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
+        fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
+
+        return fbk
+    
+    def output(self, fbk):
+        """Extend the base class method."""
+        par, cfg = self.par, self.cfg
+
+        # Get the reference signals
+        ref = super().output(fbk)
+        if self.on_u_dc:
+            ref.u_dc = self.ref.u_dc(ref.t)
+        ref = super().get_power_reference(fbk, ref)
+        ref = self.current_reference.output(fbk, ref)
+        # Voltage reference generation in synchronous coordinates
+        #u_c_ref = self.current_ctrl.output(i_c_ref, i_c, u_g_filt, self.w_g)
+        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, cfg.U_gN +1j, fbk.w_g)
+
+        # Transform the voltage reference into stator coordinates
+        ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
+        
+        # get the duty ratios from the PWM
+        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, fbk.w_g)
+
+        return ref
+    
+    def update(self, fbk, ref):
+        """Extend the base class method."""
+        super().update(fbk, ref)
+        self.current_ctrl.update(ref.T_s, fbk.u_c)
+        
 # %%
 # TODO: change GFL control system to use packages from motulator/common and
 # the ControlSystem base class
-class GridFollowingCtrl(Ctrl):
+class GridFollowingCtrl(GridConverterControlSystem):
     """
     Grid following control for power converters.
 
@@ -89,9 +219,9 @@ class GridFollowingCtrl(Ctrl):
         self.pwm = PWM(six_step=False)
         self.clock = Clock()
         self.pll = PLL(pars)
-        self.current_ctrl = CurrentCtrl(pars, pars.alpha_c)
+        self.current_ctrl = CurrentController(pars, pars.alpha_c)
         self.current_ref_calc = CurrentRefCalc(pars)
-        self.dc_bus_volt_ctrl = DCBusVoltCtrl(
+        self.dc_bus_volt_ctrl = DCBusVoltageController(
             pars.zeta_dc, pars.w_0_dc, pars.p_max)
         # Parameters
         self.u_gN = pars.u_gN
@@ -156,7 +286,7 @@ class GridFollowingCtrl(Ctrl):
         # Obtain the converter voltage calculated with the PWM
         u_c = self.pwm.realized_voltage
 
-        # Define the active and reactive power references at the given time 
+        # Define the active and reactive power references at the given time
         u_dc_ref = self.u_dc_ref(self.clock.t)
         # Definition of capacitance energy variables for the DC-bus controller
         W_dc_ref = 0.5*self.C_dc*u_dc_ref**2
@@ -335,7 +465,7 @@ class PLL:
 
 
 # %%
-class CurrentCtrl(ComplexFFPICtrl):
+class CurrentController(ComplexFFPIController):
     """
     2DOF PI current controller for grid converters.
 
@@ -345,18 +475,17 @@ class CurrentCtrl(ComplexFFPICtrl):
 
     Parameters
     ----------
-    par : ModelPars
-        Grid converter parameters, contains the filter inductance `L_f` (H).  
-    alpha_c : float
-        Closed-loop bandwidth (rad/s).
+    cfg : ModelPars
+        Grid converter parameters, contains the filter inductance `L_f` (H)
+        and the Closed-loop bandwidth 'alpha_c' (rad/s).
 
     """
 
-    def __init__(self, par, alpha_c):
-        k_t = alpha_c*par.L_f
-        k_i = alpha_c*k_t
+    def __init__(self, cfg):
+        k_t = cfg.alpha_c*cfg.par.L_f
+        k_i = cfg.alpha_c*k_t
         k_p = 2*k_t
-        L_f = par.L_f
+        L_f = cfg.par.L_f
         super().__init__(k_p, k_i, k_t, L_f)
 
 
@@ -380,7 +509,7 @@ class CurrentRefCalc:
             Control parameters.
     
         """
-        self.u_gN = pars.u_gN
+        self.u_gN = GridModelPars.U_gN
 
 
     def output(self, p_g_ref, q_g_ref):

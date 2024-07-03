@@ -46,6 +46,13 @@ class StiffSource(Subsystem):
         # Store the solutions in these lists
         self.sol_states = SimpleNamespace(exp_j_theta_g=[])
 
+    @property
+    def w_N(self):
+        """Grid frequency (rad/s)."""
+        if callable(self.par.w_N):
+            return self.par.w_N()
+        return self.par.w_N
+
     def voltages(self, t, theta_g):
         """
         Compute the grid voltage in stationary frame.
