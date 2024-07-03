@@ -1,12 +1,12 @@
 """Example plotting scripts."""
 
 # %%
+from types import SimpleNamespace
 import numpy as np
 import matplotlib.pyplot as plt
 from cycler import cycler
 
 from motulator.common.utils import (complex2abc)
-from types import SimpleNamespace
 
 # Plotting parameters
 plt.rcParams['axes.prop_cycle'] = cycler(color='brgcmyk')
@@ -113,7 +113,7 @@ def plot_grid(
 
     if plot_w:
         # Subplot 3: Grid and converter frequencies
-        ax3.plot(mdl.grid_model.data.t, mdl.grid_model.par.w_N/base.w, linewidth=LW)
+        ax3.plot(mdl.grid_model.data.t, mdl.grid_model.data.w_g/base.w, linewidth=LW)
         ax3.plot(ctrl.t, ctrl.fbk.w_c/base.w, '--', linewidth=LW)
         ax3.legend([r'$\omega_{g}$',r'$\omega_{c}$']
                    ,prop={'size': FL}, loc= 'upper right')
@@ -133,11 +133,11 @@ def plot_grid(
     else:
         ax1.set_ylabel('Voltage (V)')
         ax2.set_ylabel('Current (A)')
-    if plot_w==False: 
+    if not plot_w:
         ax3.set_ylabel('Angle (rad)')
-    elif plot_w and pu_vals:
+    elif pu_vals:
         ax3.set_ylabel('Frequency (p.u.)')
-    elif pu_vals == False:
+    else:
         ax3.set_ylabel('Frequency (rad/s)')
     ax3.set_xlabel('Time (s)')
 
