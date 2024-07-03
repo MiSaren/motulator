@@ -1,4 +1,4 @@
-Grid converter control
-------------
+Grid-following control
+----------------------
 
-These examples show operation of a grid-connected converter using grid-following and grid-forming control methods.
+These examples demonstrate grid-following control for grid-connected converters.
