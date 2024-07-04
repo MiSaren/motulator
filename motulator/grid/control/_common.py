@@ -25,7 +25,7 @@ class DCBusVoltageController(PIController):
     alpha_dc : float
         Closed-loop bandwidth (rad/s). 
     p_max : float, optional
-        Maximum converter power (W). The default is inf.
+        Maximum converter power (W). The default is `inf`.
         
     References
     ----------
@@ -46,7 +46,43 @@ class DCBusVoltageController(PIController):
 class GridConverterControlSystem(ControlSystem, ABC):
     """
     Base class for control of grid-connected converters.
+    
+    This base class provides typical functionalities for control of
+    grid-connected converters. This can be used both in power control and
+    DC-bus voltage control modes. 
+
+    Parameters
+    ----------
+    par : GridModelPars
+        Grid model parameters.
+    T_s : float
+        Sampling period (s).
+    on_u_dc : bool
+        If True, DC-bus voltage control mode is used.
+
+    Attributes
+    ----------
+    ref : SimpleNamespace
+        References, possibly containing the following fields:
+
+            U : float | callable
+                Converter output voltage reference (V). Can be given either as
+                a constant or a function of time (s). 
+            p_g : callable
+                Active power reference (W) as a function of time (s). This
+                signal is needed in power control mode.
+            q_g : callable
+                Reactive power reference (VAr) as a function of time (s). This
+                signal is needed if grid-following control is used.
+            u_dc : callable
+                DC-voltage reference (V) as a function of time (s). This signal
+                is needed in DC-bus voltage control mode.
+
+    dc_bus_volt_ctrl : DCBusVoltageController | None
+        DC-bus voltage controller. The default is None.
+
     """
+
     def __init__(self, par, T_s, on_u_dc):
         super().__init__(T_s)
         self.par = par
@@ -73,12 +109,12 @@ class GridConverterControlSystem(ControlSystem, ABC):
                 u_dc : float
                     DC-bus voltage (V).
                 i_cs : complex
-                    Converter current (A) in stator coordinates.
+                    Converter current (A) in stationary coordinates.
                 u_cs : complex
-                    Realized stator voltage (V) in stator coordinates. This
-                    signal is obtained from the PWM.
+                    Realized converter output voltage (V) in stationary
+                    coordinates. This signal is obtained from the PWM.
                 u_gs : complex
-                    PCC voltage (V) in stator coordinates.
+                    PCC voltage (V) in stationary coordinates.
 
         """
         fbk.u_dc = mdl.converter.meas_dc_voltage()

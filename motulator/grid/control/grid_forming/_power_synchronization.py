@@ -35,7 +35,7 @@ class PSCControlCfg:
     R_a : float, optional
         Damping resistance (Ω). Default is 4.6.
     k_scal : float, optional
-        Scaling ratio of the space vector transformation. The default is 3/2.
+        Scaling ratio of the space vector transformation. Default is 3/2.
     w_0_cc : float, optional
         Current controller undamped natural frequency (rad/s).
         Default is 2*pi*5.
@@ -118,7 +118,7 @@ class PSCControl(GridConverterControlSystem):
             ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
         # Voltage magnitude reference
-        ref.U = self.ref.U(ref.t)
+        ref.U = self.ref.U(ref.t) if callable(self.ref.U) else self.ref.U
 
         # Calculation of power droop
         fbk.w_c = par.w_g + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
@@ -154,7 +154,12 @@ class PSCCurrentController:
     
     It is important to note that this block uses P-type controller and can thus
     encounter steady-state error when the current reference is saturated.
-        
+
+    Parameters
+    ----------
+    cfg : PSCControlCfg
+        Model and controller configuration parameters.
+      
     """
 
     def __init__(self, cfg):

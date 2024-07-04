@@ -78,6 +78,7 @@ sphinx_gallery_conf = {
         "../../examples/flux_vector",
         "../../examples/signal_inj",
         "../../examples/grid_forming",
+        "*"
     ]),
 }
 
