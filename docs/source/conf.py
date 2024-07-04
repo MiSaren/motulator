@@ -54,8 +54,7 @@ autoapi_options = [
 ]  # "private-members", "imported-members", "undoc-members", "special-members",
 
 # Add the autoapi_ignore option to exclude specific modules
-# TODO: fix gfl and remove it from ignore
-autoapi_ignore = ["grid/control/grid_following"]
+#autoapi_ignore = ["grid/control/grid_following"]
 
 autoapi_python_class_content = "class"  # "both"
 autoapi_keep_files = True
@@ -70,6 +69,7 @@ sphinx_gallery_conf = {
     "auto_examples",  # path to where to save gallery generated output
     "nested_sections":
     True,
+    'plot_gallery': 'False', # do not execute example scripts
     "subsection_order":
     ExplicitOrder([
         "../../examples/vector",
@@ -78,9 +78,7 @@ sphinx_gallery_conf = {
         "../../examples/flux_vector",
         "../../examples/signal_inj",
         "../../examples/grid_forming",
-        "*",
     ]),
-    "filename_pattern": r"^(?!.*examples/grid).*",  # TODO: remove this line when gfl is fixed
 }
 
 # List of patterns, relative to source directory, that match files and

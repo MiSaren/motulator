@@ -1,8 +1,8 @@
 """
-6.9-kVA grid forming converter, reference-feedforward PSC (RFPSC)
+6.9-kVA grid-forming converter, reference-feedforward PSC (RFPSC)
 =================================================================
     
-This example simulates a grid forming controlled converter connected to a
+This example simulates a grid-forming controlled converter connected to a
 weak grid. The control system includes a power synchronization loop (PSL) to
 synchronize with the grid and an inner P-type current controller used to damp
 the current oscillations, enhanced with a reference-feedforward term.
@@ -18,9 +18,6 @@ from motulator.common.utils import BaseValues, NominalValues
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
 from motulator.grid.utils import (plot_grid, GridModelPars)
-
-# To check the computation time of the program
-start_time = time.time()
 
 
 # %%
@@ -61,21 +58,24 @@ ctrl = control.PSCControl(cfg)
 
 
 # %%
-# Set the time-dependent reference and disturbance signals.
+# Set the references for converter output voltage magnitude and active power.
 
 # Converter output voltage magnitude reference (constant)
 ctrl.ref.U = lambda t: mdl_par.U_gN
 
-# Set the active power reference
-ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) + 
+# Active power reference
+ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) +
     (t > .8)*(2.3e3) - (t > 1.2)*(6.9e3))
 
-# Create the simulation object and simulate it
+
+# %%
+# Create the simulation object and simulate it.
+
+start_time = time.time()
 sim = model.Simulation(mdl, ctrl)
 sim.simulate(t_stop = 1.5)
-
-# Print the execution time
-print('\nExecution time: {:.2f} s'.format((time.time() - start_time)))
+stop_time = time.time()
+print(f"Simulation time: {stop_time-start_time:.2f} s")
 
 
 # %%
