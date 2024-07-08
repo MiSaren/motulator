@@ -4,7 +4,7 @@ Converters
 Inverter
 --------
 
-The figure below shows a three-phase two-level inverter and its equivalent model, where ideal switches  are assumed. In the equivalent model, each changeover switch is connected to either negative or positive potential of the DC bus. The switching phenomena are assumed to be infinitely fast. The inverter model is provided in the class :class:`motulator.drive.model.Inverter`. 
+The figure below shows a three-phase, two-level voltage source inverter and its equivalent model, where ideal switches  are assumed. In the equivalent model, each changeover switch is connected to either negative or positive potential of the DC bus. The switching phenomena are assumed to be infinitely fast. The inverter model is provided in the class :class:`motulator.common.model.Inverter`. 
 
 
 .. figure:: figs/inverter.svg
@@ -14,6 +14,34 @@ The figure below shows a three-phase two-level inverter and its equivalent model
    :target: .
 
    Three-phase two-level inverter: (left) main circuit; (right) equivalent model. The DC-bus voltage and currents are :math:`u_\mathrm{dc}` and :math:`i_\mathrm{dc}`, respectively.
+
+The inverter model can be parametrized to take into account the capacitive dynamics of the DC-bus. An external current source 
+is feeding the DC bus that is modeled considering an equivalent circuit 
+comprising a parallel connected DC bus capacitor and resitor. The model is implemented as
+
+.. math::
+   \frac{\mathrm{d}\boldsymbol{u}_\mathrm{dc}}{\mathrm{d} t} 
+   = \frac{1}{C_\mathrm{dc}}(i_\mathrm{ext} 
+   - i_\mathrm{dc} - G_\mathrm{dc}u_\mathrm{dc})
+   :label: DC_bus_model
+
+where :math:`u_\mathrm{dc}` is the DC bus voltage, :math:`i_\mathrm{ext}` is the 
+external DC current, :math:`i_\mathrm{dc}` is the converter DC current, 
+:math:`C_\mathrm{dc}` is the DC bus capacitance, and :math:`G_\mathrm{dc}` is 
+the conductance of the parallel resistor. The converter DC current is calculated from the converter phase currents and switching states as 
+
+.. math::
+   i_\mathrm{dc} = q_\mathrm{a} i_\mathrm{a} + q_\mathrm{b} i_\mathrm{b}
+   + q_\mathrm{c} i_\mathrm{c}
+   :label: DC_current
+
+.. figure:: figs/dc_bus.svg
+   :width: 100%
+   :align: center
+   :alt: Diagram of the DC-bus model
+   :target: .
+   
+   DC-bus dynamic model.
 
 Six-Pulse Diode Bridge
 ----------------------

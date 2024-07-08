@@ -12,7 +12,7 @@ from motulator.common.model import Subsystem
 from motulator.common.utils._utils import (complex2abc, abc2complex)
 
 # %%
-# TODO: implement simulation of harmonics, negative sequence
+# TODO: implement simulation of harmonics, nonsymmetric faults
 class StiffSource(Subsystem):
     """
     3-phase voltage source model.

@@ -27,7 +27,7 @@ Induction Machine
 
 The induction machine models are provided in the package :mod:`motulator.drive.model`. The models are implemented in stator coordinates. A Γ-equivalent model is used as a base model since it can be extended with the magnetic saturation model in a straightforward manner [#Sle1989]_.
 
-.. figure:: figs/im_gamma.svg
+.. figure:: ../figs/im_gamma.svg
    :width: 100%
    :align: center
    :alt: Gamma-model of an induction machine
@@ -35,7 +35,7 @@ The induction machine models are provided in the package :mod:`motulator.drive.m
 
    Γ model.
 
-.. figure:: figs/im_block.svg
+.. figure:: ../figs/im_block.svg
    :width: 100%
    :align: center
    :alt: Block diagram of an induction machine model
@@ -73,7 +73,7 @@ The same class can also be used with the main-flux saturation models, such as :m
        R_\mathrm{R} &= \left(\frac{L_\mathrm{s}}{L_\mathrm{s} + L_\ell}\right)^2 R_\mathrm{r} \\
        L_\mathrm{M} &=  L_\mathrm{s} - L_\sigma 
 
-   .. figure:: figs/im_inv_gamma.svg
+   .. figure:: ../figs/im_inv_gamma.svg
       :width: 100%
       :align: center
       :alt: Inverse-Gamma model of an induction machine
@@ -88,7 +88,7 @@ Synchronous Machine
 
 Synchronous machine models are provided in the package :mod:`motulator.drive.model`. The models can be parametrized to represent permanent-magnet synchronous machines (PMSMs) and synchronous reluctance machines (SyRMs). 
 
-.. figure:: figs/sm_block_rot.svg
+.. figure:: ../figs/sm_block_rot.svg
    :width: 100%
    :align: center
    :alt: Synchronous machine model
@@ -116,9 +116,9 @@ The electromagnetic torque is
     \tau_\mathrm{M} = \frac{3 n_\mathrm{p}}{2}\mathrm{Im} \left\{\boldsymbol{i}_\mathrm{s} \boldsymbol{\psi}_\mathrm{s}^* \right\}
     :label: sm_torque
 
-Since the machine is fed and observed from stator coordinates, the quantities are transformed accordingly, as shown in the figure below. The mechanical subsystem closes the loop from :math:`\tau_\mathrm{M}` to :math:`\omega_\mathrm{M}`, see  :doc:`/model/mechanics`.
+Since the machine is fed and observed from stator coordinates, the quantities are transformed accordingly, as shown in the figure below. The mechanical subsystem closes the loop from :math:`\tau_\mathrm{M}` to :math:`\omega_\mathrm{M}`, see  :doc:`mechanics`.
 
-.. figure:: figs/sm_block_stat.svg
+.. figure:: ../figs/sm_block_stat.svg
    :width: 100%
    :align: center
    :alt: Synchronous machine model seen from stator coordinates

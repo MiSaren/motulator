@@ -1,7 +1,6 @@
 .. toctree::
    :maxdepth: 2
 
-   system
-   converters
    drive/index
    grid/index
+   ../auto_examples/index
