@@ -127,6 +127,7 @@ class GFLControl(GridConverterControlSystem):
             ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
         ref.i_c = self.current_reference.output(ref)
+
         # Voltage reference generation in synchronous coordinates
         ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, fbk.u_g, par.w_g)
 
@@ -145,8 +146,8 @@ class GFLControl(GridConverterControlSystem):
         super().update(fbk, ref)
         self.current_ctrl.update(ref.T_s, fbk.u_c)
         self.pll.update(ref.u_g_q)
-        if self.on_u_dc:
-            self.dc_bus_volt_ctrl.update(ref.T_s, ref.p_g) 
+        # if self.on_u_dc:
+        #     self.dc_bus_volt_ctrl.update(ref.T_s, ref.p_g)
 
 
 # %%

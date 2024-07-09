@@ -47,16 +47,16 @@ grid_model = model.StiffSource(w_N=par.w_g)
 
 # Uncomment the following two lines to use a dynamic grid model, with a variable DC voltage
 converter = model.InverterWithVariableDC()
-#dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
+dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
 
 # Uncomment the following two lines to use a static grid model, with a fixed DC voltage
 #converter = model.Inverter(u_dc=650)
-dc_model = model.DCBusVoltageSource(u_dc=650)
+#dc_model = model.DCBusVoltageSource(u_dc=650)
 
 mdl = model.dc_bus.DCBusAndLFilterModel(
         converter, grid_filter, grid_model, dc_model)
 
-on_u_dc = False
+on_u_dc = True
 
 # if dc_model is None:
 #     mdl = model.StiffSourceAndLFilterModel(
@@ -101,7 +101,7 @@ ctrl = control.GFLControl(cfg)
 
 if on_u_dc:
     ctrl.dc_bus_volt_ctrl = control.DCBusVoltageController(
-        zeta = cfg.zeta, alpha_dc=cfg.alpha_c)
+        cfg.zeta_dc, cfg.w_0_dc, cfg.p_max)
 # %%
 # Set the time-dependent reference and disturbance signals.
 
@@ -118,7 +118,7 @@ mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
 
 # DC voltage reference
 if on_u_dc:
-    ctrl.u_dc_ref = lambda t: 600 + (t > .02)*(50)
+    ctrl.ref.u_dc = lambda t: 600 + (t > .02)*(50)
    
 # %%
 # Create the simulation object and simulate it.
