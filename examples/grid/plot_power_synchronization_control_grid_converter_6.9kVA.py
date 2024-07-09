@@ -41,7 +41,7 @@ grid_filter = model.LFilter(
 grid_model = model.StiffSource(w_N=mdl_par.w_g)
 converter = model.InverterWithVariableDC()
 
-dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
+#dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
 
 # Uncomment the following two lines to use a static grid model, with a fixed DC voltage
 #converter = model.Inverter(u_dc=650)
