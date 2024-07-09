@@ -7,11 +7,12 @@ from motulator.grid.model._grid_filter import (
     LFilter, LCLFilter)
 
 from motulator.grid.model._grid_volt_source import (
-    StiffSource)
+    StiffSource, FlexSource)
 
 __all__ = [
     "StiffSourceAndGridFilterModel",
     "LFilter",
     "LCLFilter",
     "StiffSource",
+    "FlexSource",
 ]
