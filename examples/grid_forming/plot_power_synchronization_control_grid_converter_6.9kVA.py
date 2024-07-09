@@ -13,6 +13,7 @@ the current oscillations.
 import time
 import numpy as np
 
+from motulator.common.model import Simulation, Inverter
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
@@ -38,7 +39,7 @@ grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
 grid_model = model.StiffSource(w_N=mdl_par.w_g, e_g_abs = mdl_par.U_gN)
 
 # Inverter with constant DC voltage
-converter = model.Inverter(u_dc=650)
+converter = Inverter(u_dc=650)
 
 # Create system model
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
@@ -80,7 +81,7 @@ ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) +
 # Create the simulation object and simulate it.
 
 start_time = time.time()
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop = 1.5)
 stop_time = time.time()
 print(f"Simulation time: {stop_time-start_time:.2f} s")

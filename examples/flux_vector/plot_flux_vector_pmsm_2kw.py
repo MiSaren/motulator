@@ -7,6 +7,7 @@ This example simulates sensorless flux-vector control of a 2.2-kW PMSM drive.
 """
 # %%
 
+from motulator.common.model import Simulation, Inverter
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.drive import model
@@ -26,7 +27,7 @@ mdl_par = SynchronousMachinePars(
     n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
 machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
-converter = model.Inverter(u_dc=540)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
@@ -48,7 +49,7 @@ mdl.mechanics.tau_L = lambda t: (t > .8)*nom.tau*.7
 # %%
 # Create the simulation object and simulate it.
 
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.6)
 
 # %%

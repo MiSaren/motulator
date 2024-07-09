@@ -13,6 +13,7 @@ the current oscillations, enhanced with a reference-feedforward term.
 import time
 import numpy as np
 
+from motulator.common.model import Simulation, Inverter
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
@@ -34,7 +35,7 @@ mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_g=2*np.pi*50, L_f=8e-3)
 
 grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
 grid_model = model.StiffSource(w_N=mdl_par.w_g, e_g_abs = mdl_par.U_gN)
-converter = model.Inverter(u_dc=650)
+converter = Inverter(u_dc=650)
 
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 
@@ -72,7 +73,7 @@ ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) +
 # Create the simulation object and simulate it.
 
 start_time = time.time()
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop = 1.5)
 stop_time = time.time()
 print(f"Simulation time: {stop_time-start_time:.2f} s")
