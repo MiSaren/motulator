@@ -1,16 +1,7 @@
 """
 3-phase AC voltage source models.
 
-Two voltage sources with variable voltage magnitude, to simulate voltage dips
-and symmetrical short circuits are modeled. A stiff model with a constant
-frequency and a dynamic model with the electromechanical dynamics of a
-synchronous generator are considered. In this module, all space vectors are in
-stationary coordinates.
-
-The grid angle theta_g is used 
-    as state variables.
-
-        theta_g = w_N * t
+Peak-valued complex space vectors are used.
 
 """
 from types import SimpleNamespace
@@ -18,53 +9,41 @@ from types import SimpleNamespace
 import numpy as np
 
 from motulator.common.model import Subsystem
-from motulator.common.utils._utils import (complex2abc, abc2complex)
+from motulator.common.utils._utils import (complex2abc, abc2complex, wrap)
 
 # %%
-# TODO: add ability to give frequency as a function, implement simulation of harmonics, negative sequence
-# rename class to ACSource?
+# TODO: implement simulation of harmonics, nonsymmetric faults
 class StiffSource(Subsystem):
     """
-    Grid subsystem.
+    3-phase voltage source model.
 
-    This model is a constant frequency 3-phase voltage source of the AC grid.
+    This model is a 3-phase voltage source for the AC grid. A stiff grid is
+    modeled, where the frequency is given by the user either as a constant
+    or time-dependent function. Grid voltage magnitude can also be a function,
+    to simulate voltage dips and symmetrical short circuits. The complex form
+    of the grid angle (exp_j_theta_g) is used as a state variable.
 
     Parameters
     ----------
     w_N : float
-        grid constant frequency (rad/s).
-    e_g_abs : function
+        Grid nominal frequency (rad/s).
+    e_g_abs : float | callable
         3-phase grid voltage magnitude, phase-to-ground peak value (V).
+    w_g : callable, optional
+        Grid frequency (rad/s) as a function of time, `w_g(t)`. If given, w_g
+        will be used to compute grid voltage angle instead of w_N. The default
+        value is None.
+
     """
 
-    def __init__(self, w_N=2*np.pi*50,
-                 e_g_abs=lambda t: 400*np.sqrt(2/3)):
+    def __init__(self, w_N, e_g_abs, w_g=None):
         super().__init__()
+        self.w_g=w_g
         self.par = SimpleNamespace(w_N=w_N, e_g_abs=e_g_abs)
         # states
         self.state = SimpleNamespace(exp_j_theta_g=complex(1))
         # Store the solutions in these lists
         self.sol_states = SimpleNamespace(exp_j_theta_g=[])
-
-    @property
-    def w_N(self):
-        """Grid frequency (rad/s)."""
-        if callable(self.par.w_N):
-            return self.par.w_N()
-        return self.par.w_N
-
-    def rhs(self):
-        """
-        Compute the state derivatives.
-        
-        Returns
-        -------
-        list, length 1
-            Time derivatives of the state vector.
-            
-        """
-        d_exp_j_theta_g = 1j*self.par.w_N*self.state.exp_j_theta_g
-        return [d_exp_j_theta_g]
 
     def voltages(self, t, theta_g):
         """
@@ -75,19 +54,21 @@ class StiffSource(Subsystem):
         t : float
             Time (s).
         theta_g : float
-            Grid voltage angle (rad)
+            Grid voltage angle (rad).
 
         Returns
         -------
         e_gs: complex
-            grid complex voltage (V).
+            Grid complex voltage (V).
 
         """
 
         # Calculation of the three-phase voltages
-        e_g_a = self.par.e_g_abs(t)*np.cos(theta_g)
-        e_g_b = self.par.e_g_abs(t)*np.cos(theta_g-2*np.pi/3)
-        e_g_c = self.par.e_g_abs(t)*np.cos(theta_g-4*np.pi/3)
+        e_g_abs = self.par.e_g_abs(t) if callable(
+            self.par.e_g_abs) else self.par.e_g_abs
+        e_g_a = e_g_abs*np.cos(theta_g)
+        e_g_b = e_g_abs*np.cos(theta_g-2*np.pi/3)
+        e_g_c = e_g_abs*np.cos(theta_g-4*np.pi/3)
 
         e_gs = abc2complex([e_g_a, e_g_b, e_g_c])
         return e_gs
@@ -96,9 +77,26 @@ class StiffSource(Subsystem):
         """Set output variables."""
         self.out.e_gs = self.voltages(t, np.angle(self.state.exp_j_theta_g))
 
+    def set_inputs(self, t):
+        """Set input variables."""
+        self.inp.w_g = self.w_g(t) if callable(self.w_g) else self.par.w_N
+
+    def rhs(self):
+        """
+        Compute the state derivatives.
+        
+        Returns
+        -------
+        Complex list, length 1
+            Time derivative of the complex state vector, [d_exp_j_theta_g].
+            
+        """
+        d_exp_j_theta_g = 1j*self.inp.w_g*self.state.exp_j_theta_g
+        return [d_exp_j_theta_g]
+
     def meas_voltages(self, t):
         """
-        Measure the phase voltages at the end of the sampling period.
+        Measure the grid phase voltages.
         
         Parameters
         ----------
@@ -111,111 +109,72 @@ class StiffSource(Subsystem):
             Phase voltages (V).
 
         """
-        # Grid voltage
         e_g_abc = complex2abc(self.voltages(t, np.angle(self.state.exp_j_theta_g)))
         return e_g_abc
 
     def post_process_states(self):
         """Post-process the solution."""
+        if callable(self.w_g):
+            self.data.w_g = self.w_g(self.data.t)
+        else:
+            self.data.w_g = np.full(np.size(self.data.t), self.par.w_N)
         self.data.theta_g = np.angle(self.data.exp_j_theta_g)
         self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)
 
 
-# %%
-# TODO: migrate AC flex source to a separate example
 class FlexSource(Subsystem):
     """
-    Grid subsystem.
-    
+    3-phase AC grid including synchronous generator electromechanical dynamics.
+
     This models the 3-phase voltage source of the AC grid while taking into
     account the electromechanical dynamics of a typical grid generated by the 
-    synchronous generators.
-    
-    More information about the model can be found in [#ENT2013].
-    
-    [#ENT2013] : ENTSO-E, Documentation on Controller Tests in Test Grid
-    Configurations, Technical Report, 26.11.2013.
+    synchronous generators. More information about the model can be found in
+    [#ENT2013]_.
     
     Parameters
     ----------
-    T_D : float
-        turbine delay time constant (s).
-    T_N : float
-        turbine derivative time constant (s).
-    H_g : float
-        grid inertia constant (s).
-    r_d : float
-        primary frequency droop control gain (p.u.).
-    T_gov : float
-        governor time constant (s).
     w_N : float
-        grid constant frequency (rad/s).
-    S_grid : float
-        grid rated power (VA).
-    e_g_abs : function
+        Grid nominal frequency (rad/s).
+    e_g_abs : float | callable
         3-phase grid voltage magnitude, phase-to-ground peak value (V).
-    p_m_ref : function
-        mechanical power output reference (W).
-    p_e : function
-        electrical power disturbance (W).
-        
-    """
-    def __init__(
-            self, T_D=10,
-            T_N=3,
-            H_g=3,
-            D_g=0,
-            r_d=.05,
-            T_gov=0.5,
-            w_N=2*np.pi*50,
-            S_grid =500e6,
-            e_g_abs=lambda t: 400*np.sqrt(2/3),
-            p_m_ref=lambda t: 0,
-            p_e=lambda t: 0):
-        
-        super().__init__()
-        self.par = SimpleNamespace(
-            T_D=T_D, T_N=T_N, H_g=H_g, D_g=D_g, r_d=r_d, T_gov=T_gov, w_N=w_N,
-            S_grid=S_grid, e_g_abs=e_g_abs, p_m_ref=p_m_ref, p_e=p_e)
-        
-        # Initial values
-        self.w_g0 = w_N
-        self.err_w_g0, self.p_gov0, self.x_turb0, self.theta_g0 = 0, 0, 0, 0
+    S_grid : float
+        Grid rated power (VA).
+    T_D : float, optional
+        Turbine delay time constant (s). Default is 10.
+    T_N : float, optional
+        Turbine derivative time constant (s). Default is 3.
+    H_g : float, optional
+        Grid inertia constant (s). Default is 3.
+    r_d : float, optional
+        Primary frequency droop control gain (p.u.). Default is 0.05.
+    T_gov : float, optional
+        Governor time constant (s). Default is 0.5.
+    p_m_ref : callable, optional
+        Mechanical power output reference (W). Default is 0.
+    p_e : callable, optional
+        Electrical power disturbance (W). Default is 0.
 
-    def f(self, t, err_w_g, p_gov, x_turb):
-        """
-        Compute the state derivatives.
-        
-        Parameters
-        ----------
-        t : float
-            Time (s).
-        err_w_g : float
-            grid angular speed deviation (mechanical rad/s).
-        p_gov : float
-            governor output power (W).
-        x_turb : float
-            turbine state variable (W).
-        p_e : float
-            electrical power disturbance (W).
-        Returns
-        -------
-        list, length 4
-            Time derivatives of the state vector.
-            
-        """
-        # calculation of mechanical power from the turbine output
-        p_m = (self.T_N/self.T_D)*p_gov + (1-(self.T_N/self.T_D))*x_turb
-        # swing equation
-        p_diff = (p_m - self.p_e(t))/self.S_grid # in per units
-        derr_w_g = self.w_N*(p_diff - self.D_g*err_w_g)/(2*self.H_g)
-        # governor dynamics
-        dp_gov = (self.p_m_ref(t) - (1/self.r_d)*err_w_g - p_gov) / self.T_gov
-        # turbine dynamics (lead-lag)
-        dx_turb = (p_gov - x_turb)/self.T_D
-        # integration of the angle
-        dtheta_g = self.w_N + err_w_g
-        return [derr_w_g, dp_gov, dx_turb, dtheta_g]
+    References
+    ----------
+    .. [#ENT2013] ENTSO-E, Documentation on Controller Tests in Test Grid
+        Configurations, Technical Report, 26.11.2013.
+    
+    """
+
+    def __init__(self, w_N, e_g_abs, S_grid, T_D=10, T_N=3, H_g=3, D_g=0,
+                 r_d=.05, T_gov=0.5, p_m_ref=lambda t: 0, p_e=lambda t: 0):
+        super().__init__()
+        self.p_m_ref = p_m_ref
+        self.p_e = p_e
+        self.par = SimpleNamespace(T_D=T_D, T_N=T_N, H_g=H_g, D_g=D_g,
+                                   r_d=r_d*w_N/S_grid, T_gov=T_gov, w_N=w_N,
+                                   S_grid=S_grid, e_g_abs=e_g_abs)
+        # States
+        self.state = SimpleNamespace(err_w_g=0, p_gov=0, x_turb=0,
+                                     theta_g=0)
+        # Store the solutions in these lists
+        self.sol_states = SimpleNamespace(err_w_g=[], p_gov=[],
+                                          x_turb=[], theta_g=[])
 
     def voltages(self, t, theta_g):
         """
@@ -226,27 +185,71 @@ class FlexSource(Subsystem):
         t : float
             Time.
         theta_g : float
-            grid electrical angle (rad).
+            Grid electrical angle (rad).
 
         Returns
         -------
         e_gs: complex
-            grid complex voltage (V).
+            Grid complex voltage (V).
 
         """
-        # Calculation of the three-phase voltage
-        e_g_a = self.e_g_abs(t)*np.cos(theta_g)
-        e_g_b = self.e_g_abs(t)*np.cos(theta_g-2*np.pi/3)
-        e_g_c = self.e_g_abs(t)*np.cos(theta_g-4*np.pi/3)
 
+        # Calculation of the three-phase voltages
+        e_g_abs = self.par.e_g_abs(t) if callable(
+            self.par.e_g_abs) else self.par.e_g_abs
+        e_g_a = e_g_abs*np.cos(theta_g)
+        e_g_b = e_g_abs*np.cos(theta_g-2*np.pi/3)
+        e_g_c = e_g_abs*np.cos(theta_g-4*np.pi/3)
 
         e_gs = abc2complex([e_g_a, e_g_b, e_g_c])
         return e_gs
 
+    def set_outputs(self, t):
+        """Set output variables."""
+        self.out.e_gs = self.voltages(t, wrap(self.state.theta_g.real))
+
+    def set_inputs(self, t):
+        """Set input variables."""
+        self.inp.p_m_ref = self.p_m_ref(t)
+        self.inp.p_e = self.p_e(t)
+
+    def rhs(self):
+        """
+        Compute the state derivatives.
+
+        Returns
+        -------
+        Complex list, length 4
+            Time derivative of the complex state vector,
+            [d_err_w_g, d_p_gov, d_x_turb, d_theta_g].
+
+        """
+        par, state, inp = self.par, self.state, self.inp
+        err_w_g = state.err_w_g
+        p_gov = state.p_gov
+        x_turb = state.x_turb
+
+        # calculation of mechanical power from the turbine output
+        p_m = (par.T_N/par.T_D)*p_gov + (1 - (par.T_N/par.T_D))*x_turb
+        # swing equation
+        p_diff = (p_m - inp.p_e)/par.S_grid # in per units
+        d_err_w_g = par.w_N*(p_diff - par.D_g*err_w_g)/(2*par.H_g)
+        # governor dynamics
+        d_p_gov = (inp.p_m_ref - (1/par.r_d)*err_w_g - p_gov)/par.T_gov
+        # turbine dynamics (lead-lag)
+        d_x_turb = (p_gov - x_turb)/par.T_D
+        # integration of the angle
+        d_theta_g = par.w_N + err_w_g
+        return [d_err_w_g, d_p_gov, d_x_turb, d_theta_g]
 
     def meas_voltages(self, t):
         """
-        Measure the phase voltages at the end of the sampling period.
+        Measure the grid phase voltages.
+        
+        Parameters
+        ----------
+        t : float
+            Time (s).
 
         Returns
         -------
@@ -254,36 +257,37 @@ class FlexSource(Subsystem):
             Phase voltages (V).
 
         """
-        # Grid voltage
-        e_g_abc = complex2abc(self.voltages(t))
+        e_g_abc = complex2abc(self.voltages(t, self.state.theta_g.real))
         return e_g_abc
-
 
     def meas_freq(self):
         """
         Measure the grid frequency.
-        
-        This returns the grid frequency at the end of the sampling period.
-        
+
         Returns
         -------
-        w_g0 : float
-            Grid angular speed (rad/s).
-            
+        w_g : float
+            Grid angular frequency (rad/s).
+
         """
-        w_g0 = self.w_g0
-        return w_g0
+        w_g = self.par.w_N + self.state.err_w_g.real
+        return w_g
 
     def meas_angle(self):
         """
         Measure the grid angle.
-        
-        This returns the grid angle at the end of the sampling period.
-        
+
         Returns
         -------
-        theta_g0 : float
-            grid electrical angle (rad).
-            
+        theta_g : float
+            Grid electrical angle (rad).
+
         """
-        return self.theta_g0
+        theta_g = wrap(self.state.theta_g.real)
+        return theta_g
+
+    def post_process_states(self):
+        """Post-process the solution."""
+        self.data.w_g = self.par.w_N + self.data.err_w_g.real
+        self.data.theta_g = wrap(self.data.theta_g.real)
+        self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)

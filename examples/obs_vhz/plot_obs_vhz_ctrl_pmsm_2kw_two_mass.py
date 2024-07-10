@@ -14,10 +14,13 @@ this example.
 import numpy as np
 import matplotlib.pyplot as plt
 
+from motulator.common.model import Simulation, Inverter
+from motulator.common.utils import BaseValues, NominalValues, Sequence
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, Sequence, SynchronousMachinePars,
+    plot, SynchronousMachinePars,
     TwoMassMechanicalSystemPars)
 
 # %%
@@ -34,7 +37,7 @@ mdl_par = SynchronousMachinePars(
 machine = model.SynchronousMachine(mdl_par)
 mdl_mec_par = TwoMassMechanicalSystemPars(J_M=.005, J_L=.005, K_S=700, C_S=.01)
 mechanics = model.TwoMassMechanicalSystem(mdl_mec_par)
-converter = model.Inverter(u_dc=540)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
@@ -60,7 +63,7 @@ mdl.mechanics.tau_L = Sequence(times, values)
 # %%
 # Create the simulation object and simulate it.
 
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.2)
 # sphinx_gallery_thumbnail_number = 3
 plot(sim, base)  # Plot results in per-unit values

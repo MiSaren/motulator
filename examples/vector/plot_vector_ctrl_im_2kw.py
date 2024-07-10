@@ -9,10 +9,13 @@ system model, while the control system assumes constant parameters.
 """
 # %%
 
+from motulator.common.model import Simulation, Inverter
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, InductionMachinePars,
+    plot, InductionMachinePars,
     InductionMachineInvGammaPars)
 
 # %%
@@ -42,7 +45,7 @@ mdl_par = InductionMachinePars(n_p=2, R_s=3.7, R_r=2.5, L_ell=.023, L_s=L_s)
 # mdl_par = InductionMachinePars.from_inv_gamma_model_pars(par)
 machine = model.InductionMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
-converter = model.Inverter(u_dc=540)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 # mdl.pwm = model.CarrierComparison()  # Try to enable the PWM model
 # mdl.delay = model.Delay(2)  # Try longer computational delay
@@ -79,7 +82,7 @@ mdl.mechanics.tau_L = lambda t: (t > .75)*nom.tau
 # %%
 # Create the simulation object and simulate it.
 
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.5)
 
 # %%

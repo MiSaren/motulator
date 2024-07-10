@@ -8,7 +8,6 @@ models are implemented with space vectors in stationary coordinates.
 """
 from types import SimpleNamespace
 
-import numpy as np
 from motulator.common.utils._utils import complex2abc
 from motulator.common.model import Subsystem
 
@@ -20,24 +19,28 @@ class LFilter(Subsystem):
     """
     Dynamic model for an inductive L filter and an inductive-resistive grid.
 
-    An L filter and an inductive-resistive grid impedance, between the converter 
-    and grid voltage sources, are modeled combining their inductances and series
-    resistances in a state equation. The grid current is used as a state 
-    variable. The point-of-common-coupling (PCC) voltage between the L filter 
-    and the grid impedance is separately calculated.
+    An L filter and an inductive-resistive grid impedance, between the
+    converter and grid voltage sources, are modeled combining their inductances
+    and series resistances in a state equation. The grid current is used as a
+    state variable. The point-of-common-coupling (PCC) voltage between the L
+    filter and the grid impedance is separately calculated.
 
     Parameters
     ----------
+    U_gN : float
+        Grid nominal voltage (V), phase-to-ground peak value. Needed to set the
+        initial value of PCC voltage.
     L_f : float
-        Filter inductance (H)
-    R_f : float
-        Filter series resistance (Ω)
-    L_g : float
-        Grid inductance (H)
-    R_g : float
-        Grid resistance (Ω)
+        Filter inductance (H).
+    R_f : float, optional
+        Filter series resistance (Ω). The default value is 0.
+    L_g : float, optional
+        Grid inductance (H). The default value is 0.
+    R_g : float, optional
+        Grid resistance (Ω). The default value is 0.
 
     """
+
     def __init__(self, U_gN, L_f, R_f=0, L_g=0, R_g=0):
         super().__init__()
         self.par = SimpleNamespace(L_f=L_f, R_f=R_f, L_g=L_g, R_g=R_g)
@@ -48,32 +51,31 @@ class LFilter(Subsystem):
 
     def set_outputs(self, _):
         """Set output variables."""
-        state, out = self.state, self.out
-        u_gs = (self.par.L_g*self.inp.u_cs + self.par.L_f*self.inp.e_gs +
-            (self.par.R_g*self.par.L_f - self.par.R_f*self.par.L_g)*
-            self.state.i_gs)/(self.par.L_g+self.par.L_f)
+        state, par, inp, out = self.state, self.par, self.inp, self.out
+        u_gs = (par.L_g*inp.u_cs + par.L_f*inp.e_gs +
+            (par.R_g*par.L_f - par.R_f*par.L_g)*
+            state.i_gs)/(par.L_g+par.L_f)
         out.i_gs, out.i_cs, out.u_gs = state.i_gs, state.i_gs, u_gs
 
     def rhs(self):
-        # pylint: disable=R0913
         """
         Compute the state derivatives.
 
         Returns
         -------
         complex list, length 1
-            Time derivative of the complex state vector, [di_gs]
+            Time derivative of the complex state vector, [d_i_gs].
 
         """
         state, inp, par = self.state, self.inp, self.par
         L_t = par.L_f + par.L_g
         R_t = par.R_f + par.R_g
-        di_gs = (inp.u_cs - inp.e_gs - R_t*state.i_gs)/L_t
-        return [di_gs]
+        d_i_gs = (inp.u_cs - inp.e_gs - R_t*state.i_gs)/L_t
+        return [d_i_gs]
 
     def meas_currents(self):
         """
-        Measure the phase currents at the end of the sampling period.
+        Measure the phase currents.
 
         Returns
         -------
@@ -87,12 +89,12 @@ class LFilter(Subsystem):
 
     def meas_pcc_voltage(self):
         """
-        Measure the phase voltages at PCC at the end of the sampling period.
+        Measure the phase voltages at the point of common coupling (PCC).
 
         Returns
         -------
         u_g_abc : 3-tuple of floats
-            Phase voltage at the point of common coupling (V).
+            Phase voltages at the PCC (V).
 
         """
         # PCC phase voltages from the corresponding space vector
@@ -105,16 +107,16 @@ class LFilter(Subsystem):
 
     def post_process_with_inputs(self):
         """Post-process data with inputs."""
-        data=self.data
-        data.u_gs=(self.par.L_g*data.u_cs + self.par.L_f*data.e_gs +
+        data = self.data
+        data.u_gs = (self.par.L_g*data.u_cs + self.par.L_f*data.e_gs +
             (self.par.R_g*self.par.L_f - self.par.R_f*self.par.L_g)*
             data.i_gs)/(self.par.L_g+self.par.L_f)
 
 
 # %%
-class LCLFilter:
+class LCLFilter(Subsystem):
     """
-    Dynamic model for an inductive-capacitive-inductive (LCL) filter and a grid.
+    Dynamic model for an inductive-capacitive-inductive (LCL) filter and grid.
 
     An LCL filter and an inductive-resistive grid impedance, between the 
     converter and grid voltage sources, are modeled using converter current, 
@@ -125,108 +127,74 @@ class LCLFilter:
 
     Parameters
     ----------
+    U_gN : float
+        Grid nominal voltage (V), phase-to-ground peak value. Needed to set the
+        initial values of capacitor and PCC voltages.
     L_fc : float
-        Converter-side inductance of the LCL filter (H)
-    R_fc : float
-        Converter-side series resistance (Ω)
+        Converter-side inductance of the LCL filter (H).
     L_fg : float
-        Grid-side inductance of the LCL filter (H)
-    R_fg : float
-        Grid-side series resistance (Ω)
+        Grid-side inductance of the LCL filter (H).
     C_f : float
-        Capacitance of the LCL Filter (F)
-    G_f : float
-        Conductance of a resistor in parallel with the LCL-filter capacitor (S)
-    L_g : float
-        Grid inductance (H)
-    R_g : float
-        Grid resistance (Ω)
-
+        Capacitance of the LCL Filter (F).
+    R_fc : float, optional
+        Converter-side series resistance (Ω). The default value is 0.
+    R_fg : float, optional
+        Grid-side series resistance (Ω). The default value is 0.
+    G_f : float, optional
+        Conductance of a resistor in parallel with the LCL-filter capacitor
+        (S). The default value is 0.
+    L_g : float, optional
+        Grid inductance (H). The default value is 0.
+    R_g : float, optional
+        Grid resistance (Ω). The default value is 0.
 
     """
-    def __init__(
-            self, U_gN=400*np.sqrt(2/3), L_fc=6e-3, R_fc=0, L_fg=3e-3,
-            R_fg=0, C_f=10e-6, G_f=0, L_g=0, R_g=0):
-        self.L_fc = L_fc
-        self.R_fc = R_fc
-        self.L_fg = L_fg
-        self.R_fg = R_fg
-        self.C_f = C_f
-        self.G_f = G_f
-        self.L_g = L_g
-        self.R_g = R_g
-        # Storing useful variables
-        self.u_gs0 = U_gN + 0j
-        # Initial values
-        self.i_cs0 = 0j
-        self.i_gs0 = 0j
-        self.u_fs0 = U_gN + 0j
 
+    def __init__(self, U_gN, L_fc, L_fg, C_f,
+                 R_fc=0, R_fg=0, G_f=0, L_g=0, R_g=0):
+        super().__init__()
+        self.par = SimpleNamespace(L_fc=L_fc, R_fc=R_fc, L_fg=L_fg, R_fg=R_fg,
+                                    C_f=C_f, G_f=G_f, L_g=L_g, R_g=R_g)
+        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=U_gN+0j)
+        self.out = SimpleNamespace(u_gs=U_gN+0j)
+        self.state = SimpleNamespace(i_cs=0+0j, u_fs=U_gN+0j, i_gs=0+0j)
+        self.sol_states = SimpleNamespace(i_cs=[], u_fs=[], i_gs=[])
 
-    def pcc_voltages(self, i_gs, u_fs, e_gs):
-        """
-        Compute the PCC voltage between the LCL filter and the grid impedance.
+    def set_outputs(self, _):
+        """Set output variables."""
+        state, par, inp, out = self.state, self.par, self.inp, self.out
+        u_gs = (par.L_fg*inp.e_gs + par.L_g*state.u_fs + (par.R_g*par.L_fg -
+                par.R_fg*par.L_g)*state.i_gs)/(par.L_g+par.L_fg)
+        out.i_cs, out.u_fs, out.i_gs, out.u_gs = (state.i_cs, state.u_fs,
+                                                state.i_gs, u_gs)
 
-        Parameters
-        ----------
-        i_gs : complex
-            Grid current (A).
-        u_fs : complex
-            LCL-filter capacitor voltage (V).
-        e_gs : complex
-            Grid voltage (V).
-
-        Returns
-        -------
-        u_gs : complex
-            Voltage at the point of common coupling (V).
-
-        """
-        # PCC voltage in alpha-beta coordinates
-        u_gs = (self.L_fg*e_gs + self.L_g*u_fs + 
-            (self.R_g*self.L_fg-self.R_fg*self.L_g)*i_gs)/(self.L_g+self.L_fg)
-
-        return u_gs
-
-    def f(self, i_cs, u_fs, i_gs, u_cs, e_gs):
-        # pylint: disable=R0913
+    def rhs(self):
         """
         Compute the state derivatives.
-
-        Parameters
-        ----------
-        i_cs : complex
-            Converter current (A).
-        u_fs : complex
-            LCL-filter capacitor voltage (V).
-        i_gs : complex
-            Grid current (A).
-        u_cs : complex
-            Converter voltage (V).
-        e_gs : complex
-            Grid voltage (V).
 
         Returns
         -------
         complex list, length 3
-            Time derivative of the complex state vector, [di_cs, du_fs, di_gs]
+            Time derivative of the complex state vector,
+            [d_i_cs, d_u_fs, d_i_gs].
 
         """
+        state, par, inp = self.state, self.par, self.inp
         # Converter current dynamics
-        di_cs = (u_cs - u_fs - self.R_fc*i_cs)/self.L_fc
+        d_i_cs = (inp.u_cs - state.u_fs - par.R_fc*state.i_cs)/par.L_fc
         # Capacitor voltage dynamics
-        du_fs = (i_cs - i_gs - self.G_f*u_fs)/self.C_f
+        d_u_fs = (state.i_cs - state.i_gs - par.G_f*state.u_fs)/par.C_f
         # Calculation of the total grid-side impedance
-        L_t = self.L_fg + self.L_g
-        R_t = self.R_fg + self.R_g
+        L_t = par.L_fg + par.L_g
+        R_t = par.R_fg + par.R_g
         # Grid current dynamics
-        di_gs = (u_fs - e_gs - R_t*i_gs)/L_t
+        d_i_gs = (state.u_fs - inp.e_gs - R_t*state.i_gs)/L_t
 
-        return [di_cs, du_fs, di_gs]
+        return [d_i_cs, d_u_fs, d_i_gs]
 
     def meas_currents(self):
         """
-        Measure the converter phase currents at the end of the sampling period.
+        Measure the converter phase currents.
 
         Returns
         -------
@@ -235,13 +203,13 @@ class LCLFilter:
 
         """
         # Converter phase currents from the corresponding space vector
-        i_c_abc = complex2abc(self.i_cs0)
+        i_c_abc = complex2abc(self.state.i_cs)
 
         return i_c_abc
 
     def meas_grid_currents(self):
         """
-        Measure the grid phase currents at the end of the sampling period.
+        Measure the grid phase currents.
 
         Returns
         -------
@@ -250,33 +218,39 @@ class LCLFilter:
 
         """
         # Grid phase currents from the corresponding space vector
-        i_g_abc = complex2abc(self.i_gs0)
+        i_g_abc = complex2abc(self.state.i_gs)
         return i_g_abc
 
     def meas_cap_voltage(self):
         """
-        Measure the capacitor phase voltages at the end of the sampling period.
+        Measure the capacitor phase voltages.
 
         Returns
         -------
         u_f_abc : 3-tuple of floats
             Phase voltages of the LCL filter capacitor (V).
 
-        """  
+        """
         # Capacitor phase voltages from the corresponding space vector
-        u_f_abc = complex2abc(self.u_fs0)
+        u_f_abc = complex2abc(self.state.u_fs)
         return u_f_abc
 
     def meas_pcc_voltage(self):
         """
-        Measure the PCC voltages at the end of the sampling period.
+        Measure the phase voltages at the point of common coupling (PCC).
 
         Returns
         -------
         u_g_abc : 3-tuple of floats
-            Phase voltages at the point of common coupling (V).
+            Phase voltages at the PCC (V).
 
         """
         # PCC phase voltages from the corresponding space vector
-        u_g_abc = complex2abc(self.u_gs0)
+        u_g_abc = complex2abc(self.out.u_gs)
         return u_g_abc
+
+    def post_process_with_inputs(self):
+        """Post-process data with inputs."""
+        data, par = self.data, self.par
+        data.u_gs = (par.L_fg*data.e_gs+par.L_g*data.u_fs+(par.R_g*par.L_fg-
+                    par.R_fg*par.L_g)*data.i_gs)/(par.L_g+par.L_fg)

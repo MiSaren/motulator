@@ -10,10 +10,13 @@ drive.
 
 import time
 
+from motulator.common.model import Simulation, Inverter
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, SynchronousMachinePars)
+    plot, SynchronousMachinePars)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -28,7 +31,7 @@ mdl_par = SynchronousMachinePars(
     n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
 machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
-converter = model.Inverter(u_dc=540)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
@@ -53,7 +56,7 @@ mdl.mechanics.tau_L = lambda t: (t > .8)*.7*nom.tau
 
 # Simulate the system and plot results in per-unit values
 start_time = time.time()
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.4)
 stop_time = time.time()
 print(f"Simulation time: {stop_time-start_time:.2f} s")

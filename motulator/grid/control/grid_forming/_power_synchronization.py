@@ -1,19 +1,47 @@
-"""Power synchronization control for grid-connected converters"""
+"""Power synchronization control for grid-connected converters."""
 
 # %%
 from dataclasses import dataclass
 
 import numpy as np
 
+from motulator.common.utils import wrap
+
 from motulator.grid.control import GridConverterControlSystem
 from motulator.grid.utils import GridModelPars
-from motulator.common.control import PWM
-from motulator.common.utils import wrap
+
 
 # %%
 @dataclass
 class PSCControlCfg:
-    """Power synchronization control configuration"""
+    """
+    Power synchronization control configuration.
+
+    Parameters
+    ----------
+    par : GridModelPars
+        Grid model parameters.
+    T_s : float, optional
+        Sampling period of the controller (s). Default is 1/(16e3).
+    on_rf : bool, optional
+        Enable reference-feedforward for the control. Default is False.
+    on_u_dc : bool, optional
+        Enable DC-bus voltage control mode. Default is False.
+    on_u_g : bool, optional
+        Enable control of PCC voltage. Default is False (converter output
+        voltage is controlled).
+    i_max : float, optional
+        Maximum current modulus (A). Default is 20.
+    R_a : float, optional
+        Damping resistance (Ω). Default is 4.6.
+    k_scal : float, optional
+        Scaling ratio of the space vector transformation. Default is 3/2.
+    w_0_cc : float, optional
+        Current controller undamped natural frequency (rad/s).
+        Default is 2*pi*5.
+    K_cc : float, optional
+        Current controller low-pass filter gain. Default is 1.
+    """
 
     par: GridModelPars
     T_s: float = 1/(16e3)
@@ -90,7 +118,7 @@ class PSCControl(GridConverterControlSystem):
             ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
         # Voltage magnitude reference
-        ref.U = self.ref.U(ref.t)
+        ref.U = self.ref.U(ref.t) if callable(self.ref.U) else self.ref.U
 
         # Calculation of power droop
         fbk.w_c = par.w_g + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
@@ -126,7 +154,12 @@ class PSCCurrentController:
     
     It is important to note that this block uses P-type controller and can thus
     encounter steady-state error when the current reference is saturated.
-        
+
+    Parameters
+    ----------
+    cfg : PSCControlCfg
+        Model and controller configuration parameters.
+      
     """
 
     def __init__(self, cfg):

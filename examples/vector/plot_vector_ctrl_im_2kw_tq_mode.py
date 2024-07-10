@@ -9,10 +9,13 @@ in torque-control mode.
 # %%
 import numpy as np
 
+from motulator.common.model import Simulation, Inverter
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    BaseValues, NominalValues, plot, InductionMachinePars,
+    plot, InductionMachinePars,
     InductionMachineInvGammaPars)
 
 # %%
@@ -31,7 +34,7 @@ mdl_par = InductionMachinePars.from_inv_gamma_model_pars(par)
 machine = model.InductionMachine(mdl_par)
 # Use externally specified actual speed w_M(t), defined subsequently below
 mechanics = model.ExternalRotorSpeed()
-converter = model.Inverter(u_dc=540)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
@@ -57,7 +60,7 @@ mdl.mechanics.w_M = lambda t: .5*(base.w/base.n_p)*np.sin(2*np.pi*1*t)
 # %%
 # Create the simulation object and simulate it.
 
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=2)
 
 # %%

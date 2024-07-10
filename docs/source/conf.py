@@ -53,6 +53,9 @@ autoapi_options = [
     "imported-members",
 ]  # "private-members", "imported-members", "undoc-members", "special-members",
 
+# Add the autoapi_ignore option to exclude specific modules
+#autoapi_ignore = ["grid/control/grid_following"]
+
 autoapi_python_class_content = "class"  # "both"
 autoapi_keep_files = True
 autoapi_add_toctree_entry = False
@@ -66,6 +69,7 @@ sphinx_gallery_conf = {
     "auto_examples",  # path to where to save gallery generated output
     "nested_sections":
     True,
+    'plot_gallery': 'False', # do not execute example scripts
     "subsection_order":
     ExplicitOrder([
         "../../examples/vector",
@@ -73,6 +77,8 @@ sphinx_gallery_conf = {
         "../../examples/obs_vhz",
         "../../examples/flux_vector",
         "../../examples/signal_inj",
+        "../../examples/grid_forming",
+        "*"
     ]),
 }
 
