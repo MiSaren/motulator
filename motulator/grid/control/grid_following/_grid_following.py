@@ -50,6 +50,8 @@ class GFLControlCfg:
         damping ratio of the DC-voltage controller. The default is 1.
     w_0_dc : float, optional
         controller undamped natural frequency in rad/s. The default is 2*np.pi*30.
+    overmodulation : str, optional
+        overmodulation method. The default is "MPE".
     """
 
     par: GridModelPars
@@ -67,6 +69,7 @@ class GFLControlCfg:
     p_max: float = 10e3
     zeta_dc: float = 1
     w_0_dc: float = 2*np.pi*30
+    overmodulation: str = "MPE"
 
     def __post_init__(self):
         par = self.par
@@ -156,7 +159,7 @@ class GFLControl(GridConverterControlSystem):
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
         
         # get the duty ratios from the PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g)
+        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g, self.cfg.overmodulation)
 
         return ref
     
@@ -242,8 +245,6 @@ class PLL:
         # Definition of the error using the q-axis voltage
         u_gq = np.imag(u_g)
 
-        # Low pass filter for the feedforward PCC voltage:
-        #u_filt = self.u_filt
 
         # Absolute value of the grid-voltage vector
         abs_ug = np.abs(u_g)

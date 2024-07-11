@@ -26,6 +26,11 @@ class PWM:
     k_comp : float, optional
         Compensation factor for the delay effect on the voltage vector angle. 
         The default is 1.5.
+    overmodulation : str, optional
+        Overmodulation method. The default is Minimum Magnitude Error "MME".
+        For grid-connected converters, the Minimum Phase Error "MPE" is recommended.
+
+    
 
     References
     ----------
@@ -39,11 +44,12 @@ class PWM:
     
     """
 
-    def __init__(self, six_step=False, k_comp=1.5):
+    def __init__(self, six_step=False, k_comp=1.5, overmodulation="MME"):
         self.six_step = six_step
         self.k_comp = k_comp
         self.realized_voltage = 0
         self._old_u_cs = 0
+        self.overmodulation = overmodulation
 
     @staticmethod
     def six_step_overmodulation(ref_u_cs, u_dc):
@@ -99,7 +105,7 @@ class PWM:
         return ref_u_cs
 
     @staticmethod
-    def duty_ratios(ref_u_cs, u_dc):
+    def duty_ratios(ref_u_cs, u_dc, overmodulation="MME"):
         """
         Compute the duty ratios for three-phase space-vector PWM.
 
@@ -112,6 +118,9 @@ class PWM:
             Converter voltage reference (V) in stationary coordinates.
         u_dc : float
             DC-bus voltage (V).
+        overmodulation : str, optional
+            Overmodulation method. The default is Minimum Magnitude Error "MME".
+            For grid-connected converters, the Minimum Phase Error "MPE" is recommended.
 
         Returns
         -------
@@ -126,21 +135,20 @@ class PWM:
         u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
         u_abc -= u_0
 
-        # Uncommenting the following lines results in minimum-phase-error
-        # overmodulation. See [#Hav1999]_ for a comparison of the methods.
-        # m = (2./u_dc)*np.amax(u_abc)
-        # if m > 1:
-        #    u_abc = u_abc/m
+        if overmodulation == "MPE":
+            m = (2./u_dc)*np.amax(u_abc)
+            if m > 1:
+                u_abc = u_abc/m
 
         # Duty ratios
         d_abc = .5 + u_abc/u_dc
 
-        # Minimum-amplitude-error overmodulation
-        d_abc = np.clip(d_abc, 0, 1)
+        if overmodulation == "MME":
+            d_abc = np.clip(d_abc, 0, 1)
 
         return d_abc
 
-    def output(self, T_s, ref_u_cs, u_dc, w):
+    def output(self, T_s, ref_u_cs, u_dc, w, overmodulation):
         """
         Compute the duty ratios and the limited voltage reference.
 
@@ -154,6 +162,8 @@ class PWM:
             DC-bus voltage (V).
         w : float
             Angular speed of synchronous coordinates (rad/s).
+        overmodulation : str, optional
+            Overmodulation method. The default is Minimum Magnitude Error "MME".
 
         Returns
         -------
@@ -173,7 +183,7 @@ class PWM:
             ref_u_cs = self.six_step_overmodulation(ref_u_cs, u_dc)
 
         # Duty ratios
-        d_abc = self.duty_ratios(ref_u_cs, u_dc)
+        d_abc = self.duty_ratios(ref_u_cs, u_dc, overmodulation)
 
         # Limited voltage reference
         u_cs = abc2complex(d_abc)*u_dc
@@ -199,8 +209,8 @@ class PWM:
         self.realized_voltage = .5*(self._old_u_cs + u_cs)
         self._old_u_cs = u_cs
 
-    def __call__(self, T_s, ref_u_cs, u_dc, w):
-        d_abc, u_cs = self.output(T_s, ref_u_cs, u_dc, w)
+    def __call__(self, T_s, ref_u_cs, u_dc, w, overmodulation="MME"):
+        d_abc, u_cs = self.output(T_s, ref_u_cs, u_dc, w, overmodulation)
         self.update(u_cs)
         return d_abc
 

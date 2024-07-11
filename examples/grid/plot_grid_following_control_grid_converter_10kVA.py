@@ -23,6 +23,7 @@ from motulator.grid.utils import (
     GridModelPars, plot_grid)
 from motulator.common.utils import (
     BaseValues, NominalValues)
+from motulator.grid.control import DCBusVoltageController
 
 # To check the computation time of the program
 start_time = time.time()
@@ -49,12 +50,12 @@ grid_filter = model.LFilter(U_gN=par.U_gN ,R_f=0 ,L_f=par.L_f, L_g=0, R_g=0)
 grid_model = model.StiffSource(w_N=par.w_g, e_g_abs=par.U_gN)
 
 # Uncomment the following two lines to use a dynamic grid model, with a variable DC voltage
-converter = Inverter(u_dc = 650)
+converter = Inverter(u_dc = 600, C_dc=par.C_dc)
 
 mdl = model.StiffSourceAndGridFilterModel(
     converter, grid_filter, grid_model)
 
-on_u_dc = False
+on_u_dc = True
 
 # if dc_model is None:
 #     mdl = model.StiffSourceAndLFilterModel(
@@ -98,14 +99,14 @@ cfg = control.GFLControlCfg(
 ctrl = control.GFLControl(cfg)
 
 if on_u_dc:
-    ctrl.dc_bus_volt_ctrl = control.DCBusVoltageController(
+    ctrl.dc_bus_volt_ctrl = DCBusVoltageController(
         cfg.zeta_dc, cfg.w_0_dc, cfg.p_max)
 # %%
 # Set the time-dependent reference and disturbance signals.
 
 # Set the active and reactive power references
 if on_u_dc:
-    mdl.dc_model.i_ext = lambda t: (t > .06)*(10)
+    mdl.converter.i_ext = lambda t: (t > .06)*(10)
 else:
     ctrl.ref.p_g = lambda t: (t > 0.02)*(5e3)
 ctrl.ref.q_g = lambda t: (t > .04)*(4e3)

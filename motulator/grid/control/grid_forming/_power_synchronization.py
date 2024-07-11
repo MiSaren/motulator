@@ -41,6 +41,8 @@ class PSCControlCfg:
         Default is 2*pi*5.
     K_cc : float, optional
         Current controller low-pass filter gain. Default is 1.
+    overmodulation : str, optional
+        Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
     """
 
     par: GridModelPars
@@ -53,6 +55,7 @@ class PSCControlCfg:
     k_scal: float = 3/2
     w_0_cc: float = 2*np.pi*5
     K_cc: float = 1
+    overmodulation: str = "MPE"
 
     def __post_init__(self):
         par = self.par
@@ -130,7 +133,7 @@ class PSCControl(GridConverterControlSystem):
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
 
         # Get duty ratios from PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g)
+        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g, cfg.overmodulation)
 
         return ref
 
