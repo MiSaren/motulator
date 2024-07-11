@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from motulator.common.utils import abc2complex
+from motulator.common.utils import abc2complex, complex2abc
 
 
 # %%
@@ -407,12 +407,14 @@ class Inverter(Subsystem):
 
     def post_process_states(self):
         """Post-process data."""
+        data = self.data
         if self.par.C_dc is None:
-            self.data.u_dc = self.par.u_dc(self.data.t) if callable(
+            data.u_dc = self.par.u_dc(data.t) if callable(
                 self.par.u_dc) else self.par.u_dc
         else:
-            self.data.u_dc = self.data.u_dc.real
-        self.data.u_cs = self.data.q_cs*self.data.u_dc
+            data.u_dc = data.u_dc.real
+        data.u_cs = data.q_cs*data.u_dc
+        data.i_dc = 1.5*np.real(data.q_cs*np.conj(data.i_cs))
 
 
 # %%
@@ -539,3 +541,67 @@ class FrequencyConverter(Subsystem):
             (np.amin(data.u_g_abc, axis=0) == data.u_g_abc).astype(int))
         # Grid current space vector
         data.i_g = abc2complex(data.q_g_abc)*data.i_L
+
+
+class DiodeBridge(Subsystem):
+    """
+    Three-phase diode bridge.
+
+    A three-phase diode bridge rectifier with a DC-side inductor is modeled.
+    The inductor current i_L is used as a state variable.
+
+    Parameters
+    ----------
+    L : float
+        DC-bus inductance (H).
+
+    """
+
+    def __init__(self, L):
+        super().__init__()
+        self.par = SimpleNamespace(L=L)
+        self.state = SimpleNamespace(i_L=0)
+        self.sol_states = SimpleNamespace(i_L=[])
+
+    def set_outputs(self, _):
+        """Set output variables."""
+        self.out.i_L = self.state.i_L.real
+
+    def rhs(self):
+        """
+        Compute the state derivatives.
+
+        Returns
+        -------
+        complex list, length 1
+            Time derivative of the complex state vector, [d_i_L].
+
+        """
+        state, inp, out, par = self.state, self.inp, self.out, self.par
+        # Output voltage of the diode bridge
+        u_di = np.amax(out.u_g_abc, axis=0) - np.amin(out.u_g_abc, axis=0)
+        # State derivatives
+        d_i_L = (u_di - inp.u_dc)/par.L
+        # The inductor current cannot be negative due to the diode bridge
+        if state.i_L < 0 and d_i_L < 0:
+            d_i_L = 0
+
+        return [d_i_L]
+
+    def post_process_states(self):
+        """Post-process data."""
+        self.data.i_L = self.data.i_L.real
+
+    def post_process_with_inputs(self):
+        """Post-process data with inputs."""
+        data = self.data
+        data.u_g_abc = complex2abc(data.u_gs)
+        # Voltage at the output of the diode bridge
+        data.u_di = (
+            np.amax(data.u_g_abc, axis=0) - np.amin(data.u_g_abc, axis=0))
+        # Diode bridge switching states (-1, 0, 1)
+        data.q_g_abc = (
+            (np.amax(data.u_g_abc, axis=0) == data.u_g_abc).astype(int) -
+            (np.amin(data.u_g_abc, axis=0) == data.u_g_abc).astype(int))
+        # Grid current space vector
+        data.i_gs = abc2complex(data.q_g_abc)*data.i_L
