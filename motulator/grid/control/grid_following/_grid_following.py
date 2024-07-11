@@ -2,13 +2,12 @@
 
 # %%
 from __future__ import annotations
-from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
 from motulator.grid.control import (
-    GridConverterControlSystem, DCBusVoltageController)
+    GridConverterControlSystem)
 from motulator.grid.utils import GridModelPars
 
 from motulator.common.control import (ComplexFFPIController)
@@ -70,11 +69,13 @@ class GFLControlCfg:
     w_0_dc: float = 2*np.pi*30
 
     def __post_init__(self):
-        self.k_p_i = self.alpha_c*self.par.L_f
-        self.k_i_i = np.power(self.alpha_c,2)*self.par.L_f
+        par = self.par
+
+        self.k_p_i = self.alpha_c*par.L_f
+        self.k_i_i = np.power(self.alpha_c,2)*par.L_f
         self.r_i = self.alpha_c*self.par.L_f
-        self.k_p_pll = 2*self.zeta*self.w0_pll/self.par.U_gN
-        self.k_i_pll = self.w0_pll*self.w0_pll/self.par.U_gN
+        self.k_p_pll = 2*self.zeta*self.w0_pll/par.U_gN
+        self.k_i_pll = self.w0_pll*self.w0_pll/par.U_gN
 
 
 # %%
@@ -94,9 +95,9 @@ class GFLControl(GridConverterControlSystem):
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
         # Initialize the states
-
         self.current_reference = CurrentRefCalc(cfg)
         self.u_filt = cfg.par.U_gN + 1j*0
+        
         self.pll = PLL(cfg)
 
     def get_feedback_signals(self, mdl):
@@ -120,7 +121,7 @@ class GFLControl(GridConverterControlSystem):
     
     def output(self, fbk):
         """Extend the base class method."""
-        par, cfg = self.par, self.cfg
+        par = self.par
         # Get the reference signals
         ref = super().output(fbk)
         if self.on_u_dc:
@@ -128,14 +129,32 @@ class GFLControl(GridConverterControlSystem):
         ref = super().get_power_reference(fbk, ref)
         ref.i_c = self.current_reference.output(ref)
 
-        # Voltage reference generation in synchronous coordinates
-        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, fbk.u_g, par.w_g)
+        # Calculation of the modulus of current reference
+        i_abs = np.abs(ref.i_c)
+        i_cd_ref = np.real(ref.i_c)
+        i_cq_ref = np.imag(ref.i_c)
 
-        # Transform the voltage reference into stator coordinates
-        ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
+        # And current limitation algorithm
+        if i_abs > 0:
+            i_ratio = self.cfg.i_max/i_abs
+            i_cd_ref = np.sign(i_cd_ref)*np.min(
+                [i_ratio*np.abs(i_cd_ref),np.abs(i_cd_ref)])
+            i_cq_ref = np.sign(i_cq_ref)*np.min(
+                [i_ratio*np.abs(i_cq_ref),np.abs(i_cq_ref)])
+            ref.i_c = i_cd_ref + 1j*i_cq_ref
+        
+        # Low pass filter for the feedforward PCC voltage:
+        u_filt = self.u_filt
 
         # Use of PLL to bring ugq to zero
-        ref.u_g_q, ref.abs_u_g, ref.w_pll, ref.theta_pll = self.pll.output(fbk.u_g_abc)
+        ref.u_gq, ref.abs_ug, ref.w_pll, ref.theta_pll = self.pll.output(fbk.u_g_abc)
+
+        # Voltage reference generation in synchronous coordinates
+        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, par.w_g)
+
+         # Transform the voltage reference into stator coordinates
+        ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
+        
         # get the duty ratios from the PWM
         ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g)
 
@@ -145,9 +164,9 @@ class GFLControl(GridConverterControlSystem):
         """Extend the base class method."""
         super().update(fbk, ref)
         self.current_ctrl.update(ref.T_s, fbk.u_c)
-        self.pll.update(ref.u_g_q)
-        # if self.on_u_dc:
-        #     self.dc_bus_volt_ctrl.update(ref.T_s, ref.p_g)
+        self.pll.update(ref.u_gq)
+        self.u_filt = (1 - ref.T_s*self.cfg.alpha_ff)*self.u_filt + (
+            ref.T_s*self.cfg.alpha_ff*fbk.u_g)     
 
 
 # %%
@@ -217,25 +236,28 @@ class PLL:
         u_g_bc = u_g_abc[1] - u_g_abc[2] # calculation of phase-to-phase voltages
 
         # Calculation of u_g in complex form (stationary coordinates)
-        u_g_s = (2/3)*u_g_ab +(1/3)*u_g_bc + 1j*(np.sqrt(3)/(3))*u_g_bc
+        u_gs = (2/3)*u_g_ab +(1/3)*u_g_bc + 1j*(np.sqrt(3)/(3))*u_g_bc
         # And then in general coordinates
-        u_g = u_g_s*np.exp(-1j*self.theta_c)
+        u_g = u_gs*np.exp(-1j*self.theta_c)
         # Definition of the error using the q-axis voltage
-        u_g_q = np.imag(u_g)
+        u_gq = np.imag(u_g)
+
+        # Low pass filter for the feedforward PCC voltage:
+        #u_filt = self.u_filt
 
         # Absolute value of the grid-voltage vector
-        abs_u_g = np.abs(u_g)
+        abs_ug = np.abs(u_g)
 
         # Calculation of the estimated PLL frequency
-        w_g_pll = self.k_p_pll*u_g_q + self.w_pll
+        w_g_pll = self.k_p_pll*u_gq + self.w_pll
 
         # Estimated phase angle
         theta_pll = self.theta_c + self.T_s*w_g_pll
 
-        return u_g_q, abs_u_g, w_g_pll, theta_pll
+        return u_gq, abs_ug, w_g_pll, theta_pll
 
 
-    def update(self, u_g_q):
+    def update(self, u_gq):
         """
         Update the integral state.
     
@@ -247,10 +269,10 @@ class PLL:
         """
 
         # Calculation of the estimated PLL frequency
-        w_g_pll = self.k_p_pll*u_g_q + self.w_pll
+        w_g_pll = self.k_p_pll*u_gq + self.w_pll
 
         # Update the integrator state
-        self.w_pll = self.w_pll + self.T_s*self.k_i_pll*u_g_q
+        self.w_pll = self.w_pll + self.T_s*self.k_i_pll*u_gq
         # Update the grid-voltage angle state
         self.theta_c = self.theta_c + self.T_s*w_g_pll
         self.theta_c = wrap(self.theta_c)    # Limit to [-pi, pi]
@@ -301,7 +323,6 @@ class CurrentRefCalc:
     
         """
         self.u_gN = cfg.par.U_gN
-        self.u_filt = self.u_gN + 1j*0
         self.i_max = cfg.i_max
 
 
@@ -327,20 +348,7 @@ class CurrentRefCalc:
         # Calculation of the current references in the stationary frame:
         i_c_ref = 2*ref.p_g/(3*self.u_gN) -2*1j*ref.q_g/(3*self.u_gN)
 
-        # Calculation of the modulus of current reference
-        i_abs = np.abs(i_c_ref)
-        i_cd_ref = np.real(i_c_ref)
-        i_cq_ref = np.imag(i_c_ref)
-    
-        # And current limitation algorithm
-        if i_abs > 0:
-            i_ratio = self.i_max/i_abs
-            i_cd_ref = np.sign(i_cd_ref)*np.min(
-                [i_ratio*np.abs(i_cd_ref),np.abs(i_cd_ref)])
-            i_cq_ref = np.sign(i_cq_ref)*np.min(
-                [i_ratio*np.abs(i_cq_ref),np.abs(i_cq_ref)])
-            i_c_ref = i_cd_ref + 1j*i_cq_ref
-
         ref.i_c = i_c_ref
 
         return ref.i_c
+

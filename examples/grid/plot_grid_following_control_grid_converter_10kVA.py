@@ -18,8 +18,11 @@ import numpy as np
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 #import motulator.grid.control.grid_following as control
+from motulator.common.model import Simulation, Inverter
 from motulator.grid.utils import (
-    BaseValues, NominalValues, plot_grid, GridModelPars)
+    GridModelPars, plot_grid)
+from motulator.common.utils import (
+    BaseValues, NominalValues)
 
 # To check the computation time of the program
 start_time = time.time()
@@ -43,20 +46,15 @@ par = GridModelPars(
 # grid impedance and filter model
 grid_filter = model.LFilter(U_gN=par.U_gN ,R_f=0 ,L_f=par.L_f, L_g=0, R_g=0)
 # AC grid model (either constant frequency or dynamic electromechanical model)
-grid_model = model.StiffSource(w_N=par.w_g)
+grid_model = model.StiffSource(w_N=par.w_g, e_g_abs=par.U_gN)
 
 # Uncomment the following two lines to use a dynamic grid model, with a variable DC voltage
-converter = model.InverterWithVariableDC()
-dc_model = model.dc_bus.DCBus(C_dc = 1e-3, u_dc0=600, G_dc=0)
+converter = Inverter(u_dc = 650)
 
-# Uncomment the following two lines to use a static grid model, with a fixed DC voltage
-#converter = model.Inverter(u_dc=650)
-#dc_model = model.DCBusVoltageSource(u_dc=650)
+mdl = model.StiffSourceAndGridFilterModel(
+    converter, grid_filter, grid_model)
 
-mdl = model.dc_bus.DCBusAndLFilterModel(
-        converter, grid_filter, grid_model, dc_model)
-
-on_u_dc = True
+on_u_dc = False
 
 # if dc_model is None:
 #     mdl = model.StiffSourceAndLFilterModel(
@@ -109,7 +107,7 @@ if on_u_dc:
 if on_u_dc:
     mdl.dc_model.i_ext = lambda t: (t > .06)*(10)
 else:
-    ctrl.ref.p_g = lambda t: (t > .02)*(5e3)
+    ctrl.ref.p_g = lambda t: (t > 0.02)*(5e3)
 ctrl.ref.q_g = lambda t: (t > .04)*(4e3)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
@@ -124,7 +122,7 @@ if on_u_dc:
 # Create the simulation object and simulate it.
 
 #mdl.pwm = model.CarrierComparison()  # Enable the PWM model
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop = .1)
 
 # Print the execution time
