@@ -18,7 +18,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import (plot_grid, GridModelPars)
+from motulator.grid.utils import plot_grid, GridModelPars
 
 
 # %%
@@ -88,7 +88,9 @@ print(f"Simulation time: {stop_time-start_time:.2f} s")
 
 
 # %%
-# Plot results in per-unit values. By omitting the argument `base` you can plot
+# Plot results in per-unit values. 
+
+# By omitting the argument `base` you can plot
 # the results in SI units.
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=True)
