@@ -69,7 +69,7 @@ The figure below shows an inverter equipped with a generic three-phase load. In 
 
    Instantaneous switching states are defined by the carrier comparison. In this example, the switching states are :math:`q_\mathrm{a}=1`, :math:`q_\mathrm{b}=0`, and :math:`q_\mathrm{c}=0`.
 
-The figure below shows the principle of carrier comparison. The logic shown in the figure is implemented in the class :class:`motulator.drive.model.CarrierComparison`, where the switching instants are explicitly computed in the beginning of each sampling period (instead of searching for zero crossings), allowing faster simulations.
+The figure below shows the principle of carrier comparison. The logic shown in the figure is implemented in the class :class:`motulator.common.model.CarrierComparison`, where the switching instants are explicitly computed in the beginning of each sampling period (instead of searching for zero crossings), allowing faster simulations.
 
 .. figure:: figs/carrier_comparison.svg
    :width: 100%
