@@ -5,6 +5,91 @@ from types import SimpleNamespace
 import numpy as np
 from motulator.common.control import (ControlSystem, PIController)
 from motulator.common.utils import (abc2complex)
+from motulator.common.utils import wrap
+
+
+# %%
+class PLL:
+
+    """
+    PLL synchronizing loop.
+
+    Parameters
+    ----------
+    cfg: GFLControlCfg
+        Model and controller configuration parameters.
+        
+    """
+
+    def __init__(self, cfg):
+
+        """
+        Parameters
+        ----------
+        pars : GridFollowingCtrlPars
+           Control parameters.
+    
+        """
+        self.cfg = cfg
+
+        # Initial states
+        self.w_pll = cfg.par.w_g
+        self.theta_c = 0
+
+
+    def output(self, fbk, ref):
+
+        """
+        Compute the estimated frequency and phase angle using the PLL.
+    
+        Parameters
+        ----------
+        u_g_abc : ndarray, shape (3,)
+            Grid 3-phase voltage.
+    
+        Returns
+        -------
+        u_g_q : float
+            Error signal (in V, corresponds to the q-axis grid voltage).
+        abs_u_g : float
+            magnitude of the grid voltage vector (in V).
+        w_g_pll : float
+            estimated grid frequency (in rad/s).
+        """
+
+        u_g_ab = fbk.u_g_abc[0] - fbk.u_g_abc[1] # calculation of phase-to-phase voltages
+        u_g_bc = fbk.u_g_abc[1] - fbk.u_g_abc[2] # calculation of phase-to-phase voltages
+
+        # Calculation of u_g in complex form (stationary coordinates)
+        u_gs = (2/3)*u_g_ab +(1/3)*u_g_bc + 1j*(np.sqrt(3)/(3))*u_g_bc
+        # And then in general coordinates
+        ref.u_g = u_gs*np.exp(-1j*fbk.theta_c)
+        # Definition of the error using the q-axis voltage
+        ref.u_gq = np.imag(ref.u_g)
+        # Absolute value of the grid-voltage vector
+        ref.abs_ug = np.abs(ref.u_g)
+
+        return ref
+    
+    def update(self, u_gq):
+        """
+        Update the integral state.
+    
+        Parameters
+        ----------
+        u_g_q : real
+            Error signal (in V, corresponds to the q-axis grid voltage).
+    
+        """
+        cfg = self.cfg
+        # Calculation of the estimated PLL frequency
+        w_g_pll = cfg.k_p_pll*u_gq + self.w_pll
+
+        # Update the integrator state
+        self.w_pll = self.w_pll + cfg.T_s*cfg.k_i_pll*u_gq
+        # Update the grid-voltage angle state
+        self.theta_c = self.theta_c + cfg.T_s*w_g_pll
+        self.theta_c = wrap(self.theta_c)    # Limit to [-pi, pi]
 
 
 # %%

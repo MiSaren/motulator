@@ -11,7 +11,7 @@ from motulator.grid.control import (
 from motulator.grid.utils import GridModelPars
 
 from motulator.common.control import (ComplexFFPIController)
-from motulator.common.utils import wrap
+from motulator.grid.control._common import PLL
 
 # %%
 @dataclass
@@ -100,11 +100,12 @@ class GFLControl(GridConverterControlSystem):
         super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc)
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
-        # Initialize the states
+        self.pll = PLL(cfg)
         self.current_reference = CurrentRefCalc(cfg)
+
+        # Initialize the states
         self.u_filt = cfg.par.U_gN + 1j*0
         
-        self.pll = PLL(cfg)
 
     def get_feedback_signals(self, mdl):
         fbk = super().get_feedback_signals(mdl)
@@ -173,92 +174,6 @@ class GFLControl(GridConverterControlSystem):
         self.pll.update(ref.u_gq)
         self.u_filt = (1 - ref.T_s*self.cfg.alpha_ff)*self.u_filt + (
             ref.T_s*self.cfg.alpha_ff*fbk.u_g)     
-
-
-# %%
-class PLL:
-
-    """
-    PLL synchronizing loop.
-
-    Parameters
-    ----------
-    cfg: GFLControlCfg
-        Model and controller configuration parameters.
-        
-    """
-
-    def __init__(self, cfg):
-
-        """
-        Parameters
-        ----------
-        pars : GridFollowingCtrlPars
-           Control parameters.
-    
-        """
-        self.cfg = cfg
-
-        # Initial states
-        self.w_pll = cfg.par.w_g
-        self.theta_c = 0
-
-
-    def output(self, fbk, ref):
-
-        """
-        Compute the estimated frequency and phase angle using the PLL.
-    
-        Parameters
-        ----------
-        u_g_abc : ndarray, shape (3,)
-            Grid 3-phase voltage.
-    
-        Returns
-        -------
-        u_g_q : float
-            Error signal (in V, corresponds to the q-axis grid voltage).
-        abs_u_g : float
-            magnitude of the grid voltage vector (in V).
-        w_g_pll : float
-            estimated grid frequency (in rad/s).
-        theta_pll : float
-            estimated phase angle (in rad).
-        """
-
-        u_g_ab = fbk.u_g_abc[0] - fbk.u_g_abc[1] # calculation of phase-to-phase voltages
-        u_g_bc = fbk.u_g_abc[1] - fbk.u_g_abc[2] # calculation of phase-to-phase voltages
-
-        # Calculation of u_g in complex form (stationary coordinates)
-        u_gs = (2/3)*u_g_ab +(1/3)*u_g_bc + 1j*(np.sqrt(3)/(3))*u_g_bc
-        # And then in general coordinates
-        ref.u_g = u_gs*np.exp(-1j*fbk.theta_c)
-        # Definition of the error using the q-axis voltage
-        ref.u_gq = np.imag(ref.u_g)
-
-        # Absolute value of the grid-voltage vector
-        ref.abs_ug = np.abs(ref.u_g)
-
-
-    def update(self, u_gq):
-        """
-        Update the integral state.
-    
-        Parameters
-        ----------
-        u_g_q : real
-            Error signal (in V, corresponds to the q-axis grid voltage).
-    
-        """
-        cfg = self.cfg
-        # Calculation of the estimated PLL frequency
-        w_g_pll = cfg.k_p_pll*u_gq + self.w_pll
-
-        # Update the integrator state
-        self.w_pll = self.w_pll + cfg.T_s*cfg.k_i_pll*u_gq
-        # Update the grid-voltage angle state
-        self.theta_c = self.theta_c + cfg.T_s*w_g_pll
-        self.theta_c = wrap(self.theta_c)    # Limit to [-pi, pi]
 
 
 # %%
