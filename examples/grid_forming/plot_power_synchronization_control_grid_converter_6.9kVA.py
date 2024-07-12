@@ -13,7 +13,7 @@ the current oscillations.
 import time
 import numpy as np
 
-from motulator.common.model import Simulation, Inverter
+from motulator.common.model import Simulation, Inverter, CarrierComparison
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model

@@ -51,7 +51,7 @@ class GFLControlCfg:
     w_0_dc : float, optional
         controller undamped natural frequency in rad/s. The default is 2*np.pi*30.
     overmodulation : str, optional
-        overmodulation method. The default is "MPE".
+        overmodulation method. The default is Minimum Phase Error "MPE".
     """
 
     par: GridModelPars
@@ -74,9 +74,12 @@ class GFLControlCfg:
     def __post_init__(self):
         par = self.par
 
+        # Current controller gains
         self.k_p_i = self.alpha_c*par.L_f
         self.k_i_i = np.power(self.alpha_c,2)*par.L_f
         self.r_i = self.alpha_c*self.par.L_f
+
+        # PLL gains
         self.k_p_pll = 2*self.zeta*self.w0_pll/par.U_gN
         self.k_i_pll = self.w0_pll*self.w0_pll/par.U_gN
 
@@ -130,7 +133,7 @@ class GFLControl(GridConverterControlSystem):
         if self.on_u_dc:
             ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
-        ref.i_c = self.current_reference.output(ref)
+        self.current_reference.get_current_reference(ref)
 
         # Calculation of the modulus of current reference
         i_abs = np.abs(ref.i_c)
@@ -150,7 +153,7 @@ class GFLControl(GridConverterControlSystem):
         u_filt = self.u_filt
 
         # Use of PLL to bring ugq to zero
-        ref.u_gq, ref.abs_ug, ref.w_pll, ref.theta_pll = self.pll.output(fbk.u_g_abc)
+        self.pll.output(fbk, ref)
 
         # Voltage reference generation in synchronous coordinates
         ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, par.w_g)
@@ -180,17 +183,8 @@ class PLL:
 
     Parameters
     ----------
-    u_g_abc : ndarray, shape (3,)
-        Phase voltages at the PCC.
-
-    Returns
-    -------
-    u_g_q : float
-        q-axis of the PCC voltage (V)
-    abs_u_g : float
-        amplitude of the voltage waveform, in V
-    theta_pll : float
-        estimated phase angle (in rad).
+    cfg: GFLControlCfg
+        Model and controller configuration parameters.
         
     """
 
@@ -203,17 +197,14 @@ class PLL:
            Control parameters.
     
         """
-        self.T_s = cfg.T_s
-        self.w_0_pll = cfg.w0_pll
-        self.k_p_pll = cfg.k_p_pll
-        self.k_i_pll = cfg.k_i_pll
+        self.cfg = cfg
 
         # Initial states
         self.w_pll = cfg.par.w_g
         self.theta_c = 0
 
 
-    def output(self, u_g_abc):
+    def output(self, fbk, ref):
 
         """
         Compute the estimated frequency and phase angle using the PLL.
@@ -235,27 +226,18 @@ class PLL:
             estimated phase angle (in rad).
         """
 
-        u_g_ab = u_g_abc[0] - u_g_abc[1] # calculation of phase-to-phase voltages
-        u_g_bc = u_g_abc[1] - u_g_abc[2] # calculation of phase-to-phase voltages
+        u_g_ab = fbk.u_g_abc[0] - fbk.u_g_abc[1] # calculation of phase-to-phase voltages
+        u_g_bc = fbk.u_g_abc[1] - fbk.u_g_abc[2] # calculation of phase-to-phase voltages
 
         # Calculation of u_g in complex form (stationary coordinates)
         u_gs = (2/3)*u_g_ab +(1/3)*u_g_bc + 1j*(np.sqrt(3)/(3))*u_g_bc
         # And then in general coordinates
-        u_g = u_gs*np.exp(-1j*self.theta_c)
+        ref.u_g = u_gs*np.exp(-1j*fbk.theta_c)
         # Definition of the error using the q-axis voltage
-        u_gq = np.imag(u_g)
-
+        ref.u_gq = np.imag(ref.u_g)
 
         # Absolute value of the grid-voltage vector
-        abs_ug = np.abs(u_g)
-
-        # Calculation of the estimated PLL frequency
-        w_g_pll = self.k_p_pll*u_gq + self.w_pll
-
-        # Estimated phase angle
-        theta_pll = self.theta_c + self.T_s*w_g_pll
-
-        return u_gq, abs_ug, w_g_pll, theta_pll
+        ref.abs_ug = np.abs(ref.u_g)
 
 
     def update(self, u_gq):
@@ -268,14 +250,14 @@ class PLL:
             Error signal (in V, corresponds to the q-axis grid voltage).
     
         """
-
+        cfg = self.cfg
         # Calculation of the estimated PLL frequency
-        w_g_pll = self.k_p_pll*u_gq + self.w_pll
+        w_g_pll = cfg.k_p_pll*u_gq + self.w_pll
 
         # Update the integrator state
-        self.w_pll = self.w_pll + self.T_s*self.k_i_pll*u_gq
+        self.w_pll = self.w_pll + cfg.T_s*cfg.k_i_pll*u_gq
         # Update the grid-voltage angle state
-        self.theta_c = self.theta_c + self.T_s*w_g_pll
+        self.theta_c = self.theta_c + cfg.T_s*w_g_pll
         self.theta_c = wrap(self.theta_c)    # Limit to [-pi, pi]
 
 
@@ -319,15 +301,15 @@ class CurrentRefCalc:
         """
         Parameters
         ----------
-        pars : GridFollowingCtrlPars
-            Control parameters.
+        cfg : GFLControlCfg
+            Model and controller configuration parameters.
     
         """
         self.u_gN = cfg.par.U_gN
         self.i_max = cfg.i_max
 
 
-    def output(self, ref):
+    def get_current_reference(self, ref):
 
         """
         Current reference genetator.
@@ -338,18 +320,7 @@ class CurrentRefCalc:
             active power reference
         q_g_ref : float
             reactive power reference
-    
-        Returns
-        -------
-        i_c_ref : float
-            current reference in the rotationary frame
-            
         """
 
         # Calculation of the current references in the stationary frame:
-        i_c_ref = 2*ref.p_g/(3*self.u_gN) -2*1j*ref.q_g/(3*self.u_gN)
-
-        ref.i_c = i_c_ref
-
-        return ref.i_c
-
+        ref.i_c = 2*ref.p_g/(3*self.u_gN) -2*1j*ref.q_g/(3*self.u_gN)
