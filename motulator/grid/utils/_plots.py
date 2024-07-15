@@ -63,6 +63,7 @@ def plot_grid(sim, base=None, plot_pcc_voltage=False, plot_w=False,
 
     # 3-phase quantities
     i_c_abc = complex2abc(mdl.converter.data.i_cs).T
+    #i_g_abc = complex2abc(mdl.grid_filter.data.i_gs).T
     e_g_abc = complex2abc(mdl.grid_model.data.e_gs).T
     u_g_abc = complex2abc(mdl.grid_filter.data.u_gs).T
 

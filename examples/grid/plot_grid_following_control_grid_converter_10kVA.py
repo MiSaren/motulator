@@ -37,18 +37,19 @@ mdl_par = GridModelPars(
     w_g=2*np.pi*50,
     L_f=10e-3,
     C_dc=1e-3)
-
-# grid impedance and filter model
-grid_filter = model.LFilter(U_gN=mdl_par.U_gN ,R_f=0 ,L_f=mdl_par.L_f, L_g=0, R_g=0)
+grid_filter = model.LFilter(U_gN=mdl_par.U_gN ,L_f=mdl_par.L_f)
 # AC grid model with constant voltage magnitude and frequency
 grid_model = model.StiffSource(w_N=mdl_par.w_g, e_g_abs=mdl_par.U_gN)
-
 # Inverter with constant DC voltage
 converter = Inverter(u_dc = 650)
 
 mdl = model.StiffSourceAndGridFilterModel(
     converter, grid_filter, grid_model)
 
+# %%
+# Configure the control system.
+
+# Control configuration parameters
 cfg = control.GFLControlCfg(
     mdl_par,
     i_max=1.5*base.i,
@@ -78,7 +79,7 @@ sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop = .1)
 
 # Print the execution time
-print('\nExecution time: {:.2f} s'.format((time.time() - start_time)))
+#print('\nExecution time: {:.2f} s'.format((time.time() - start_time)))
 
 
 # %%

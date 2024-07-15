@@ -162,16 +162,20 @@ class GridConverterControlSystem(ControlSystem, ABC):
             u_dc : callable
                 DC-voltage reference (V) as a function of time (s). This signal
                 is needed in DC-bus voltage control mode.
+            on_u_cap: bool, optional
+                to use the filter capacitance voltage measurement or PCC voltage. 
+                The default is False.
 
     dc_bus_volt_ctrl : DCBusVoltageController | None
         DC-bus voltage controller. The default is None.
 
     """
 
-    def __init__(self, par, T_s, on_u_dc):
+    def __init__(self, par, T_s, on_u_dc, on_u_cap=False):
         super().__init__(T_s)
         self.par = par
         self.on_u_dc = on_u_dc
+        self.on_u_cap = on_u_cap
         self.dc_bus_volt_ctrl = None
         self.ref = SimpleNamespace()
 
@@ -205,7 +209,10 @@ class GridConverterControlSystem(ControlSystem, ABC):
         fbk.u_dc = mdl.converter.meas_dc_voltage()
         fbk.i_cs = abc2complex(mdl.grid_filter.meas_currents())
         fbk.u_cs = self.pwm.get_realized_voltage()
-        fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
+        if self.on_u_cap:
+            fbk.u_gs = abc2complex(mdl.grid_filter.meas_cap_voltage())
+        else:
+            fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
 
         return fbk
 

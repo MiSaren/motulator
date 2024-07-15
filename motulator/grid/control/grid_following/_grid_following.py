@@ -12,6 +12,7 @@ from motulator.grid.utils import GridModelPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL
+from motulator.common.utils import complex2abc
 
 # %%
 @dataclass
@@ -97,7 +98,7 @@ class GFLControl(GridConverterControlSystem):
     """
 
     def __init__(self, cfg):
-        super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc)
+        super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc, on_u_cap=cfg.on_u_cap)
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
         self.pll = PLL(cfg)
@@ -119,11 +120,8 @@ class GFLControl(GridConverterControlSystem):
         fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
         fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
 
-        if self.cfg.on_u_cap:
-            fbk.u_g_abc = mdl.grid_filter.meas_cap_voltage()
-        else:
-            fbk.u_g_abc = mdl.grid_filter.meas_pcc_voltage()
-
+        fbk.u_g_abc = complex2abc(fbk.u_gs)
+    
         return fbk
     
     def output(self, fbk):
