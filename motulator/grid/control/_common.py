@@ -44,26 +44,20 @@ class PLL:
     
         Parameters
         ----------
-        u_g_abc : ndarray, shape (3,)
-            Grid 3-phase voltage.
+        u_gs : complex
+            PCC voltage (in V) in synchronous coordinates.
     
         Returns
         -------
+        u_g : complex            
         u_g_q : float
             Error signal (in V, corresponds to the q-axis grid voltage).
         abs_u_g : float
             magnitude of the grid voltage vector (in V).
-        w_g_pll : float
-            estimated grid frequency (in rad/s).
         """
 
-        u_g_ab = fbk.u_g_abc[0] - fbk.u_g_abc[1] # calculation of phase-to-phase voltages
-        u_g_bc = fbk.u_g_abc[1] - fbk.u_g_abc[2] # calculation of phase-to-phase voltages
-
-        # Calculation of u_g in complex form (stationary coordinates)
-        u_gs = (2/3)*u_g_ab +(1/3)*u_g_bc + 1j*(np.sqrt(3)/(3))*u_g_bc
-        # And then in general coordinates
-        ref.u_g = u_gs*np.exp(-1j*fbk.theta_c)
+        # Definition of the grid-voltage vector
+        ref.u_g = fbk.u_gs*np.exp(-1j*fbk.theta_c)
         # Definition of the error using the q-axis voltage
         ref.u_gq = np.imag(ref.u_g)
         # Absolute value of the grid-voltage vector

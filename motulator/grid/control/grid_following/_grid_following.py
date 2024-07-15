@@ -120,7 +120,7 @@ class GFLControl(GridConverterControlSystem):
         fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
         fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
 
-        fbk.u_g_abc = complex2abc(fbk.u_gs)
+        #fbk.u_g_abc = complex2abc(fbk.u_gs)
     
         return fbk
     
