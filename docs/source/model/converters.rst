@@ -4,7 +4,10 @@ Converters
 Inverter
 --------
 
-The figure below shows a three-phase, two-level voltage source inverter and its equivalent model, where ideal switches  are assumed. In the equivalent model, each changeover switch is connected to either negative or positive potential of the DC bus. The switching phenomena are assumed to be infinitely fast. The inverter model is provided in the class :class:`motulator.common.model.Inverter`. 
+The figure below shows a three-phase, two-level voltage source inverter and its equivalent model, where ideal switches  are assumed.
+In the equivalent model, each changeover switch is connected to either negative or positive potential of the DC-bus.
+The switching phenomena are assumed to be infinitely fast.
+The inverter model is provided in the class :class:`motulator.common.model.Inverter`. 
 
 
 .. figure:: figs/inverter.svg
@@ -15,8 +18,8 @@ The figure below shows a three-phase, two-level voltage source inverter and its 
 
    Three-phase two-level inverter: (left) main circuit; (right) equivalent model. The DC-bus voltage and currents are :math:`u_\mathrm{dc}` and :math:`i_\mathrm{dc}`, respectively.
 
-The inverter model can be parametrized to take into account the capacitive dynamics of the DC-bus. An external current source 
-is feeding the DC bus that is modeled considering an equivalent circuit 
+By default, the DC-bus voltage is stiff. Alternatively, the capacitive dynamics of the DC-bus are modeled.
+An external current source is feeding the DC-bus that is modeled considering an equivalent circuit 
 comprising a parallel connected DC bus capacitor and resitor. The model is implemented as
 
 .. math::
@@ -25,9 +28,9 @@ comprising a parallel connected DC bus capacitor and resitor. The model is imple
    - i_\mathrm{dc} - G_\mathrm{dc}u_\mathrm{dc})
    :label: DC_bus_model
 
-where :math:`u_\mathrm{dc}` is the DC bus voltage, :math:`i_\mathrm{ext}` is the 
+where :math:`u_\mathrm{dc}` is the DC-bus voltage, :math:`i_\mathrm{ext}` is the 
 external DC current, :math:`i_\mathrm{dc}` is the converter DC current, 
-:math:`C_\mathrm{dc}` is the DC bus capacitance, and :math:`G_\mathrm{dc}` is 
+:math:`C_\mathrm{dc}` is the DC-bus capacitance, and :math:`G_\mathrm{dc}` is 
 the conductance of the parallel resistor. The converter DC current is calculated from the converter phase currents and switching states as 
 
 .. math::
@@ -35,18 +38,19 @@ the conductance of the parallel resistor. The converter DC current is calculated
    + q_\mathrm{c} i_\mathrm{c}
    :label: DC_current
 
-.. figure:: figs/dc_bus.svg
+.. figure:: figs/inverter_dc.svg
    :width: 100%
    :align: center
-   :alt: Diagram of the DC-bus model
+   :alt: Equivalent model of inverter with DC-bus capacitance
    :target: .
    
-   DC-bus dynamic model.
+   Equivalent model of inverter with DC-bus capacitance.
 
 Six-Pulse Diode Bridge
 ----------------------
 
-The figure below shows a six-pulse diode bridge rectifier, where the inductor :math:`L` and the capacitor :math:`C` are placed in the DC link. For simplicity, a three-phase supply voltage is assumed to be stiff. The class :class:`motulator.drive.model.FrequencyConverter` applies this model as a part of a frequency converter model.
+The figure below shows a six-pulse diode bridge rectifier, where the inductor :math:`L` is placed in the DC link.
+This model is implemented in the class :class:`motulator.common.model.DiodeBridge`.
 
 .. figure:: figs/diode_bridge.svg
    :width: 100%
@@ -59,7 +63,11 @@ The figure below shows a six-pulse diode bridge rectifier, where the inductor :m
 Carrier Comparison
 ------------------
 
-The figure below shows an inverter equipped with a generic three-phase load. In pulse-width modulation (PWM), carrier comparison is commonly used to generate instantaneous switching state signals :math:`q_\mathrm{a}`, :math:`q_\mathrm{b}`, and :math:`q_\mathrm{c}` from duty ratios :math:`d_\mathrm{a}`, :math:`d_\mathrm{b}`, and :math:`d_\mathrm{c}`. The duty ratios are continuous signals in the range [0, 1} while the switching states are either 0 or 1.
+The figure below shows an inverter equipped with a generic three-phase load.
+In pulse-width modulation (PWM), carrier comparison is commonly used to generate
+instantaneous switching state signals :math:`q_\mathrm{a}`, :math:`q_\mathrm{b}`,
+and :math:`q_\mathrm{c}` from duty ratios :math:`d_\mathrm{a}`, :math:`d_\mathrm{b}`,
+and :math:`d_\mathrm{c}`. The duty ratios are continuous signals in the range [0, 1} while the switching states are either 0 or 1.
 
 .. figure:: figs/pwm_inverter.svg
    :width: 100%
@@ -69,7 +77,10 @@ The figure below shows an inverter equipped with a generic three-phase load. In 
 
    Instantaneous switching states are defined by the carrier comparison. In this example, the switching states are :math:`q_\mathrm{a}=1`, :math:`q_\mathrm{b}=0`, and :math:`q_\mathrm{c}=0`.
 
-The figure below shows the principle of carrier comparison. The logic shown in the figure is implemented in the class :class:`motulator.common.model.CarrierComparison`, where the switching instants are explicitly computed in the beginning of each sampling period (instead of searching for zero crossings), allowing faster simulations.
+The figure below shows the principle of carrier comparison. The logic shown in the figure
+is implemented in the class :class:`motulator.common.model.CarrierComparison`,
+where the switching instants are explicitly computed in the beginning of each sampling period
+(instead of searching for zero crossings), allowing faster simulations.
 
 .. figure:: figs/carrier_comparison.svg
    :width: 100%
@@ -79,7 +90,9 @@ The figure below shows the principle of carrier comparison. The logic shown in t
 
    Carrier comparison. The duty ratios are :math:`d_\mathrm{a}`, :math:`d_\mathrm{b}`, and :math:`d_\mathrm{c}` are constant over the sampling period :math:`T_\mathrm{s}` (or, optionally, over the the switching period :math:`T_\mathrm{sw}=2T_\mathrm{s}`). The carrier signal is the same for all three phases and varies between 0 and 1.
 
-The zero-sequence voltage does not affect the phase currents if the neutral of the load is not connected. Therefore, the reference potential of the phase voltages can be freely chosen when computing the space vector of the converter output voltage. The converter voltage vector in stationary coordinates is
+The zero-sequence voltage does not affect the phase currents if the neutral of the load is not connected.
+Therefore, the reference potential of the phase voltages can be freely chosen when computing the space vector of the converter output voltage.
+The converter voltage vector in stationary coordinates is
 
 .. math::
 	\boldsymbol{u}_\mathrm{c}^\mathrm{s} &= \frac{2}{3}\left(u_\mathrm{an} + u_\mathrm{bn}\mathrm{e}^{\mathrm{j}2\pi/3} + u_\mathrm{cn}\mathrm{e}^{\mathrm{j} 4\pi/3}\right) \\
@@ -99,7 +112,8 @@ where :math:`\boldsymbol{q}_\mathrm{c}^\mathrm{s}` is the switching-state space 
 Switching-Cycle Averaging
 -------------------------
 
-If the switching ripple is not of interest in simulations, the carrier comparison can be replaced with zero-order hold (ZOH) of the duty ratios. In this case, the output voltage vector is
+If the switching ripple is not of interest in simulations, the carrier comparison can be replaced with zero-order hold (ZOH) of the duty ratios.
+In this case, the output voltage vector is
 
 .. math::
 	\boldsymbol{u}_\mathrm{c}^\mathrm{s} = \underbrace{\frac{2}{3}\left(d_\mathrm{a} + d_\mathrm{b}\mathrm{e}^{\mathrm{j} 2\pi/3} + d_\mathrm{c}\mathrm{e}^{\mathrm{j} 4\pi/3}\right)}_{\boldsymbol{d}_\mathrm{c}^\mathrm{s}}u_\mathrm{dc}
