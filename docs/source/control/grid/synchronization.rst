@@ -4,7 +4,31 @@ Synchronization Methods
 Phase-Locked Loop
 -----------------
 
-TODO
+The :doc:`/auto_examples/grid_following/index` examples use a Phase-Locked Loop (PLL) to synchronize with the grid. 
+
+.. figure:: ../figs/pll.svg
+   :width: 100%
+   :align: center
+   :alt: Phase-Locked Loop for the grid synchronization
+   :target: .
+
+   Phase-Locked Loop.
+
+The PLL drives the signal :math:`\hat{u}_{gq}` to zero, leading to :math:`\hat{\vartheta}_g=\vartheta_g` 
+and :math:`\hat{u}_{gd}=u_{gd}` in ideal conditions. 
+The grid voltage-vector :math:`\boldsymbol{u}_\mathrm{g}^\mathrm{s}=u_g e^{j \vartheta_g}` is measured.
+The angle :math:`\vartheta_g` can be noisy and it is not directly used in the control. 
+Instead, the PLL tracks :math:`\vartheta_g` and filters its noise and harmonics above the PLL bandwidth.
+
+The gain selection:
+
+.. math:: 
+    k_\mathrm{p} = \frac{2 \zeta \omega_\mathrm{0,PLL}}{U_\mathrm{gN}} \qquad
+    k_\mathrm{i} = \frac{\omega_\mathrm{0,PLL}^2}{U_\mathrm{gN}}
+
+where :math:`\zeta` is the damping factor, :math:`\omega_\mathrm{0,PLL}` is the natural frequency of the PLL, and :math:`U_\mathrm{gN}` is the nominal grid voltage amplitude.
+
+More details on the control methods used can be found in [#Kau1997]_.
 
 Power Synchronization
 ---------------------
@@ -27,6 +51,8 @@ realized value for the converter active power output, respectively. The active p
 and the realized converter output voltage obtained from the PWM.
 
 .. rubric:: References
+
+.. [#Kau1997] Kaura and Blasko, "Operation of a phase locked loop system under distorted utility conditions," in IEEE Trans. Ind. Appl., vol. 33, no. 1, pp. 58-63, Jan.-Feb. 1997, https://doi.org/10.1109/28.567077
 
 .. [#Har2019] Harnefors, Hinkkanen, Riaz, Rahman, Zhang, "Robust Analytic Design of Power-Synchronization Control," IEEE Trans. Ind. Electron., Aug. 2019, https://doi.org/10.1109/TIE.2018.2874584
 
