@@ -13,13 +13,14 @@ frequency and the sampling frequency.
 
 import numpy as np
 
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.model import Simulation, CarrierComparison, Inverter
+from motulator.common.utils import BaseValues, NominalValues, Sequence
 
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
     InductionMachinePars, InductionMachineInvGammaPars,
-    plot, plot_extra, Sequence)
+    plot, plot_extra)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -38,9 +39,9 @@ machine = model.InductionMachine(mdl_par)
 # Mechanics with quadratic load torque coefficient
 k = .2*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
-converter = model.Inverter(u_dc=540)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
-mdl.pwm = model.CarrierComparison()  # Enable the PWM model
+mdl.pwm = CarrierComparison()  # Enable the PWM model
 
 # %%
 # Control system (parametrized as open-loop V/Hz control).
@@ -64,7 +65,7 @@ mdl.mechanics.tau_L = lambda t: (t > 1.)*nom.tau*.1
 # %%
 # Create the simulation object and simulate it.
 
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=2)
 
 # %%

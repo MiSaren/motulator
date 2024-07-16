@@ -203,10 +203,10 @@ class BaseValues:
         Impedance (Ω).
     L : float
         Inductance (H).
-    tau : float
-        Torque (Nm).
-    n_p : int
-        Number of pole pairs.
+    tau : float, optional
+        Torque (Nm). Default is None.
+    n_p : int, optional
+        Number of pole pairs. Default is None.
 
     """
     u: float

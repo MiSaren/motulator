@@ -10,6 +10,7 @@ magnet synchronous reluctance motor. Control look-up tables are also plotted.
 
 import numpy as np
 
+from motulator.common.model import Simulation, Inverter
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.drive import model
@@ -33,7 +34,7 @@ machine = model.SynchronousMachine(mdl_par)
 # Quadratic load torque profile
 k = .05*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.0042, B_L=lambda w_M: k*np.abs(w_M))
-converter = model.Inverter(u_dc=310)
+converter = Inverter(u_dc=310)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
@@ -68,6 +69,6 @@ ctrl.ref.w_m = lambda t: (t > .1)*base.w*3
 # %%
 # Create the simulation object, simulate, and plot results in per-unit values.
 
-sim = model.Simulation(mdl, ctrl)
+sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=.6)
 plot(sim, base)
