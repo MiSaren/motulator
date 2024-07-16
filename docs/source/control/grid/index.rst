@@ -11,6 +11,8 @@ references provided.
    :titlesonly:
    :maxdepth: 2
 
+   synchronization
    current_ctrl
+   dc_volt_ctrl
 
 This section will be extended in the future.

@@ -16,6 +16,11 @@ The model is an ideal three-phase voltage source, where the phase voltages are
     e_\mathrm{gc} &= \hat{e}_\mathrm{gc}\cos(\vartheta_\mathrm{g} - 4\pi/3)
     :label: grid_voltages
 
+The grid phase angle is simply :math:`\vartheta_\mathrm{g} = \omega_g t`, where
+the angular frequency of the grid can either be constant or a time-dependent function.
+
+.. TODO: nonsymmetric faults
+
 Flex Source
 -----------
 

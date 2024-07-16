@@ -48,8 +48,9 @@ converter current is
 
 where :math:`i_\mathrm{a}`, :math:`i_\mathrm{b}`, and :math:`i_\mathrm{c}` are
 the phase currents, which may vary freely in time. In our notation, the subscript
-c refers to the converter-side AC quantities and the superscript s refers to the stationary coordinates.
-The space vector does not include the zero-sequence component, which is defined as
+c refers to the converter-side AC quantities and the superscript s refers to the
+stationary coordinates. The space vector does not include the zero-sequence
+component, which is defined as
 
 .. math::
 	i_\mathrm{c0} = \frac{1}{3}\left(i_\mathrm{a} + i_\mathrm{b} + i_\mathrm{c}\right) 
