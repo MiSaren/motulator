@@ -12,7 +12,6 @@ from motulator.grid.utils import GridModelPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL
-from motulator.common.utils import complex2abc
 
 # %%
 @dataclass
