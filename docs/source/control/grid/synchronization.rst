@@ -30,6 +30,8 @@ where :math:`\zeta` is the damping factor, :math:`\omega_\mathrm{0,PLL}` is the 
 
 More details on the control methods used can be found in [#Kau1997]_.
 
+This controller is implemented in the class :class:`motulator.grid.control.PLL`.
+
 Power Synchronization
 ---------------------
 
