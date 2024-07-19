@@ -152,13 +152,13 @@ class GFLControl(GridConverterControlSystem):
         self.pll.output(fbk, ref)
 
         # Voltage reference generation in synchronous coordinates
-        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, par.w_g)
+        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, par.w_gN)
 
          # Transform the voltage reference into stator coordinates
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
         
         # get the duty ratios from the PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g, self.cfg.overmodulation)
+        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_gN, self.cfg.overmodulation)
 
         return ref
     

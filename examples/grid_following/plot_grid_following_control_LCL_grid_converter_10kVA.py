@@ -40,7 +40,7 @@ base = BaseValues.from_nominal(nom)
 
 mdl_par = GridModelPars(
     U_gN = 400*np.sqrt(2/3),
-    w_g = 2*np.pi*50,
+    w_gN = 2*np.pi*50,
     L_f = 3.7e-3,
     C_dc = 100e-3
     )
@@ -52,7 +52,7 @@ grid_filter = model.LCLFilter(
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var =  lambda t: np.sqrt(2/3)*400
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_N=2*np.pi*50, e_g_abs = e_g_abs_var)
+grid_model = model.StiffSource(w_gN=2*np.pi*50, e_g_abs = e_g_abs_var)
 # Inverter model with constant DC voltage
 converter = Inverter(u_dc=650)
 

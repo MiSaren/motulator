@@ -34,12 +34,12 @@ base = BaseValues.from_nominal(nom)
 
 mdl_par = GridModelPars(
     U_gN=400*np.sqrt(2/3),
-    w_g=2*np.pi*50,
+    w_gN=2*np.pi*50,
     L_f=10e-3,
     C_dc=1e-3)
 grid_filter = model.LFilter(U_gN=mdl_par.U_gN ,L_f=mdl_par.L_f)
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_N=mdl_par.w_g, e_g_abs=mdl_par.U_gN)
+grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs=mdl_par.U_gN)
 # Inverter with constant DC voltage
 converter = Inverter(u_dc = 650)
 

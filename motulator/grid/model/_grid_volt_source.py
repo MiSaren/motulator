@@ -25,7 +25,7 @@ class StiffSource(Subsystem):
 
     Parameters
     ----------
-    w_N : float
+    w_gN : float
         Grid nominal frequency (rad/s).
     e_g_abs : float | callable
         3-phase grid voltage magnitude, phase-to-ground peak value (V).
@@ -36,10 +36,10 @@ class StiffSource(Subsystem):
 
     """
 
-    def __init__(self, w_N, e_g_abs, w_g=None):
+    def __init__(self, w_gN, e_g_abs, w_g=None):
         super().__init__()
         self.w_g=w_g
-        self.par = SimpleNamespace(w_N=w_N, e_g_abs=e_g_abs)
+        self.par = SimpleNamespace(w_gN=w_gN, e_g_abs=e_g_abs)
         # states
         self.state = SimpleNamespace(exp_j_theta_g=complex(1))
         # Store the solutions in these lists
@@ -79,7 +79,7 @@ class StiffSource(Subsystem):
 
     def set_inputs(self, t):
         """Set input variables."""
-        self.inp.w_g = self.w_g(t) if callable(self.w_g) else self.par.w_N
+        self.inp.w_g = self.w_g(t) if callable(self.w_g) else self.par.w_gN
 
     def rhs(self):
         """
@@ -117,7 +117,7 @@ class StiffSource(Subsystem):
         if callable(self.w_g):
             self.data.w_g = self.w_g(self.data.t)
         else:
-            self.data.w_g = np.full(np.size(self.data.t), self.par.w_N)
+            self.data.w_g = np.full(np.size(self.data.t), self.par.w_gN)
         self.data.theta_g = np.angle(self.data.exp_j_theta_g)
         self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)
 
@@ -133,7 +133,7 @@ class FlexSource(Subsystem):
     
     Parameters
     ----------
-    w_N : float
+    w_gN : float
         Grid nominal frequency (rad/s).
     e_g_abs : float | callable
         3-phase grid voltage magnitude, phase-to-ground peak value (V).
@@ -161,13 +161,13 @@ class FlexSource(Subsystem):
     
     """
 
-    def __init__(self, w_N, e_g_abs, S_grid, T_D=10, T_N=3, H_g=3, D_g=0,
+    def __init__(self, w_gN, e_g_abs, S_grid, T_D=10, T_N=3, H_g=3, D_g=0,
                  r_d=.05, T_gov=0.5, p_m_ref=lambda t: 0, p_e=lambda t: 0):
         super().__init__()
         self.p_m_ref = p_m_ref
         self.p_e = p_e
         self.par = SimpleNamespace(T_D=T_D, T_N=T_N, H_g=H_g, D_g=D_g,
-                                   r_d=r_d*w_N/S_grid, T_gov=T_gov, w_N=w_N,
+                                   r_d=r_d*w_gN/S_grid, T_gov=T_gov, w_gN=w_gN,
                                    S_grid=S_grid, e_g_abs=e_g_abs)
         # States
         self.state = SimpleNamespace(err_w_g=0, p_gov=0, x_turb=0,
@@ -233,13 +233,13 @@ class FlexSource(Subsystem):
         p_m = (par.T_N/par.T_D)*p_gov + (1 - (par.T_N/par.T_D))*x_turb
         # swing equation
         p_diff = (p_m - inp.p_e)/par.S_grid # in per units
-        d_err_w_g = par.w_N*(p_diff - par.D_g*err_w_g)/(2*par.H_g)
+        d_err_w_g = par.w_gN*(p_diff - par.D_g*err_w_g)/(2*par.H_g)
         # governor dynamics
         d_p_gov = (inp.p_m_ref - (1/par.r_d)*err_w_g - p_gov)/par.T_gov
         # turbine dynamics (lead-lag)
         d_x_turb = (p_gov - x_turb)/par.T_D
         # integration of the angle
-        d_theta_g = par.w_N + err_w_g
+        d_theta_g = par.w_gN + err_w_g
         return [d_err_w_g, d_p_gov, d_x_turb, d_theta_g]
 
     def meas_voltages(self, t):
@@ -270,7 +270,7 @@ class FlexSource(Subsystem):
             Grid angular frequency (rad/s).
 
         """
-        w_g = self.par.w_N + self.state.err_w_g.real
+        w_g = self.par.w_gN + self.state.err_w_g.real
         return w_g
 
     def meas_angle(self):
@@ -288,6 +288,6 @@ class FlexSource(Subsystem):
 
     def post_process_states(self):
         """Post-process the solution."""
-        self.data.w_g = self.par.w_N + self.data.err_w_g.real
+        self.data.w_g = self.par.w_gN + self.data.err_w_g.real
         self.data.theta_g = wrap(self.data.theta_g.real)
         self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)

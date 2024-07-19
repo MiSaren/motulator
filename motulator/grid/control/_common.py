@@ -10,7 +10,6 @@ from motulator.common.utils import wrap
 
 # %%
 class PLL:
-
     """
     PLL synchronizing loop.
 
@@ -33,7 +32,7 @@ class PLL:
         self.cfg = cfg
 
         # Initial states
-        self.w_pll = cfg.par.w_g
+        self.w_pll = cfg.par.w_gN
         self.theta_c = 0
 
 
@@ -49,11 +48,15 @@ class PLL:
     
         Returns
         -------
-        u_g : complex            
-        u_g_q : float
-            Error signal (in V, corresponds to the q-axis grid voltage).
-        abs_u_g : float
-            magnitude of the grid voltage vector (in V).
+        ref : SimpleNamespace
+            References, containing the following fields:
+
+                u_g : complex
+                    Grid-voltage vector
+                u_gq : float
+                    Error signal (in V, corresponds to the q-axis grid voltage).
+                abs_u_g : float
+                     magnitude of the grid voltage vector (in V).
         """
 
         # Definition of the grid-voltage vector
@@ -71,7 +74,7 @@ class PLL:
     
         Parameters
         ----------
-        u_g_q : real
+        u_gq : real
             Error signal (in V, corresponds to the q-axis grid voltage).
     
         """
