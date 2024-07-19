@@ -33,7 +33,7 @@ class PLL:
         self.cfg = cfg
 
         # Initial states
-        self.w_pll = cfg.par.w_g
+        self.w_pll = cfg.par.w_gN
         self.theta_c = 0
 
 

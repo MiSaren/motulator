@@ -39,11 +39,11 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
-mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_g=2*np.pi*50, L_f=3e-3)
+mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_gN=2*np.pi*50, L_f=3e-3)
 
 grid_filter = model.LCLFilter(U_gN=mdl_par.U_gN, L_fc=mdl_par.L_f,
                               L_fg=3e-3, C_f=10e-6, L_g=20e-3)
-grid_model = model.FlexSource(w_N=2*np.pi*50, e_g_abs=400*np.sqrt(2/3),
+grid_model = model.FlexSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3),
                               S_grid=500e3, H_g=2, r_d=0.05)
 converter = Inverter(u_dc=650)
 

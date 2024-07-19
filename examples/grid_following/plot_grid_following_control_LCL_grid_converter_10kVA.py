@@ -40,7 +40,7 @@ base = BaseValues.from_nominal(nom)
 
 mdl_par = GridModelPars(
     U_gN = 400*np.sqrt(2/3),
-    w_g = 2*np.pi*50,
+    w_gN = 2*np.pi*50,
     L_f = 3.7e-3,
     C_dc = 100e-3
     )
