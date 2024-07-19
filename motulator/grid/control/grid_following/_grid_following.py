@@ -12,7 +12,6 @@ from motulator.grid.utils import GridModelPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL
-from motulator.common.utils import complex2abc
 
 # %%
 @dataclass
@@ -119,8 +118,6 @@ class GFLControl(GridConverterControlSystem):
         # Calculating of active and reactive powers
         fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
         fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
-
-        #fbk.u_g_abc = complex2abc(fbk.u_gs)
     
         return fbk
     
