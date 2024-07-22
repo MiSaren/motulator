@@ -19,9 +19,7 @@ system. The same architecture is used in *motulator*.
 
 The continuous-time system (named `mdl` in :doc:`/auto_examples/index`) is the
 model of a physical machine drive or grid converter system. The system comprises
-a power converter along with other subsystem models depending on the application,
-those being typically a machine and mechanics in the case of drives or a filter
-and grid in the case of grid converters. The continuous-time system may have
+a power converter along with other subsystem models depending on the application. The continuous-time system may have
 external inputs, such as a load torque or power fed to a DC-bus of the converter.
 
 The discrete-time controller (named `ctrl`) contains control algorithms, such as
