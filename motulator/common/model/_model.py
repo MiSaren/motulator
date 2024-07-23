@@ -410,8 +410,10 @@ class Inverter(Subsystem):
         """Post-process data."""
         data = self.data
         if self.par.C_dc is None:
-            data.u_dc = self.par.u_dc(data.t) if callable(
-                self.par.u_dc) else self.par.u_dc
+            if callable(self.u_dc):
+                self.data.u_dc = self.u_dc(self.data.t)
+            else:
+                self.data.u_dc = np.full(np.size(self.data.t), self.u_dc)
         else:
             data.u_dc = data.u_dc.real
         data.u_cs = data.q_cs*data.u_dc

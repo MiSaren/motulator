@@ -13,12 +13,12 @@ the current oscillations.
 import time
 import numpy as np
 
-from motulator.common.model import Simulation, Inverter
+from motulator.common.model import Simulation, Inverter, CarrierComparison
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import (plot_grid, GridModelPars)
+from motulator.grid.utils import plot_grid, GridModelPars
 
 
 # %%
@@ -31,12 +31,12 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
-mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_g=2*np.pi*50, L_f=8e-3)
+mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_gN=2*np.pi*50, L_f=8e-3)
 
 grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
 
 # Grid voltage source with constant frequency and voltage magnitude
-grid_model = model.StiffSource(w_N=mdl_par.w_g, e_g_abs = mdl_par.U_gN)
+grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs = mdl_par.U_gN)
 
 # Inverter with constant DC voltage
 converter = Inverter(u_dc=650)
@@ -88,7 +88,9 @@ print(f"Simulation time: {stop_time-start_time:.2f} s")
 
 
 # %%
-# Plot results in per-unit values. By omitting the argument `base` you can plot
+# Plot results in per-unit values. 
+
+# By omitting the argument `base` you can plot
 # the results in SI units.
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=True)

@@ -19,9 +19,7 @@ system. The same architecture is used in *motulator*.
 
 The continuous-time system (named `mdl` in :doc:`/auto_examples/index`) is the
 model of a physical machine drive or grid converter system. The system comprises
-a power converter along with other subsystem models depending on the application,
-those being typically a machine and mechanics in the case of drives or a filter
-and grid in the case of grid converters. The continuous-time system may have
+a power converter along with other subsystem models depending on the application. The continuous-time system may have
 external inputs, such as a load torque or power fed to a DC-bus of the converter.
 
 The discrete-time controller (named `ctrl`) contains control algorithms, such as
@@ -48,8 +46,9 @@ converter current is
 
 where :math:`i_\mathrm{a}`, :math:`i_\mathrm{b}`, and :math:`i_\mathrm{c}` are
 the phase currents, which may vary freely in time. In our notation, the subscript
-c refers to the converter-side AC quantities and the superscript s refers to the stationary coordinates.
-The space vector does not include the zero-sequence component, which is defined as
+c refers to the converter-side AC quantities and the superscript s refers to the
+stationary coordinates. The space vector does not include the zero-sequence
+component, which is defined as
 
 .. math::
 	i_\mathrm{c0} = \frac{1}{3}\left(i_\mathrm{a} + i_\mathrm{b} + i_\mathrm{c}\right) 

@@ -5,6 +5,88 @@ from types import SimpleNamespace
 import numpy as np
 from motulator.common.control import (ControlSystem, PIController)
 from motulator.common.utils import (abc2complex)
+from motulator.common.utils import wrap
+
+
+# %%
+class PLL:
+    """
+    PLL synchronizing loop.
+
+    Parameters
+    ----------
+    cfg: GFLControlCfg
+        Model and controller configuration parameters.
+        
+    """
+
+    def __init__(self, cfg):
+
+        """
+        Parameters
+        ----------
+        pars : GridFollowingCtrlPars
+           Control parameters.
+    
+        """
+        self.cfg = cfg
+
+        # Initial states
+        self.w_pll = cfg.par.w_gN
+        self.theta_c = 0
+
+
+    def output(self, fbk, ref):
+
+        """
+        Compute the estimated frequency and phase angle using the PLL.
+    
+        Parameters
+        ----------
+        u_gs : complex
+            PCC voltage (in V) in synchronous coordinates.
+    
+        Returns
+        -------
+        ref : SimpleNamespace
+            References, containing the following fields:
+
+                u_g : complex
+                    Grid-voltage vector
+                u_gq : float
+                    Error signal (in V, corresponds to the q-axis grid voltage).
+                abs_u_g : float
+                     magnitude of the grid voltage vector (in V).
+        """
+
+        # Definition of the grid-voltage vector
+        ref.u_g = fbk.u_gs*np.exp(-1j*fbk.theta_c)
+        # Definition of the error using the q-axis voltage
+        ref.u_gq = np.imag(ref.u_g)
+        # Absolute value of the grid-voltage vector
+        ref.abs_ug = np.abs(ref.u_g)
+
+        return ref
+    
+    def update(self, u_gq):
+        """
+        Update the integral state.
+    
+        Parameters
+        ----------
+        u_gq : real
+            Error signal (in V, corresponds to the q-axis grid voltage).
+    
+        """
+        cfg = self.cfg
+        # Calculation of the estimated PLL frequency
+        w_g_pll = cfg.k_p_pll*u_gq + self.w_pll
+
+        # Update the integrator state
+        self.w_pll = self.w_pll + cfg.T_s*cfg.k_i_pll*u_gq
+        # Update the grid-voltage angle state
+        self.theta_c = self.theta_c + cfg.T_s*w_g_pll
+        self.theta_c = wrap(self.theta_c)    # Limit to [-pi, pi]
 
 
 # %%
@@ -77,16 +159,20 @@ class GridConverterControlSystem(ControlSystem, ABC):
             u_dc : callable
                 DC-voltage reference (V) as a function of time (s). This signal
                 is needed in DC-bus voltage control mode.
+            on_u_cap: bool, optional
+                to use the filter capacitance voltage measurement or PCC voltage. 
+                The default is False.
 
     dc_bus_volt_ctrl : DCBusVoltageController | None
         DC-bus voltage controller. The default is None.
 
     """
 
-    def __init__(self, par, T_s, on_u_dc):
+    def __init__(self, par, T_s, on_u_dc, on_u_cap=False):
         super().__init__(T_s)
         self.par = par
         self.on_u_dc = on_u_dc
+        self.on_u_cap = on_u_cap
         self.dc_bus_volt_ctrl = None
         self.ref = SimpleNamespace()
 
@@ -120,7 +206,10 @@ class GridConverterControlSystem(ControlSystem, ABC):
         fbk.u_dc = mdl.converter.meas_dc_voltage()
         fbk.i_cs = abc2complex(mdl.grid_filter.meas_currents())
         fbk.u_cs = self.pwm.get_realized_voltage()
-        fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
+        if self.on_u_cap:
+            fbk.u_gs = abc2complex(mdl.grid_filter.meas_cap_voltage())
+        else:
+            fbk.u_gs = abc2complex(mdl.grid_filter.meas_pcc_voltage())
 
         return fbk
 

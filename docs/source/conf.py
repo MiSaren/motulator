@@ -69,7 +69,7 @@ sphinx_gallery_conf = {
     "auto_examples",  # path to where to save gallery generated output
     "nested_sections":
     True,
-    'plot_gallery': 'False', # do not execute example scripts
+    'plot_gallery': 'True', # do not execute example scripts
     "subsection_order":
     ExplicitOrder([
         "../../examples/vector",

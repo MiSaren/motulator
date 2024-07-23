@@ -41,6 +41,8 @@ class PSCControlCfg:
         Default is 2*pi*5.
     K_cc : float, optional
         Current controller low-pass filter gain. Default is 1.
+    overmodulation : str, optional
+        Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
     """
 
     par: GridModelPars
@@ -53,10 +55,11 @@ class PSCControlCfg:
     k_scal: float = 3/2
     w_0_cc: float = 2*np.pi*5
     K_cc: float = 1
+    overmodulation: str = "MPE"
 
     def __post_init__(self):
         par = self.par
-        self.k_p_psc = par.w_g*self.R_a/(self.k_scal*par.U_gN*par.U_gN)
+        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.U_gN*par.U_gN)
 
 
 # %%
@@ -121,7 +124,7 @@ class PSCControl(GridConverterControlSystem):
         ref.U = self.ref.U(ref.t) if callable(self.ref.U) else self.ref.U
 
         # Calculation of power droop
-        fbk.w_c = par.w_g + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
+        fbk.w_c = par.w_gN + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
 
         # Get voltage reference from current controller
         ref = self.current_ctrl.output(fbk, ref, par)
@@ -130,7 +133,7 @@ class PSCControl(GridConverterControlSystem):
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
 
         # Get duty ratios from PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_g)
+        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_gN, cfg.overmodulation)
 
         return ref
 
@@ -199,7 +202,7 @@ class PSCCurrentController:
 
         # Calculation of converter voltage output (reference sent to PWM)
         ref.u_c = ((ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c) +
-           cfg.on_u_g*1j*par.L_f*par.w_g*fbk.i_c)
+           cfg.on_u_g*1j*par.L_f*par.w_gN*fbk.i_c)
 
         return ref
 
