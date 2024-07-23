@@ -38,6 +38,8 @@ machine = model.InductionMachine(mdl_par)
 # Mechanical subsystem with the quadratic load torque profile
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
+
+# %%
 # Frequency converter with a diode bridge
 ac_source = StiffSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3))
 diode_bridge = DiodeBridge(L=2e-3)

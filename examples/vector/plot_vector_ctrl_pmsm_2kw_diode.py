@@ -32,6 +32,8 @@ mdl_par = SynchronousMachinePars(
     n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
 machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
+
+# %%
 # Frequency converter with a diode bridge
 ac_source = StiffSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3))
 diode_bridge = DiodeBridge(L=2e-3)
