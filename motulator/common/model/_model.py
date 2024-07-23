@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from motulator.common.utils import abc2complex
+from motulator.common.utils import abc2complex, complex2abc
 
 
 # %%
@@ -370,6 +370,7 @@ class Inverter(Subsystem):
     def set_outputs(self, _):
         """Set output variables."""
         self.out.u_cs = self.u_cs
+        self.out.u_dc = self.u_dc
 
     def set_inputs(self, t):
         """Set input variables."""
@@ -407,92 +408,41 @@ class Inverter(Subsystem):
 
     def post_process_states(self):
         """Post-process data."""
+        data = self.data
         if self.par.C_dc is None:
             if callable(self.u_dc):
                 self.data.u_dc = self.u_dc(self.data.t)
             else:
                 self.data.u_dc = np.full(np.size(self.data.t), self.u_dc)
         else:
-            self.data.u_dc = self.data.u_dc.real
-        self.data.u_cs = self.data.q_cs*self.data.u_dc
+            data.u_dc = data.u_dc.real
+        data.u_cs = data.q_cs*data.u_dc
 
 
 # %%
-# TODO: implement diode bridge as a separate subsystem and remove this class
-class FrequencyConverter(Subsystem):
+class DiodeBridge(Subsystem):
     """
-    Frequency converter.
+    Three-phase diode bridge.
 
-    This extends the Inverter class with models for a strong grid, a
-    three-phase diode-bridge rectifier, an LC filter.
+    A three-phase diode bridge rectifier with a DC-side inductor is modeled.
+    The inductor current i_L is used as a state variable.
 
     Parameters
     ----------
     L : float
         DC-bus inductance (H).
-    C : float
-        DC-bus capacitance (F).
-    U_g : float
-        Grid voltage (V, line-line, rms).
-    f_g : float
-        Grid frequency (Hz).
 
     """
 
-    def __init__(self, L, C, U_g, f_g):
+    def __init__(self, L):
         super().__init__()
-        self.par = SimpleNamespace(
-            L=L, C=C, w_g=2*np.pi*f_g, u_g=np.sqrt(2/3)*U_g)
-        self.state = SimpleNamespace(u_dc=np.sqrt(2)*U_g, i_L=0)
-        self.inp = SimpleNamespace(q_cs=None, i_cs=0j)
-        self.sol_states = SimpleNamespace(u_dc=[], i_L=[])
-        self.sol_q_cs = []
+        self.par = SimpleNamespace(L=L)
+        self.state = SimpleNamespace(i_L=0)
+        self.sol_states = SimpleNamespace(i_L=[])
 
-    @property
-    def u_dc(self):
-        """DC-bus voltage."""
-        return self.state.u_dc.real
-
-    @property
-    def u_cs(self):
-        """AC-side voltage (V)."""
-        return self.inp.q_cs*self.u_dc
-
-    @property
-    def i_dc(self):
-        """DC-side current (A)."""
-        return 1.5*np.real(self.inp.q_cs*np.conj(self.inp.i_cs))
-
-    def grid_voltages(self, t):
-        """
-        Compute three-phase grid voltages.
-
-        Parameters
-        ----------
-        t : float
-            Time (s).
-
-        Returns
-        -------
-        u_g_abc : ndarray of floats, shape (3,)
-            Phase voltages (V).
-
-        """
-        theta_g = self.par.w_g*t
-        u_g_abc = self.par.u_g*np.array([
-            np.cos(theta_g),
-            np.cos(theta_g - 2*np.pi/3),
-            np.cos(theta_g - 4*np.pi/3)
-        ])
-        return u_g_abc
-
-    def set_outputs(self, t):
+    def set_outputs(self, _):
         """Set output variables."""
-        self.out.u_cs = self.u_cs
-        self.out.u_dc, self.out.i_L = self.state.u_dc.real, self.state.i_L.real
-        self.out.i_dc = self.i_dc.real
-        # Grid phase voltages
-        self.out.u_g_abc = self.grid_voltages(t)
+        self.out.i_L = self.state.i_L.real
 
     def rhs(self):
         """
@@ -500,38 +450,30 @@ class FrequencyConverter(Subsystem):
 
         Returns
         -------
-        complex list, length 2
-            Time derivative of the complex state vector, [d_u_dc, d_i_L].
+        complex list, length 1
+            Time derivative of the complex state vector, [d_i_L].
 
         """
-        state, out, par = self.state, self.out, self.par
+        state, inp, out, par = self.state, self.inp, self.out, self.par
         # Output voltage of the diode bridge
-        u_di = np.amax(out.u_g_abc, axis=0) - np.amin(out.u_g_abc, axis=0)
+        u_g_abc = complex2abc(inp.u_gs)
+        u_di = np.amax(u_g_abc, axis=0) - np.amin(u_g_abc, axis=0)
         # State derivatives
-        d_u_dc = (state.i_L - self.i_dc)/par.C
-        d_i_L = (u_di - self.u_dc)/par.L
+        d_i_L = (u_di - inp.u_dc)/par.L
         # The inductor current cannot be negative due to the diode bridge
         if state.i_L < 0 and d_i_L < 0:
             d_i_L = 0
 
-        return [d_u_dc, d_i_L]
-
-    def meas_dc_voltage(self):
-        """Measure the DC-bus voltage."""
-        return self.u_dc
+        return [d_i_L]
 
     def post_process_states(self):
         """Post-process data."""
-        data = self.data
-        data.u_dc, data.i_L = data.u_dc.real, data.i_L.real
-        data.u_cs = data.q_cs*data.u_dc
+        self.data.i_L = self.data.i_L.real
 
     def post_process_with_inputs(self):
         """Post-process data with inputs."""
         data = self.data
-        data.i_dc = 1.5*np.real(data.q_cs*np.conj(data.i_cs))
-        data.u_g_abc = self.grid_voltages(data.t)
-        data.u_g = abc2complex(data.u_g_abc)
+        data.u_g_abc = complex2abc(data.u_gs)
         # Voltage at the output of the diode bridge
         data.u_di = (
             np.amax(data.u_g_abc, axis=0) - np.amin(data.u_g_abc, axis=0))
@@ -540,4 +482,4 @@ class FrequencyConverter(Subsystem):
             (np.amax(data.u_g_abc, axis=0) == data.u_g_abc).astype(int) -
             (np.amin(data.u_g_abc, axis=0) == data.u_g_abc).astype(int))
         # Grid current space vector
-        data.i_g = abc2complex(data.q_g_abc)*data.i_L
+        data.i_gs = abc2complex(data.q_g_abc)*data.i_L

@@ -44,6 +44,7 @@ class StiffSource(Subsystem):
         self.state = SimpleNamespace(exp_j_theta_g=complex(1))
         # Store the solutions in these lists
         self.sol_states = SimpleNamespace(exp_j_theta_g=[])
+        #self.inp = SimpleNamespace(i_cs=0*1j)
 
     def voltages(self, t, theta_g):
         """
