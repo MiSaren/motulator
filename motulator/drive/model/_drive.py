@@ -153,7 +153,6 @@ class DriveWithDiodebridge(Model):
 
     def interconnect(self, _):
         """Interconnect the subsystems."""
-        #self.voltage_source.inp.i_cs = self.diodebridge.out.i_L
         self.diodebridge.inp.u_dc = self.converter.out.u_dc
         self.diodebridge.inp.u_gs = self.voltage_source.out.e_gs
         self.converter.inp.i_ext = self.diodebridge.out.i_L
@@ -167,7 +166,6 @@ class DriveWithDiodebridge(Model):
         # Post-processing based on the states
         super().post_process_states()
         # Add the input data to the subsystems for post-processing
-        #self.voltage_source.data.i_cs = self.diodebridge.data.i_L
         self.diodebridge.data.u_dc = self.converter.data.u_dc
         self.diodebridge.data.u_gs = self.voltage_source.data.e_gs
         self.converter.data.i_ext = self.diodebridge.data.i_L

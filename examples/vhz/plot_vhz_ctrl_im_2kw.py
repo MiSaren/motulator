@@ -11,7 +11,7 @@ parameters in this example yield open-loop V/Hz control.
 import numpy as np
 
 from motulator.common.model import (
-    Simulation, CarrierComparison, FrequencyConverter, Inverter, DiodeBridge)
+    Simulation, CarrierComparison, Inverter, DiodeBridge)
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.drive import model
@@ -39,10 +39,9 @@ machine = model.InductionMachine(mdl_par)
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 # Frequency converter with a diode bridge
-ac_source = StiffSource(w_gN=2*np.pi*50, e_g_abs=400)
+ac_source = StiffSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3))
 diode_bridge = DiodeBridge(L=2e-3)
-#converter = FrequencyConverter(L=2e-3, C=235e-6, U_g=400, f_g=50)
-converter = Inverter(u_dc=400, C_dc=235e-6)
+converter = Inverter(u_dc=400*np.sqrt(2), C_dc=235e-6)
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
     diodebridge=diode_bridge,
