@@ -417,7 +417,6 @@ class Inverter(Subsystem):
         else:
             data.u_dc = data.u_dc.real
         data.u_cs = data.q_cs*data.u_dc
-        data.i_dc = 1.5*np.real(data.q_cs*np.conj(data.i_cs))
 
 
 # %%
