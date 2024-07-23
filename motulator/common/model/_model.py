@@ -370,6 +370,7 @@ class Inverter(Subsystem):
     def set_outputs(self, _):
         """Set output variables."""
         self.out.u_cs = self.u_cs
+        self.out.u_dc = self.u_dc
 
     def set_inputs(self, t):
         """Set input variables."""
@@ -579,7 +580,8 @@ class DiodeBridge(Subsystem):
         """
         state, inp, out, par = self.state, self.inp, self.out, self.par
         # Output voltage of the diode bridge
-        u_di = np.amax(out.u_g_abc, axis=0) - np.amin(out.u_g_abc, axis=0)
+        u_g_abc = complex2abc(inp.u_gs)
+        u_di = np.amax(u_g_abc, axis=0) - np.amin(u_g_abc, axis=0)
         # State derivatives
         d_i_L = (u_di - inp.u_dc)/par.L
         # The inductor current cannot be negative due to the diode bridge
