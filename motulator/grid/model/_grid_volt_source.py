@@ -12,16 +12,21 @@ from motulator.common.model import Subsystem
 from motulator.common.utils._utils import (complex2abc, abc2complex, wrap)
 
 # %%
-# TODO: implement simulation of harmonics, nonsymmetric faults
+# TODO: implement zero sequence and harmonics
 class StiffSource(Subsystem):
     """
     3-phase voltage source model.
 
     This model is a 3-phase voltage source for the AC grid. A stiff grid is
     modeled, where the frequency is given by the user either as a constant
-    or time-dependent function. Grid voltage magnitude can also be a function,
-    to simulate voltage dips and symmetrical short circuits. The complex form
-    of the grid angle (exp_j_theta_g) is used as a state variable.
+    or a time-dependent function. The grid voltage magnitude e_g_abs can also
+    be a function, to simulate voltage dips and symmetrical short circuits. 
+    
+    In addition, the voltage magnitude of any of the three phases can be given
+    as a function to simulate nonsymmetric faults. A phase shift angle for the
+    grid voltages can also be given as a function, to simulate phase angle
+    jumps. The complex form of the phase A voltage angle (exp_j_theta_p) is
+    used as a state variable.
 
     Parameters
     ----------
@@ -31,51 +36,76 @@ class StiffSource(Subsystem):
         3-phase grid voltage magnitude, phase-to-ground peak value (V).
     w_g : callable, optional
         Grid frequency (rad/s) as a function of time, `w_g(t)`. If given, w_g
-        will be used to compute grid voltage angle instead of w_N. The default
+        will be used to compute grid voltage angle instead of w_gN. The default
         value is None.
+    e_ga_abs : callable, optional
+        Phase A voltage magnitude, phase-to-ground peak value (V). Default is
+        None (e_g_abs used).
+    e_gb_abs : callable, optional
+        Phase B voltage magnitude, phase-to-ground peak value (V). Default is
+        None.
+    e_gc_abs : callable, optional
+        Phase C voltage magnitude, phase-to-ground peak value (V). Default is
+        None.
+    phi : callable, optional
+        Phase shift of the grid voltage (rad). Default is 0.
 
     """
 
-    def __init__(self, w_gN, e_g_abs, w_g=None):
+    def __init__(self, w_gN, e_g_abs, w_g=None, e_ga_abs=None, e_gb_abs=None,
+                 e_gc_abs=None, phi=lambda t: 0):
         super().__init__()
         self.w_g=w_g
+        self.e_ga_abs=e_ga_abs
+        self.e_gb_abs=e_gb_abs
+        self.e_gc_abs=e_gc_abs
+        self.phi=phi
         self.par = SimpleNamespace(w_gN=w_gN, e_g_abs=e_g_abs)
         # states
-        self.state = SimpleNamespace(exp_j_theta_g=complex(1))
+        self.state = SimpleNamespace(exp_j_theta_p=complex(1))
         # Store the solutions in these lists
-        self.sol_states = SimpleNamespace(exp_j_theta_g=[])
+        self.sol_states = SimpleNamespace(exp_j_theta_p=[])
 
-    def voltages(self, t, theta_g):
+    def voltages(self, t, theta_p):
         """
         Compute the grid voltage in stationary frame.
-           
+        
         Parameters
         ----------
         t : float
             Time (s).
-        theta_g : float
-            Grid voltage angle (rad).
+        theta_p : float
+            Phase A voltage angle (rad).
 
         Returns
         -------
-        e_gs: complex
+        e_gs : complex
             Grid complex voltage (V).
+        e_g0 : float
+            Zero-sequence component of grid voltage (V).
 
         """
 
-        # Calculation of the three-phase voltages
+        # Phase voltage magnitudes
         e_g_abs = self.par.e_g_abs(t) if callable(
             self.par.e_g_abs) else self.par.e_g_abs
-        e_g_a = e_g_abs*np.cos(theta_g)
-        e_g_b = e_g_abs*np.cos(theta_g-2*np.pi/3)
-        e_g_c = e_g_abs*np.cos(theta_g-4*np.pi/3)
+        e_ga_abs = self.e_ga_abs(t) if self.e_ga_abs is not None else e_g_abs
+        e_gb_abs = self.e_gb_abs(t) if self.e_gb_abs is not None else e_g_abs
+        e_gc_abs = self.e_gc_abs(t) if self.e_gc_abs is not None else e_g_abs
 
-        e_gs = abc2complex([e_g_a, e_g_b, e_g_c])
-        return e_gs
+        # Calculation of the three-phase voltages
+        e_ga = e_ga_abs*np.cos(theta_p - self.phi(t))
+        e_gb = e_gb_abs*np.cos(theta_p-2*np.pi/3 - self.phi(t))
+        e_gc = e_gc_abs*np.cos(theta_p-4*np.pi/3 - self.phi(t))
+
+        e_gs = abc2complex([e_ga, e_gb, e_gc])
+        e_g0 = (e_ga + e_gb + e_gc)/3
+        return e_gs, e_g0
 
     def set_outputs(self, t):
         """Set output variables."""
-        self.out.e_gs = self.voltages(t, np.angle(self.state.exp_j_theta_g))
+        self.out.e_gs, self.out.e_g0 = self.voltages(t, np.angle(
+            self.state.exp_j_theta_p))
 
     def set_inputs(self, t):
         """Set input variables."""
@@ -88,11 +118,11 @@ class StiffSource(Subsystem):
         Returns
         -------
         Complex list, length 1
-            Time derivative of the complex state vector, [d_exp_j_theta_g].
+            Time derivative of the complex state vector, [d_exp_j_theta_p].
             
         """
-        d_exp_j_theta_g = 1j*self.inp.w_g*self.state.exp_j_theta_g
-        return [d_exp_j_theta_g]
+        d_exp_j_theta_p = 1j*self.inp.w_g*self.state.exp_j_theta_p
+        return [d_exp_j_theta_p]
 
     def meas_voltages(self, t):
         """
@@ -109,8 +139,8 @@ class StiffSource(Subsystem):
             Phase voltages (V).
 
         """
-        e_g_abc = complex2abc(self.voltages(t, np.angle(self.state.exp_j_theta_g)))
-        return e_g_abc
+        e_gs, _ = self.voltages(t, np.angle(self.state.exp_j_theta_p))
+        return complex2abc(e_gs)
 
     def post_process_states(self):
         """Post-process the solution."""
@@ -118,8 +148,10 @@ class StiffSource(Subsystem):
             self.data.w_g = self.w_g(self.data.t)
         else:
             self.data.w_g = np.full(np.size(self.data.t), self.par.w_gN)
-        self.data.theta_g = np.angle(self.data.exp_j_theta_g)
-        self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)
+        self.data.theta_p = np.angle(self.data.exp_j_theta_p)
+        self.data.e_gs, self.data.e_g0 = self.voltages(
+            self.data.t, self.data.theta_p)
+        self.data.theta_g = np.angle(self.data.e_gs)
 
 
 class FlexSource(Subsystem):
