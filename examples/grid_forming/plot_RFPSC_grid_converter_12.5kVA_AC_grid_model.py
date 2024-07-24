@@ -2,8 +2,8 @@
 12.5-kVA grid-forming converter (RFPSC), with electromechanical grid model
 ==========================================================================
     
-This example simulates a grid-forming controlled converter, which uses
-reference-feedforward power synchronization control (RFPSC) method connected to
+This example simulates a grid-forming-controlled converter, which uses the
+reference-feedforward power synchronization control (RFPSC) method, connected to
 a weak grid. The control system includes a power synchronization loop (PSL) to
 synchronize with the grid, and an inner P-type current controller used to damp
 the current oscillations enhanced with a reference-feedforward term. The

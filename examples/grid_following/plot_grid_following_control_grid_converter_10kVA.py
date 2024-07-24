@@ -1,10 +1,10 @@
 """
-10-kVA grid following converter, power control
+10-kVA grid-following converter, power control
 ==============================================
     
-This example simulates a grid following controlled converter connected to a
+This example simulates a grid-following-controlled converter connected to a
 strong grid. The control system includes a phase-locked loop (PLL) to
-synchronize with the grid, a current reference generatior and a PI-based
+synchronize with the grid, a current reference generator, and a PI-based
 current controller.
 
 """
