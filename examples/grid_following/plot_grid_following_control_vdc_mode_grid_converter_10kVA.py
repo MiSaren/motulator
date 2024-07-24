@@ -21,7 +21,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridConverterPars,plot_grid
+from motulator.grid.utils import GridPars, FilterPars, DCBusPars, plot_grid
 from motulator.grid.control import DCBusVoltageController
 
 # To check the computation time of the program
@@ -31,26 +31,39 @@ start_time = time.time()
 # %%
 # Compute base values based on the nominal values (just for figures).
 
-nom = NominalValues(U=400, I=14.5, f=50, P=10e3)
+nom = NominalValues(
+    U=400,
+    I=14.5,
+    f=50,
+    P=10e3)
 base = BaseValues.from_nominal(nom)
 
 
 # %%
 # Configure the system model.
 
-mdl_par = GridConverterPars(
-    u_gN = 400*np.sqrt(2/3),
-    w_gN = 2*np.pi*50,
-    L_f = 10e-3,
-    C_dc = 1e-3
-    )
-grid_filter = model.LFilter(u_gN=mdl_par.u_gN, L_f=mdl_par.L_f)
+# Grid parameters
+grid_par = GridPars(
+    u_gN = base.u,
+    w_gN = base.w)
+
+# Filter parameters
+filter_par = FilterPars(L_fc = 10e-3)
+
+# DC-bus parameters
+DC_bus_par = DCBusPars(
+    u_dc = 600,
+    C_dc = 1e-3)
+
+grid_filter = model.LFilter(grid_par, filter_par)
+
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
-e_g_abs_var =  lambda t: np.sqrt(2/3)*400
+e_g_abs_var =  lambda t: base.u
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=mdl_par.w_gN,e_g_abs = e_g_abs_var)
-# Inverter model, u_dc is the initial DC voltage
-converter = Inverter(u_dc=600, C_dc=mdl_par.C_dc)
+grid_model = model.StiffSource(w_gN=grid_par.w_gN,e_g_abs = e_g_abs_var)
+
+# Inverter model, u_dc in DC bus parameter is the initial DC voltage
+converter = Inverter(DC_bus_par)
 
 # Create system model
 mdl = model.StiffSourceAndGridFilterModel(
@@ -62,7 +75,9 @@ mdl = model.StiffSourceAndGridFilterModel(
 
 # Control parameters
 cfg = control.GFLControlCfg(
-            mdl_par,
+            grid_par,
+            DC_bus_par,
+            filter_par,
             on_u_dc= True,
             i_max = 1.5*base.i,
             p_max = base.p,

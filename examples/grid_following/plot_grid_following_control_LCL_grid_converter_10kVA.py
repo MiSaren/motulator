@@ -13,14 +13,13 @@ PI-based current controller.
 # Imports.
 
 import time
-import numpy as np
 
 from motulator.common.model import Simulation, Inverter, CarrierComparison
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridConverterPars, plot_grid
+from motulator.grid.utils import GridPars, FilterPars, DCBusPars, plot_grid
 
 # To check the computation time of the program
 
@@ -31,30 +30,32 @@ start_time = time.time()
 
 nom = NominalValues(U=400, I=14.5, f=50, P=10e3)
 base = BaseValues.from_nominal(nom)
-# base_values = BaseValuesElectrical(
-#     U_nom=400, I_nom=14.5, f_nom=50.0, P_nom=10e3)
 
 
 # %%
 # Configure the system model.
 
-mdl_par = GridConverterPars(
-    u_gN = 400*np.sqrt(2/3),
-    w_gN = 2*np.pi*50,
-    L_f = 3.7e-3,
-    C_dc = 100e-3
-    )
-grid_filter = model.LCLFilter(
-    u_gN = mdl_par.u_gN,
-    C_f = 8e-6,
+grid_par = GridPars(
+    u_gN = base.u,
+    w_gN = base.w)
+
+filter_par = FilterPars(
     L_fc = 3.7e-3,
-    L_fg = 3.7e-3)
+    L_fg = 3.7e-3,
+    C_f = 8e-6)
+
+dc_bus_par = DCBusPars(
+    u_dc = 650,
+    C_dc = 100e-3)
+
+grid_filter = model.LCLFilter(grid_par, filter_par)
+
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
-e_g_abs_var =  lambda t: np.sqrt(2/3)*400
+e_g_abs_var =  lambda t: grid_par.u_gN
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=2*np.pi*50, e_g_abs = e_g_abs_var)
+grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs = e_g_abs_var)
 # Inverter model with constant DC voltage
-converter = Inverter(u_dc=650)
+converter = Inverter(dc_bus_par)
 
 # Create system model
 mdl = model.StiffSourceAndGridFilterModel(
@@ -66,7 +67,9 @@ mdl = model.StiffSourceAndGridFilterModel(
 
 # # Control parameters
 cfg = control.GFLControlCfg(
-    mdl_par,
+    grid_par=grid_par,
+    dc_bus_par=dc_bus_par,
+    filter_par=filter_par,
     on_u_cap = True,
     i_max=1.5*base.i
     )
