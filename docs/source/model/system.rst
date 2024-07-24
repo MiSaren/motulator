@@ -60,11 +60,6 @@ to flow if the stator winding of a machine is delta-connected, or the star point
 of the three-phase system is not connected, i.e., :math:`i_\mathrm{c0} = 0`.
 Consequently, the zero-sequence voltage cannot produce neither power nor torque.
 
-.. Even though the zero-sequence voltage exists at the ouput of typical 
-.. converters (see :doc:`/model/converters`), there is no path for the 
-.. zero-sequence current to flow in three-phase three-wire grid-converter systems, 
-.. i.e., :math:`i_\mathrm{c0} = 0`.
-
 The space vector transformation in :eq:`space_vector` is implemented in the
 function :func:`motulator.common.utils.abc2complex` and its inverse transformation
 in the function :func:`motulator.common.utils.complex2abc`. 
