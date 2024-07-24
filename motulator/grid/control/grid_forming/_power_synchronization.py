@@ -8,7 +8,7 @@ import numpy as np
 from motulator.common.utils import wrap
 
 from motulator.grid.control import GridConverterControlSystem
-from motulator.grid.utils import GridConverterPars
+from motulator.grid.utils import GridConverterPars, GridPars, DCBusPars, FilterPars
 
 
 # %%
@@ -45,7 +45,9 @@ class PSCControlCfg:
         Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
     """
 
-    par: GridConverterPars
+    grid_par: GridPars
+    dc_bus_par: DCBusPars
+    filter_par: FilterPars
     T_s: float = 1/(16e3)
     on_rf: bool = False
     on_u_dc: bool = False
@@ -58,7 +60,7 @@ class PSCControlCfg:
     overmodulation: str = "MPE"
 
     def __post_init__(self):
-        par = self.par
+        par = self.grid_par
         self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.u_gN*par.u_gN)
 
 
@@ -89,7 +91,7 @@ class PSCControl(GridConverterControlSystem):
     """
 
     def __init__(self, cfg):
-        super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc)
+        super().__init__(cfg.grid_par, cfg.dc_bus_par, cfg.T_s, on_u_dc=cfg.on_u_dc)
         self.cfg = cfg
         self.current_ctrl = PSCCurrentController(cfg)
         self.ref.q_g = 0
@@ -113,7 +115,7 @@ class PSCControl(GridConverterControlSystem):
 
     def output(self, fbk):
         """Extend the base class method."""
-        par, cfg = self.par, self.cfg
+        par, cfg = self.grid_par, self.cfg
 
         # Get the reference signals
         ref = super().output(fbk)
@@ -202,7 +204,7 @@ class PSCCurrentController:
 
         # Calculation of converter voltage output (reference sent to PWM)
         ref.u_c = ((ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c) +
-           cfg.on_u_g*1j*par.L_f*par.w_gN*fbk.i_c)
+           cfg.on_u_g*1j*self.cfg.filter_par.L_fc*par.w_gN*fbk.i_c)
 
         return ref
 

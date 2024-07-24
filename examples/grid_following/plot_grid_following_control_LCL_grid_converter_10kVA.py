@@ -86,7 +86,7 @@ ctrl.ref.q_g = lambda t: (t > .04)*(4e3)
 # %%
 # Create the simulation object and simulate it.
 
-#mdl.pwm = model.CarrierComparison()  # Enable the PWM model
+#mdl.pwm = CarrierComparison()  # Enable the PWM model
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop = .1)
 

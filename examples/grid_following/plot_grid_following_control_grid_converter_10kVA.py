@@ -78,7 +78,7 @@ mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
 # %%
 # Create the simulation object and simulate it.
 
-#mdl.pwm = model.CarrierComparison()  # Enable the PWM model
+#mdl.pwm = CarrierComparison()  # Enable the PWM model
 start_time = time.time()
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop = .1)
