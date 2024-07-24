@@ -27,7 +27,7 @@ class LFilter(Subsystem):
 
     Parameters
     ----------
-    U_gN : float
+    u_gN : float
         Grid nominal voltage (V), phase-to-ground peak value. Needed to set the
         initial value of PCC voltage.
     L_f : float
@@ -41,11 +41,11 @@ class LFilter(Subsystem):
 
     """
 
-    def __init__(self, U_gN, L_f, R_f=0, L_g=0, R_g=0):
+    def __init__(self, u_gN, L_f, R_f=0, L_g=0, R_g=0):
         super().__init__()
         self.par = SimpleNamespace(L_f=L_f, R_f=R_f, L_g=L_g, R_g=R_g)
-        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=U_gN+0j)
-        self.out = SimpleNamespace(u_gs=U_gN+0j)  # Needed for direct feedthrough
+        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=u_gN+0j)
+        self.out = SimpleNamespace(u_gs=u_gN+0j)  # Needed for direct feedthrough
         self.state = SimpleNamespace(i_gs=0+0j)
         self.sol_states = SimpleNamespace(i_gs=[])
 
@@ -127,7 +127,7 @@ class LCLFilter(Subsystem):
 
     Parameters
     ----------
-    U_gN : float
+    u_gN : float
         Grid nominal voltage (V), phase-to-ground peak value. Needed to set the
         initial values of capacitor and PCC voltages.
     L_fc : float
@@ -150,14 +150,14 @@ class LCLFilter(Subsystem):
 
     """
 
-    def __init__(self, U_gN, L_fc, L_fg, C_f,
+    def __init__(self, u_gN, L_fc, L_fg, C_f,
                  R_fc=0, R_fg=0, G_f=0, L_g=0, R_g=0):
         super().__init__()
         self.par = SimpleNamespace(L_fc=L_fc, R_fc=R_fc, L_fg=L_fg, R_fg=R_fg,
                                     C_f=C_f, G_f=G_f, L_g=L_g, R_g=R_g)
-        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=U_gN+0j)
-        self.out = SimpleNamespace(u_gs=U_gN+0j)
-        self.state = SimpleNamespace(i_cs=0+0j, u_fs=U_gN+0j, i_gs=0+0j)
+        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=u_gN+0j)
+        self.out = SimpleNamespace(u_gs=u_gN+0j)
+        self.state = SimpleNamespace(i_cs=0+0j, u_fs=u_gN+0j, i_gs=0+0j)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[], i_gs=[])
 
     def set_outputs(self, _):

@@ -20,7 +20,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridModelPars, plot_grid
+from motulator.grid.utils import GridConverterPars, plot_grid
 
 # To check the computation time of the program
 
@@ -38,7 +38,7 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
-mdl_par = GridModelPars(
+mdl_par = GridConverterPars(
     U_gN = 400*np.sqrt(2/3),
     w_gN = 2*np.pi*50,
     L_f = 3.7e-3,

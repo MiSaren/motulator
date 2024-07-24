@@ -26,7 +26,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import GridModelPars, plot_grid
+from motulator.grid.utils import GridConverterPars, plot_grid
 
 
 # %%
@@ -39,7 +39,10 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
-mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_gN=2*np.pi*50, L_f=3e-3)
+mdl_par = GridConverterPars(
+    U_gN=400*np.sqrt(2/3),
+    w_gN=2*np.pi*50,
+    L_f=3e-3)
 
 grid_filter = model.LCLFilter(U_gN=mdl_par.U_gN, L_fc=mdl_par.L_f,
                               L_fg=3e-3, C_f=10e-6, L_g=20e-3)

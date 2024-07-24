@@ -20,6 +20,7 @@ import motulator.drive.control.im as control
 from motulator.drive.utils import (
     InductionMachinePars, InductionMachineInvGammaPars,
     plot, plot_extra)
+from motulator.grid.utils import GridConverterPars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -41,9 +42,17 @@ mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 
 # %%
 # Frequency converter with a diode bridge
-ac_source = StiffSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3))
-diode_bridge = DiodeBridge(L=2e-3)
-converter = Inverter(u_dc=400*np.sqrt(2), C_dc=235e-6)
+
+# Grid and grid converter parameters
+grid_par = GridConverterPars(
+    U_gN=400*np.sqrt(2/3),
+    w_gN=2*np.pi*50,
+    L_f=2e-3,
+    C_dc=235e-6
+)
+ac_source = StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.U_gN)
+diode_bridge = DiodeBridge(L=grid_par.L_f)
+converter = Inverter(u_dc=400*np.sqrt(2), C_dc=grid_par.C_dc)
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
     diodebridge=diode_bridge,

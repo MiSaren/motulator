@@ -8,7 +8,7 @@ import numpy as np
 
 from motulator.grid.control import (
     GridConverterControlSystem)
-from motulator.grid.utils import GridModelPars
+from motulator.grid.utils import GridConverterPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL
@@ -20,8 +20,8 @@ class GFLControlCfg:
     
     Parameters
     ----------
-    par : GridModelPars
-        Grid model parameters.
+    par : GridConverterPars
+        Grid and Grid converter model parameters.
     T_s : float, optional
         Sampling period (s). The default is 1/(16e3).
     on_u_dc : bool, optional
@@ -54,7 +54,7 @@ class GFLControlCfg:
         overmodulation method. The default is Minimum Phase Error "MPE".
     """
 
-    par: GridModelPars
+    par: GridConverterPars
     T_s: float = 1/(16e3)
     on_u_dc: bool = False
     on_u_cap: bool = False
