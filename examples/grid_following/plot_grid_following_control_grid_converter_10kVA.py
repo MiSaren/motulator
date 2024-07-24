@@ -20,7 +20,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridModelPars, plot_grid
+from motulator.grid.utils import GridModelPars, plot_grid, plot_voltage_vector
 
 
 # %%
@@ -37,7 +37,7 @@ mdl_par = GridModelPars(
     w_gN=2*np.pi*50,
     L_f=10e-3,
     C_dc=1e-3)
-grid_filter = model.LFilter(U_gN=mdl_par.U_gN ,L_f=mdl_par.L_f)
+grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f)
 # AC grid model with constant voltage magnitude and frequency
 grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs=mdl_par.U_gN)
 # Inverter with constant DC voltage
@@ -65,6 +65,9 @@ ctrl = control.GFLControl(cfg)
 ctrl.ref.p_g = lambda t: (t > 0.02)*(5e3)
 ctrl.ref.q_g = lambda t: (t > 0.04)*(4e3)
 
+# Uncomment the following line to simulate a single-phase voltage dip
+#mdl.grid_model.par.e_gb_abs = lambda t: mdl_par.U_gN*(1 - 0.5*(t > 0.05))
+
 
 # %%
 # Create the simulation object and simulate it.
@@ -79,9 +82,12 @@ sim.simulate(t_stop = .1)
 
 
 # %%
-# Plot results in SI units.
+# Plot results per-unit values.
 
 # By omitting the argument `base` you can plot
 # the results in SI units.
+
+# Plot the locus of the grid voltage space vector
+plot_voltage_vector(sim=sim, base=base)
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=True)
