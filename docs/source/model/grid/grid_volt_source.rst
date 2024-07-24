@@ -22,14 +22,15 @@ simulate nonsymmetric grid faults. Furthermore, :math:`\vartheta_\mathrm{p}` is 
 grid phase voltage angle and :math:`\phi` an additional phase shift. If the phase voltages are symmetric,
 :math:`\vartheta_\mathrm{g}=\vartheta_\mathrm{p}` holds, where :math:`\vartheta_\mathrm{g}` is the
 angle of the grid voltage space vector :math:`\boldsymbol{e}_\mathrm{g}^\mathrm{s}`.
-If there is nonsymmetry in the phase voltages, a zero-sequence component
+
+Nonsymmetry in the grid voltage vector can also be modeled with a negative sequence component which is defined as
 
 .. math::
-    e_\mathrm{g0} = \frac{1}{3}\left(e_\mathrm{ga} + e_\mathrm{gb} + e_\mathrm{gc}\right) 
-    :label: grid_zerosequence
+    \boldsymbol{e}_\mathrm{g-}^\mathrm{s} = \hat{e}_\mathrm{g-}\mathrm{e}^{-\mathrm{j}(\vartheta_\mathrm{p} + \phi_\mathrm{u-} + \phi)}
+    :label: neg_sequence
 
-is also present. This component is calculated separately, as the information of the zero-sequence
-is lost in the space vector transformation.
+where :math:`\hat{e}_\mathrm{g-}` is the magnitude of the negative sequence component and :math:`\phi_\mathrm{u-}` is the
+phase shift of the negative sequence.
 
 Flex Source
 -----------

@@ -58,9 +58,7 @@ Even though the zero-sequence voltage exists at the ouput of typical converters
 (see :doc:`/model/converters`), there is no path for the zero-sequence current
 to flow if the stator winding of a machine is delta-connected, or the star point
 of the three-phase system is not connected, i.e., :math:`i_\mathrm{c0} = 0`.
-Consequently, the zero-sequence voltage cannot usually produce neither power nor torque.
-However, the zero-sequence may be considered in the case of an unbalanced grid, see
-:doc:`/model/grid/grid_volt_source`.
+Consequently, the zero-sequence voltage cannot produce neither power nor torque.
 
 The space vector transformation in :eq:`space_vector` is implemented in the
 function :func:`motulator.common.utils.abc2complex` and its inverse transformation
