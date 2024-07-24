@@ -63,13 +63,9 @@ ctrl = control.GFLControl(cfg)
 
 # Set the active and reactive power references
 ctrl.ref.p_g = lambda t: (t > 0.02)*(5e3)
-ctrl.ref.q_g = lambda t: (t > .04)*(4e3)
+ctrl.ref.q_g = lambda t: (t > 0.04)*(4e3)
 
-# AC-voltage magnitude (to simulate voltage dips or short-circuits)
-e_g_abs_var =  lambda t: np.sqrt(2/3)*400
-mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
 
-   
 # %%
 # Create the simulation object and simulate it.
 
