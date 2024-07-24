@@ -8,7 +8,7 @@ import numpy as np
 from motulator.common.utils import wrap
 
 from motulator.grid.control import GridConverterControlSystem
-from motulator.grid.utils import GridModelPars
+from motulator.grid.utils import GridConverterPars
 
 
 # %%
@@ -19,8 +19,8 @@ class PSCControlCfg:
 
     Parameters
     ----------
-    par : GridModelPars
-        Grid model parameters.
+    par : GridConverterPars
+        Grid and grid converter model parameters.
     T_s : float, optional
         Sampling period of the controller (s). Default is 1/(16e3).
     on_rf : bool, optional
@@ -45,7 +45,7 @@ class PSCControlCfg:
         Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
     """
 
-    par: GridModelPars
+    par: GridConverterPars
     T_s: float = 1/(16e3)
     on_rf: bool = False
     on_u_dc: bool = False
@@ -59,7 +59,7 @@ class PSCControlCfg:
 
     def __post_init__(self):
         par = self.par
-        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.U_gN*par.U_gN)
+        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.u_gN*par.u_gN)
 
 
 # %%

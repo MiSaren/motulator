@@ -18,7 +18,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import plot_grid, GridModelPars
+from motulator.grid.utils import plot_grid, GridConverterPars
 
 
 # %%
@@ -31,12 +31,15 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
-mdl_par = GridModelPars(U_gN=400*np.sqrt(2/3), w_gN=2*np.pi*50, L_f=8e-3)
+mdl_par = GridConverterPars(
+    u_gN=400*np.sqrt(2/3),
+    w_gN=2*np.pi*50,
+    L_f=8e-3)
 
-grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
+grid_filter = model.LFilter(u_gN=mdl_par.u_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
 
 # Grid voltage source with constant frequency and voltage magnitude
-grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs = mdl_par.U_gN)
+grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs = mdl_par.u_gN)
 
 # Inverter with constant DC voltage
 converter = Inverter(u_dc=650)
@@ -70,7 +73,7 @@ ctrl = control.PSCControl(cfg)
 # Set the references for converter output voltage magnitude and active power.
 
 # Converter output voltage magnitude reference (constant)
-ctrl.ref.U = lambda t: mdl_par.U_gN
+ctrl.ref.U = lambda t: mdl_par.u_gN
 
 # Active power reference
 ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) +

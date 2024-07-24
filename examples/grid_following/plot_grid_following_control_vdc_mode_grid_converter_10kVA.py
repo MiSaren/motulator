@@ -21,7 +21,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridModelPars,plot_grid
+from motulator.grid.utils import GridConverterPars,plot_grid
 from motulator.grid.control import DCBusVoltageController
 
 # To check the computation time of the program
@@ -38,13 +38,13 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
-mdl_par = GridModelPars(
-    U_gN = 400*np.sqrt(2/3),
+mdl_par = GridConverterPars(
+    u_gN = 400*np.sqrt(2/3),
     w_gN = 2*np.pi*50,
     L_f = 10e-3,
     C_dc = 1e-3
     )
-grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f)
+grid_filter = model.LFilter(u_gN=mdl_par.u_gN, L_f=mdl_par.L_f)
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var =  lambda t: np.sqrt(2/3)*400
 # AC grid model with constant voltage magnitude and frequency

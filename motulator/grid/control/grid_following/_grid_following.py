@@ -8,7 +8,7 @@ import numpy as np
 
 from motulator.grid.control import (
     GridConverterControlSystem)
-from motulator.grid.utils import GridModelPars
+from motulator.grid.utils import GridConverterPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL
@@ -20,8 +20,8 @@ class GFLControlCfg:
     
     Parameters
     ----------
-    par : GridModelPars
-        Grid model parameters.
+    par : GridConverterPars
+        Grid and Grid converter model parameters.
     T_s : float, optional
         Sampling period (s). The default is 1/(16e3).
     on_u_dc : bool, optional
@@ -54,7 +54,7 @@ class GFLControlCfg:
         overmodulation method. The default is Minimum Phase Error "MPE".
     """
 
-    par: GridModelPars
+    par: GridConverterPars
     T_s: float = 1/(16e3)
     on_u_dc: bool = False
     on_u_cap: bool = False
@@ -80,8 +80,8 @@ class GFLControlCfg:
         self.r_i = self.alpha_c*self.par.L_f
 
         # PLL gains
-        self.k_p_pll = 2*self.zeta*self.w0_pll/par.U_gN
-        self.k_i_pll = self.w0_pll*self.w0_pll/par.U_gN
+        self.k_p_pll = 2*self.zeta*self.w0_pll/par.u_gN
+        self.k_i_pll = self.w0_pll*self.w0_pll/par.u_gN
 
 
 # %%
@@ -104,7 +104,7 @@ class GFLControl(GridConverterControlSystem):
         self.current_reference = CurrentRefCalc(cfg)
 
         # Initialize the states
-        self.u_filt = cfg.par.U_gN + 1j*0
+        self.u_filt = cfg.par.u_gN + 1j*0
         
 
     def get_feedback_signals(self, mdl):
@@ -215,7 +215,7 @@ class CurrentRefCalc:
             Model and controller configuration parameters.
     
         """
-        self.u_gN = cfg.par.U_gN
+        self.u_gN = cfg.par.u_gN
         self.i_max = cfg.i_max
 
 
