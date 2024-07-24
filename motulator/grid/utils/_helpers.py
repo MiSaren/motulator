@@ -10,13 +10,13 @@ from dataclasses import dataclass
 # optionally there could be a parent class which is inherited (subclasses could
 # be LFilterModelPars and LCLFilterModelPars?)
 @dataclass
-class GridModelPars(ABC):
+class GridConverterPars(ABC):
     """
-    Class for grid parameters
+    Class for grid and grid converter parameters
     
     Parameters
     ----------
-    U_gN : float
+    u_gN : float
         Nominal grid voltage, phase-to-ground peak value (V).
     w_gN : float
         Nominal grid angular frequency (rad/s).
@@ -26,7 +26,7 @@ class GridModelPars(ABC):
         DC bus capacitance (F).
     
     """
-    U_gN: float = None
+    u_gN: float = None
     w_gN: float = None
     L_f: float = None
     C_dc: float = None

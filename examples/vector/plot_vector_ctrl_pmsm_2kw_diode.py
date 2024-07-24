@@ -10,7 +10,7 @@ drive, equipped with a diode bridge rectifier.
 import numpy as np
 
 from motulator.common.model import (
-    Simulation, CarrierComparison,Inverter, DiodeBridge)
+    Simulation, CarrierComparison, Inverter, DiodeBridge)
 from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.drive import model
@@ -18,6 +18,7 @@ from motulator.grid.model import StiffSource
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
     plot, plot_extra, SynchronousMachinePars)
+from motulator.grid.utils import GridConverterPars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -27,15 +28,26 @@ base = BaseValues.from_nominal(nom, n_p=3)
 
 # %%
 # Configure the system model.
+grid_par = GridConverterPars(
+    u_gN=400*np.sqrt(2/3),
+    w_gN=2*np.pi*50,
+    L_f=2e-3,
+    C_dc=235e-6
+)
 
 mdl_par = SynchronousMachinePars(
     n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
 machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
+
+# %%
 # Frequency converter with a diode bridge
-ac_source = StiffSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3))
-diode_bridge = DiodeBridge(L=2e-3)
-converter = Inverter(u_dc=400*np.sqrt(2), C_dc=235e-6)
+ac_source = StiffSource(
+    w_gN=grid_par.w_gN,
+    e_g_abs=grid_par.u_gN)
+
+diode_bridge = DiodeBridge(L=grid_par.L_f)
+converter = Inverter(u_dc=400*np.sqrt(2), C_dc=grid_par.C_dc)
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
     diodebridge=diode_bridge,

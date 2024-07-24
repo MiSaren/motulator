@@ -59,6 +59,9 @@ This model is implemented in the class :class:`motulator.common.model.DiodeBridg
    :target: .
 
    Six-pulse diode bridge rectifier.
+   
+The use case example of six-pulse diode bridge can be found in :doc:`/auto_examples/vhz/plot_vhz_ctrl_im_2kw` and 
+:doc:`/auto_examples/vector/plot_vector_ctrl_pmsm_2kw_diode`
 
 Carrier Comparison
 ------------------
