@@ -39,12 +39,12 @@ base = BaseValues.from_nominal(nom)
 # Configure the system model.
 
 mdl_par = GridConverterPars(
-    U_gN = 400*np.sqrt(2/3),
+    u_gN = 400*np.sqrt(2/3),
     w_gN = 2*np.pi*50,
     L_f = 10e-3,
     C_dc = 1e-3
     )
-grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f)
+grid_filter = model.LFilter(u_gN=mdl_par.u_gN, L_f=mdl_par.L_f)
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var =  lambda t: np.sqrt(2/3)*400
 # AC grid model with constant voltage magnitude and frequency

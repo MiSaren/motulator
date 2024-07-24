@@ -39,13 +39,13 @@ base = BaseValues.from_nominal(nom)
 # Configure the system model.
 
 mdl_par = GridConverterPars(
-    U_gN = 400*np.sqrt(2/3),
+    u_gN = 400*np.sqrt(2/3),
     w_gN = 2*np.pi*50,
     L_f = 3.7e-3,
     C_dc = 100e-3
     )
 grid_filter = model.LCLFilter(
-    U_gN = mdl_par.U_gN,
+    u_gN = mdl_par.u_gN,
     C_f = 8e-6,
     L_fc = 3.7e-3,
     L_fg = 3.7e-3)

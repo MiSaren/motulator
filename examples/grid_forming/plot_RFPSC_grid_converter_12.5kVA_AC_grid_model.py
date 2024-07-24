@@ -40,13 +40,13 @@ base = BaseValues.from_nominal(nom)
 # Configure the system model.
 
 mdl_par = GridConverterPars(
-    U_gN=400*np.sqrt(2/3),
+    u_gN=400*np.sqrt(2/3),
     w_gN=2*np.pi*50,
     L_f=3e-3)
 
-grid_filter = model.LCLFilter(U_gN=mdl_par.U_gN, L_fc=mdl_par.L_f,
+grid_filter = model.LCLFilter(u_gN=mdl_par.u_gN, L_fc=mdl_par.L_f,
                               L_fg=3e-3, C_f=10e-6, L_g=20e-3)
-grid_model = model.FlexSource(w_gN=2*np.pi*50, e_g_abs=400*np.sqrt(2/3),
+grid_model = model.FlexSource(w_gN=2*np.pi*50, e_g_abs=mdl_par.u_gN,
                               S_grid=500e3, H_g=2, r_d=0.05)
 converter = Inverter(u_dc=650)
 
@@ -74,7 +74,7 @@ ctrl = control.PSCControl(cfg)
 # Set the time-dependent reference and disturbance signals.
 
 # Converter output voltage magnitude reference (constant)
-ctrl.ref.U = lambda t: mdl_par.U_gN
+ctrl.ref.U = lambda t: mdl_par.u_gN
 
 # Active power reference
 ctrl.ref.p_g = lambda t: ((t > .2)*(6.25e3))

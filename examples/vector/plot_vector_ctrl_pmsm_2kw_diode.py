@@ -29,7 +29,7 @@ base = BaseValues.from_nominal(nom, n_p=3)
 # %%
 # Configure the system model.
 grid_par = GridConverterPars(
-    U_gN=400*np.sqrt(2/3),
+    u_gN=400*np.sqrt(2/3),
     w_gN=2*np.pi*50,
     L_f=2e-3,
     C_dc=235e-6
@@ -42,7 +42,10 @@ mechanics = model.StiffMechanicalSystem(J=.015)
 
 # %%
 # Frequency converter with a diode bridge
-ac_source = StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.U_gN)
+ac_source = StiffSource(
+    w_gN=grid_par.w_gN,
+    e_g_abs=grid_par.u_gN)
+
 diode_bridge = DiodeBridge(L=grid_par.L_f)
 converter = Inverter(u_dc=400*np.sqrt(2), C_dc=grid_par.C_dc)
 mdl = model.DriveWithDiodebridge(

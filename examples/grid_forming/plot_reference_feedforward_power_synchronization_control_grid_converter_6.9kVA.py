@@ -32,12 +32,12 @@ base = BaseValues.from_nominal(nom)
 # Configure the system model.
 
 mdl_par = GridConverterPars(
-    U_gN=400*np.sqrt(2/3),
+    u_gN=400*np.sqrt(2/3),
     w_gN=2*np.pi*50,
     L_f=8e-3)
 
-grid_filter = model.LFilter(U_gN=mdl_par.U_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
-grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs = mdl_par.U_gN)
+grid_filter = model.LFilter(u_gN=mdl_par.u_gN, L_f=mdl_par.L_f, L_g=65.8e-3)
+grid_model = model.StiffSource(w_gN=mdl_par.w_gN, e_g_abs = mdl_par.u_gN)
 converter = Inverter(u_dc=650)
 
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
@@ -65,7 +65,7 @@ ctrl = control.PSCControl(cfg)
 # Set the references for converter output voltage magnitude and active power.
 
 # Converter output voltage magnitude reference (constant)
-ctrl.ref.U = lambda t: mdl_par.U_gN
+ctrl.ref.U = lambda t: mdl_par.u_gN
 
 # Active power reference
 ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) +

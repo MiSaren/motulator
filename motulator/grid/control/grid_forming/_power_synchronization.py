@@ -59,7 +59,7 @@ class PSCControlCfg:
 
     def __post_init__(self):
         par = self.par
-        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.U_gN*par.U_gN)
+        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.u_gN*par.u_gN)
 
 
 # %%
