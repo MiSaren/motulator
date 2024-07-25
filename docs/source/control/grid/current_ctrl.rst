@@ -49,7 +49,7 @@ This controller is implemented in the class :class:`motulator.common.control.Com
 
 .. [#Har2009] Harnefors, Bongiorno, "Current controller design
        for passivity of the input admittance," 2009 13th European Conference
-       on Power Electronics and Applications, Barcelona, Spain, 2009. https://doi.org/10.1109/EPE.2009.5276547
+       on Power Electronics and Applications, Barcelona, Spain, 2009.
 
 .. [#Bri2000] Briz, Degner, Lorenz, "Analysis and design of current 
        regulators using complex vectors," IEEE Trans. Ind. Appl., 2000,
