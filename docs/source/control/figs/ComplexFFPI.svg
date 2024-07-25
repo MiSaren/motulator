@@ -25,9 +25,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="true"
-     inkscape:zoom="1.8619553"
-     inkscape:cx="244.63531"
-     inkscape:cy="54.781123"
+     inkscape:zoom="2.2451622"
+     inkscape:cx="332.49269"
+     inkscape:cy="185.28728"
      inkscape:window-width="1512"
      inkscape:window-height="839"
      inkscape:window-x="0"
@@ -1560,6 +1560,30 @@
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none;marker-end:none"
          transform="matrix(0.4,0,0,0.4,2.96,0.4)" />
     </marker>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath111-9">
+      <path
+         d="M 0,0 H 393.15601 V 178.04547 H 0 Z"
+         transform="matrix(-1,0,0,1,2.5000001e-7,-178.04547)"
+         id="path111-3" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath112-9">
+      <path
+         d="M 0,0 H 393.15601 V 178.04547 H 0 Z"
+         transform="matrix(-1,0,0,1,2.5000001e-7,-178.04547)"
+         id="path112-1" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath113-04">
+      <path
+         d="M 0,0 H 393.15601 V 178.04547 H 0 Z"
+         transform="matrix(-1,0,0,1,2.5000001e-7,-178.04547)"
+         id="path113-90" />
+    </clipPath>
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -1622,7 +1646,7 @@
     </g>
     <g
        id="g99-1-5"
-       transform="matrix(0.24911193,0,0,0.20108401,-17.271597,3.6761957)"
+       transform="matrix(0.24911193,0,0,0.20108401,-17.375061,4.6236166)"
        style="stroke-width:0.830423;stroke-dasharray:none">
       <path
          d="m 307.875,50.047 h 30 v 22.5 h -30 z"
@@ -1668,6 +1692,28 @@
          transform="matrix(-1.3333333,0,0,-1.3333333,40.258667,54.234041)"
          clip-path="url(#clipPath113)"
          id="path126" />
+    </g>
+    <g
+       id="g126-3"
+       transform="matrix(5.2334941e-7,-0.26458333,0.26458333,5.2334941e-7,81.082786,156.11782)">
+      <path
+         d="m -349.875,-57.547 3.75,-7.5"
+         style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         transform="matrix(-1.3333333,0,0,-1.3333333,40.258667,54.234041)"
+         clip-path="url(#clipPath111-9)"
+         id="path124-2" />
+      <path
+         d="m -348,-57.547 3.75,-7.5"
+         style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         transform="matrix(-1.3333333,0,0,-1.3333333,40.258667,54.234041)"
+         clip-path="url(#clipPath112-9)"
+         id="path125-8" />
+      <path
+         d="m -346.125,-57.547 3.75,-7.5"
+         style="fill:none;stroke:#000000;stroke-width:0.75;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         transform="matrix(-1.3333333,0,0,-1.3333333,40.258667,54.234041)"
+         clip-path="url(#clipPath113-04)"
+         id="path126-2" />
     </g>
     <g
        id="g128"
@@ -1814,7 +1860,7 @@
     </g>
     <g
        id="g140-9"
-       transform="matrix(0.25136633,0,0,0.24601234,-18.687265,4.3241739)"
+       transform="matrix(0.25136633,0,0,0.24601234,-18.691577,5.0982751)"
        style="stroke-width:0.961094;stroke-dasharray:none">
       <path
          d="m 235.367,31.316 h 30 v 30 h -30 z"
@@ -1830,7 +1876,7 @@
          id="path140-9-4" />
     </g>
     <g
-       transform="matrix(0.352778,0,0,0.352778,74.16775,27.329041)"
+       transform="matrix(0.352778,0,0,0.352778,74.163438,28.103142)"
        ns3:version="1.10.2"
        ns3:texconverter="pdflatex"
        ns3:pdfconverter="inkscape"
@@ -1881,7 +1927,7 @@
       </g>
     </g>
     <g
-       transform="matrix(0.352778,0,0,0.352778,78.563504,63.113243)"
+       transform="matrix(0.352778,0,0,0.352778,78.559192,63.887344)"
        ns3:version="1.10.2"
        ns3:texconverter="pdflatex"
        ns3:pdfconverter="inkscape"
@@ -2201,7 +2247,7 @@
       </g>
     </g>
     <g
-       transform="matrix(0.352778,0,0,0.352778,96.739618,29.777143)"
+       transform="matrix(0.352778,0,0,0.352778,96.636154,30.724564)"
        ns3:version="1.10.2"
        ns3:texconverter="pdflatex"
        ns3:pdfconverter="inkscape"
@@ -2366,7 +2412,7 @@
          id="path41-2" />
     </g>
     <g
-       transform="matrix(0.352778,0,0,0.352778,65.952585,32.078369)"
+       transform="matrix(0.352778,0,0,0.352778,65.658487,33.607536)"
        ns3:version="1.10.2"
        ns3:texconverter="pdflatex"
        ns3:pdfconverter="inkscape"
@@ -3548,11 +3594,11 @@
        id="path45" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-end:url(#marker169)"
-       d="M 94.836085,30.978616 85.34794,30.899106"
+       d="m 95,31.999995 -9.488145,-0.07951"
        id="path168" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-end:url(#marker171)"
-       d="M 75,31.020028 66.992592,30.97349 V 27.558062"
+       d="m 75,32.075281 -8.007408,-0.06055 v -4.443934"
        id="path170" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-end:url(#marker173)"
@@ -3782,12 +3828,12 @@
        d="M 120,9.9999984 V 2.9999995"
        id="path197" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-start:url(#marker209);marker-end:url(#marker211)"
-       d="m 79.999999,21.40518 v 3.129627"
+       style="fill:none;stroke:#000000;stroke-width:0.238999;stroke-miterlimit:0;stroke-dasharray:none;marker-start:url(#marker209);marker-end:url(#marker211)"
+       d="m 79.999996,21.447303 v 3.695382"
        id="path208" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-start:url(#marker102)"
-       d="m 79.974243,22.999996 h 9.054206 l -0.0569,19.938235 4.583991,0.06176"
+       d="m 79.974243,23.496729 h 9.054206 l -0.0569,19.448686 4.583991,0.06024"
        id="path212" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-start:url(#Dot);marker-end:url(#marker217)"
@@ -3795,11 +3841,11 @@
        id="path213" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-end:url(#marker219)"
-       d="m 118.63063,56.999991 h 6.08372 V 30.999996 h -19.26511"
+       d="m 118.63063,56.995605 h 6.08372 v -24.99561 h -19.26511"
        id="path218" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none;marker-start:url(#marker102)"
-       d="m 109,30.999996 0.0616,12.000439 -0.60467,0.0084"
+       d="m 109,32.057402 0.0616,10.925669 -0.60467,0.0076"
        id="path220" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.239;stroke-miterlimit:0;stroke-dasharray:none"
