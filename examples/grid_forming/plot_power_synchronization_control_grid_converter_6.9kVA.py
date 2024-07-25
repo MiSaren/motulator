@@ -18,7 +18,7 @@ from motulator.common.utils import BaseValues, NominalValues
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import plot_grid, GridConverterPars, GridPars, FilterPars, DCBusPars
+from motulator.grid.utils import plot_grid, GridPars, FilterPars, DCBusPars
 
 
 # %%
@@ -31,20 +31,17 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
+# Grid parameters
 grid_par = GridPars(
     u_gN = base.u,
     w_gN = base.w,
     L_g=65.8e-3)
 
-filter_par = FilterPars(
-    L_fc = 10e-3)
+# Filter parameters
+filter_par = FilterPars(L_fc = 8e-3)
 
+# DC bus parameters
 dc_bus_par = DCBusPars(u_dc=650)
-
-mdl_par = GridConverterPars(
-    u_gN=400*np.sqrt(2/3),
-    w_gN=2*np.pi*50,
-    L_f=8e-3)
 
 grid_filter = model.LFilter(grid_par, filter_par)
 
@@ -58,7 +55,7 @@ converter = Inverter(dc_bus_par)
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 
 # Uncomment line below to enable the PWM model
-mdl.pwm = CarrierComparison()
+#mdl.pwm = CarrierComparison()
 
 
 # %%
@@ -82,7 +79,7 @@ ctrl = control.PSCControl(cfg)
 # Set the references for converter output voltage magnitude and active power.
 
 # Converter output voltage magnitude reference (constant)
-ctrl.ref.U = lambda t: mdl_par.u_gN
+ctrl.ref.U = lambda t: grid_par.u_gN
 
 # Active power reference
 ctrl.ref.p_g = lambda t: ((t > .2)*(2.3e3) + (t > .5)*(2.3e3) +

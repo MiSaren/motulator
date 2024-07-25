@@ -21,14 +21,14 @@ class GridConverterPars(ABC):
     w_gN : float
         Nominal grid angular frequency (rad/s).
     L_f : float
-        Filter inductance (H).
+        Dc bus inductance (H).
     C_dc : float
         DC bus capacitance (F).
     
     """
     u_gN: float = None
     w_gN: float = None
-    L_f: float = None
+    L_dc: float = None
     C_dc: float = None
 
 @dataclass

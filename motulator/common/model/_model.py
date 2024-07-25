@@ -435,14 +435,14 @@ class DiodeBridge(Subsystem):
 
     Parameters
     ----------
-    L : float
+    L_dc : float
         DC-bus inductance (H).
 
     """
 
-    def __init__(self, L):
+    def __init__(self, L_dc):
         super().__init__()
-        self.par = SimpleNamespace(L=L)
+        self.par = SimpleNamespace(L=L_dc)
         self.state = SimpleNamespace(i_L=0)
         self.sol_states = SimpleNamespace(i_L=[])
 

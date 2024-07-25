@@ -135,12 +135,17 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
     Parameters
     ----------
-    par : GridModelPars
+    grid_par : GridPars
         Grid model parameters.
+    dc_bus_par : DCBusPars
+        DC-bus model parameters.
     T_s : float
         Sampling period (s).
     on_u_dc : bool
         If True, DC-bus voltage control mode is used.
+    on_u_cap : bool, optional
+        to use the filter capacitance voltage measurement or PCC voltage. 
+        The default is False
 
     Attributes
     ----------

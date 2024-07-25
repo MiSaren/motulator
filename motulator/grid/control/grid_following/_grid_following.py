@@ -151,7 +151,7 @@ class GFLControl(GridConverterControlSystem):
         u_filt = self.u_filt
 
         # Use of PLL to bring ugq to zero
-        self.pll.output(fbk, ref) 
+        self.pll.output(fbk, ref)
 
         # Voltage reference generation in synchronous coordinates
         ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, grid_par.w_gN)
