@@ -24,6 +24,8 @@ class LCFilter(Subsystem):
                 Converter-side inductance of the filter (H).
             filter_pars.C_f : float
                 Filter capacitance (F).
+            filter_pars.G_f : float, optional
+                Filter conductance (S). The default is 0.
             filter_pars.R_fc : float, optional
                 Converter-side series resistance (Ω). The default is 0.
    
@@ -31,7 +33,11 @@ class LCFilter(Subsystem):
 
     def __init__(self, filter_pars: FilterPars):
         super().__init__()
-        self.par = SimpleNamespace(L=filter_pars.L_fc, C=filter_pars.C_f, R=filter_pars.R_fc)
+        self.par = SimpleNamespace(
+            L_fc=filter_pars.L_fc,
+            C_f=filter_pars.C_f,
+            R_fc=filter_pars.R_fc,
+            G_f=filter_pars.G_f)
         self.state = SimpleNamespace(i_cs=0, u_fs=0)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[])
 
@@ -43,8 +49,8 @@ class LCFilter(Subsystem):
     def rhs(self):
         """Compute state derivatives."""
         state, inp, par = self.state, self.inp, self.par
-        d_i_cs = (inp.u_cs - state.u_fs - par.R*state.i_cs)/par.L
-        d_u_fs = (state.i_cs - inp.i_fs)/par.C
+        d_i_cs = (inp.u_cs - state.u_fs - par.R_fc*state.i_cs)/par.L_fc
+        d_u_fs = (state.i_cs - inp.i_fs - par.G_f*state.u_fs)/par.C_f
 
         return [d_i_cs, d_u_fs]
 
