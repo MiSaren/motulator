@@ -271,7 +271,7 @@ class BaseValues:
 @dataclass
 class FilterPars(ABC):
     """
-    Class for filter parameters
+    Filter parameters
 
     Parameters
     ----------
@@ -301,7 +301,7 @@ class FilterPars(ABC):
 @dataclass
 class DCBusPars(ABC):
     """
-    Class for DC bus parameters
+    DC bus parameters
 
     Parameters
     ----------

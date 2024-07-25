@@ -10,7 +10,7 @@ in torque-control mode.
 import numpy as np
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.utils import BaseValues, NominalValues, DCBusPars
 
 from motulator.drive import model
 import motulator.drive.control.im as control
@@ -27,6 +27,8 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # %%
 # Configure the system model.
 
+dc_bus = DCBusPars(u_dc=540)
+
 # Parametrize the machine model using its inverse-Γ parameters
 par = InductionMachineInvGammaPars(
     n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
@@ -34,7 +36,7 @@ mdl_par = InductionMachinePars.from_inv_gamma_model_pars(par)
 machine = model.InductionMachine(mdl_par)
 # Use externally specified actual speed w_M(t), defined subsequently below
 mechanics = model.ExternalRotorSpeed()
-converter = Inverter(u_dc=540)
+converter = Inverter(dc_bus)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
