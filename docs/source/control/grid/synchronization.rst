@@ -4,21 +4,22 @@ Synchronization Methods
 Phase-Locked Loop
 -----------------
 
-The :doc:`/auto_examples/grid_following/index` examples use a Phase-Locked Loop (PLL) to synchronize with the grid. 
+The :doc:`/auto_examples/grid_following/index` examples use a Phase-Locked Loop (PLL) to synchronize with the grid.
+The block diagram of the PLL is shown in the figure below.
 
 .. figure:: ../figs/pll.svg
    :width: 100%
    :align: center
-   :alt: Phase-Locked Loop for the grid synchronization
+   :alt: Block diagram of the phase-locked loop for grid synchronization
    :target: .
 
-   Phase-Locked Loop.
+   Block diagram of the phase-locked loop.
 
-The PLL drives the signal :math:`\hat{u}_{gq}` to zero, leading to :math:`\hat{\vartheta}_g=\vartheta_g` 
-and :math:`\hat{u}_{gd}=u_{gd}` in ideal conditions. 
-The grid voltage-vector :math:`\boldsymbol{u}_\mathrm{g}^\mathrm{s}=u_g e^{j \vartheta_g}` is measured.
-The angle :math:`\vartheta_g` can be noisy and it is not directly used in the control. 
-Instead, the PLL tracks :math:`\vartheta_g` and filters its noise and harmonics above the PLL bandwidth.
+The PLL drives the signal :math:`\hat{u}_\mathrm{gq}` to zero, leading to :math:`\hat{\vartheta}_\mathrm{g}=\vartheta_\mathrm{g}` 
+and :math:`\hat{u}_\mathrm{gd}=u_\mathrm{gd}` in ideal conditions. 
+The grid voltage-vector :math:`\boldsymbol{u}_\mathrm{g}^\mathrm{s}=u_\mathrm{g} \mathrm{e}^{\mathrm{j} \vartheta_\mathrm{g}}` is measured.
+The angle :math:`\vartheta_\mathrm{g}` can be noisy and it is not directly used in the control. 
+Instead, the PLL tracks :math:`\vartheta_{g}` and filters its noise and harmonics above the PLL bandwidth.
 
 The gain selection:
 

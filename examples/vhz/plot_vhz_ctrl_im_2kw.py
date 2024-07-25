@@ -56,6 +56,7 @@ dc_bus_par = DCBusPars(
 ac_source = StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
 diode_bridge = DiodeBridge(dc_bus_par)
 converter = Inverter(dc_bus_par)
+
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
     diodebridge=diode_bridge,

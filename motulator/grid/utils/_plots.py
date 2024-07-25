@@ -226,6 +226,56 @@ def plot_grid(sim, base=None, plot_pcc_voltage=False, plot_w=False,
     plt.show()
 
 
+def plot_voltage_vector(sim, base=None):
+    """
+    Plot locus of the grid voltage vector.
+
+    Parameters
+    ----------
+    sim : Simulation
+        Should contain the simulated data.
+    base : BaseValues, optional
+        Base values for scaling the waveforms.
+
+    """
+    FS = 16 # Font size of the plots axis
+    FL = 16 # Font size of the legends only
+    LW = 3 # Line width in plots
+
+    mdl = sim.mdl  # Continuous-time data
+
+    # Check if the base values were given
+    if base is None:
+        pu_vals = False
+        # Scaling with unity base values except for power use kW
+        base = SimpleNamespace(w=1, u=1, i=1, p=1000)
+    else:
+        pu_vals = True
+
+    # Plot the grid voltage vector in the complex plane
+    e_g_alpha = mdl.grid_model.data.e_gs.real
+    e_g_beta = mdl.grid_model.data.e_gs.imag
+
+    _, ax = plt.subplots()
+    ax.plot(e_g_alpha/base.u, e_g_beta/base.u, linewidth=LW)
+    ax.axhline(0, color="k")
+    ax.axvline(0, color="k")
+    ticks = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5]
+    if pu_vals:
+        ax.set_xlabel("Real part (p.u.)")
+        ax.set_ylabel("Imaginary part (p.u.)")
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+    else:
+        ax.set_xlabel("Real part (V)")
+        ax.set_ylabel("Imaginary part (V)")
+    ax.legend([r"$\boldsymbol{e}_\mathrm{g}^\mathrm{s}$"], prop={'size': FL})
+    ax.set_aspect("equal")
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+             ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(FS)
+
+
 # %%
 def save_plot(name):
     """

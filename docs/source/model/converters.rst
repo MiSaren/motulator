@@ -4,7 +4,7 @@ Converters
 Inverter
 --------
 
-The figure below shows a three-phase, two-level voltage source inverter and its equivalent model, where ideal switches  are assumed.
+The figure below shows a three-phase, two-level voltage source inverter and its equivalent model, where ideal switches are assumed.
 In the equivalent model, each changeover switch is connected to either negative or positive potential of the DC-bus.
 The switching phenomena are assumed to be infinitely fast.
 The inverter model is provided in the class :class:`motulator.common.model.Inverter`. 
@@ -18,9 +18,10 @@ The inverter model is provided in the class :class:`motulator.common.model.Inver
 
    Three-phase two-level inverter: (left) main circuit; (right) equivalent model. The DC-bus voltage and currents are :math:`u_\mathrm{dc}` and :math:`i_\mathrm{dc}`, respectively.
 
-By default, the DC-bus voltage is stiff. Alternatively, the capacitive dynamics of the DC-bus are modeled.
-An external current source is feeding the DC-bus that is modeled considering an equivalent circuit 
-comprising a parallel connected DC bus capacitor and resitor. The model is implemented as
+By default, the DC-bus voltage is stiff. Alternatively, the capacitive dynamics of the DC-bus can be simulated.
+The equivalent circuit with the dynamic model of the DC-bus is shown in the figure below.
+An external current source is feeding the DC-bus that is modeled with
+a parallel-connected DC-bus capacitor and resitor. The model is implemented as
 
 .. math::
    \frac{\mathrm{d}\boldsymbol{u}_\mathrm{dc}}{\mathrm{d} t} 
@@ -41,10 +42,10 @@ the conductance of the parallel resistor. The converter DC current is calculated
 .. figure:: figs/inverter_dc.svg
    :width: 100%
    :align: center
-   :alt: Equivalent model of inverter with DC-bus capacitance
+   :alt: Equivalent model of inverter with DC-bus dynamic model
    :target: .
    
-   Equivalent model of inverter with DC-bus capacitance.
+   Equivalent model of inverter with DC-bus dynamic model.
 
 Six-Pulse Diode Bridge
 ----------------------

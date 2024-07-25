@@ -1,10 +1,10 @@
 """
-10-kVA grid following converter, power control
+10-kVA grid-following converter, power control
 ==============================================
     
-This example simulates a grid following controlled converter connected to a
+This example simulates a grid-following-controlled converter connected to a
 strong grid. The control system includes a phase-locked loop (PLL) to
-synchronize with the grid, a current reference generatior and a PI-based
+synchronize with the grid, a current reference generator, and a PI-based
 current controller.
 
 """
@@ -20,7 +20,9 @@ from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusP
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
+
 from motulator.grid.utils import GridPars, plot_grid
+
 
 
 # %%
@@ -41,6 +43,7 @@ filter_par = FilterPars(L_fc = 10e-3)
 dc_bus_par = DCBusPars(u_dc = 650)
 
 grid_filter = model.LFilter(grid_par, filter_par)
+
 # AC grid model with constant voltage magnitude and frequency
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
 # Inverter with constant DC voltage
@@ -68,13 +71,12 @@ ctrl = control.GFLControl(cfg)
 
 # Set the active and reactive power references
 ctrl.ref.p_g = lambda t: (t > 0.02)*(5e3)
-ctrl.ref.q_g = lambda t: (t > .04)*(4e3)
+ctrl.ref.q_g = lambda t: (t > 0.04)*(4e3)
 
-# AC-voltage magnitude (to simulate voltage dips or short-circuits)
-e_g_abs_var =  lambda t: np.sqrt(2/3)*400
-mdl.grid_model.e_g_abs = e_g_abs_var # grid voltage magnitude
+# Uncomment the following line to simulate a single-phase voltage dip
+#mdl.grid_model.par.e_gb_abs = lambda t: mdl_par.U_gN*(1 - 0.5*(t > 0.05))
 
-   
+
 # %%
 # Create the simulation object and simulate it.
 
@@ -88,9 +90,12 @@ sim.simulate(t_stop = .1)
 
 
 # %%
-# Plot results in SI units.
+# Plot results per-unit values.
 
 # By omitting the argument `base` you can plot
 # the results in SI units.
+
+# Plot the locus of the grid voltage space vector
+plot_voltage_vector(sim=sim, base=base)
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=True)
