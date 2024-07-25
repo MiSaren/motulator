@@ -15,11 +15,11 @@ PI-based current controller.
 import time
 
 from motulator.common.model import Simulation, Inverter, CarrierComparison
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridPars, FilterPars, DCBusPars, plot_grid
+from motulator.grid.utils import GridPars, plot_grid
 
 # To check the computation time of the program
 

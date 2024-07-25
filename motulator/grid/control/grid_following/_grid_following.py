@@ -8,7 +8,8 @@ import numpy as np
 
 from motulator.grid.control import (
     GridConverterControlSystem)
-from motulator.grid.utils import GridConverterPars, DCBusPars, GridPars, FilterPars
+from motulator.common.utils import DCBusPars, FilterPars
+from motulator.grid.utils import GridPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL

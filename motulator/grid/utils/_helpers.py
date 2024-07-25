@@ -56,7 +56,7 @@ class GridPars(ABC):
 @dataclass
 class FilterPars(ABC):
     """
-    Class for grid filter parameters
+    Class for filter parameters
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ class DCBusPars(ABC):
         DC bus voltage (V).
     C_dc : float, optional
         DC bus capacitance (F). The default is None.
-    L_f : float, optional
+    L_dc : float, optional
         Filter inductance (H). The default is 0.
     R_dc : float, optional
         DC bus series resistance (Ω). The default is 0.
@@ -103,6 +103,6 @@ class DCBusPars(ABC):
     """
     u_dc: float
     C_dc: float = None
-    L_f: float = 0
+    L_dc: float = 0
     R_dc: float = 0
     G_dc: float = 0

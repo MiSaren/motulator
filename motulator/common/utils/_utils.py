@@ -3,6 +3,7 @@
 # %%
 import numpy as np
 from dataclasses import dataclass
+from abc import ABC
 
 
 # %%
@@ -263,3 +264,60 @@ class BaseValues:
             tau = n_p*p/w
             return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L, tau=tau, n_p=n_p)
         return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L)
+
+
+# %%
+@dataclass
+class FilterPars(ABC):
+    """
+    Class for filter parameters
+
+    Parameters
+    ----------
+    L_fc : float
+        Converter-side inductance of the filter (H).
+    L_fg : float, optional
+        Grid-side inductance of the filter (H). The default is 0.
+    C_f : float, optional
+        Filter capacitance (F). The default is 0.
+    R_fc : float, optional
+        Converter-side series resistance (Ω). The default is 0.
+    R_fg : float, optional
+        Grid-side series resistance (Ω). The default is 0.
+    G_f : float, optional
+        Conductance of a resistor in parallel with the filter capacitor (S).
+        The default is 0.
+
+    """
+    L_fc: float
+    L_fg: float = 0
+    C_f: float = 0
+    R_fc: float = 0
+    R_fg: float = 0
+    G_f: float = 0
+
+# %%
+@dataclass
+class DCBusPars(ABC):
+    """
+    Class for DC bus parameters
+
+    Parameters
+    ----------
+    u_dc : float | callable
+        DC bus voltage (V).
+    C_dc : float, optional
+        DC bus capacitance (F). The default is None.
+    L_dc : float, optional
+        Filter inductance (H). The default is 0.
+    R_dc : float, optional
+        DC bus series resistance (Ω). The default is 0.
+    G_dc : float, optional
+        DC bus conductance (S). The default is 0.
+
+    """
+    u_dc: float
+    C_dc: float = None
+    L_dc: float = 0
+    R_dc: float = 0
+    G_dc: float = 0

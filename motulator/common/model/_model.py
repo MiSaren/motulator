@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from motulator.common.utils import abc2complex, complex2abc
-from motulator.grid.utils import DCBusPars, GridPars, FilterPars
+from motulator.common.utils import abc2complex, complex2abc, DCBusPars, FilterPars
+from motulator.grid.utils import GridPars
 
 
 # %%

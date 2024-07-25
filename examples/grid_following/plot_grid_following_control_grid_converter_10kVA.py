@@ -16,11 +16,11 @@ import time
 import numpy as np
 
 from motulator.common.model import Simulation, Inverter, CarrierComparison
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridPars, DCBusPars, FilterPars, plot_grid
+from motulator.grid.utils import GridPars, plot_grid
 
 
 # %%

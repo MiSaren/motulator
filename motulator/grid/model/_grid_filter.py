@@ -8,9 +8,9 @@ models are implemented with space vectors in stationary coordinates.
 """
 from types import SimpleNamespace
 
-from motulator.common.utils._utils import complex2abc
+from motulator.common.utils._utils import complex2abc, FilterPars
 from motulator.common.model import Subsystem
-from motulator.grid.utils import GridPars, FilterPars
+from motulator.grid.utils import GridPars
 
 
 # %%
