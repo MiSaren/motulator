@@ -21,8 +21,12 @@ class GFLControlCfg:
     
     Parameters
     ----------
-    par : GridConverterPars
-        Grid and Grid converter model parameters.
+    grid_par : GridPars
+        Grid model parameters.
+    dc_bus_par : DCBusPars
+        DC bus parameters.
+    filter_par : FilterPars
+        Filter parameters.
     T_s : float, optional
         Sampling period (s). The default is 1/(16e3).
     on_u_dc : bool, optional
@@ -126,7 +130,6 @@ class GFLControl(GridConverterControlSystem):
     def output(self, fbk):
         """Extend the base class method."""
         grid_par = self.cfg.grid_par
-        dc_bus_par = self.cfg.dc_bus_par
         # Get the reference signals
         ref = super().output(fbk)
         if self.on_u_dc:
@@ -186,7 +189,7 @@ class CurrentController(ComplexFFPIController):
     Parameters
     ----------
     cfg : ModelPars
-        Grid converter parameters, contains the filter inductance `L_f` (H)
+        Grid converter parameters, contains the filter inductance `L_fc` (H)
         and the Closed-loop bandwidth 'alpha_c' (rad/s).
 
     """
