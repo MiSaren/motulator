@@ -7,7 +7,7 @@ The space vector model is implemented in stator coordinates.
 from types import SimpleNamespace
 
 from motulator.common.model import Subsystem
-from motulator.common.utils import complex2abc
+from motulator.common.utils import complex2abc, FilterPars
 
 
 # %%
@@ -17,18 +17,27 @@ class LCFilter(Subsystem):
 
     Parameters
     ----------
-    L : float
-        Inductance (H).
-    C : float
-        Capacitance (F). 
-    R : float, optional
-        Series resistance (Ω) of the inductor. The default is 0.
+    filter_pars : FilterPars
+        Filter parameters. Machine drive LC-filter uses the following parameters:
+    
+            filter_pars.L_fc : float
+                Converter-side inductance of the filter (H).
+            filter_pars.C_f : float
+                Filter capacitance (F).
+            filter_pars.G_f : float, optional
+                Filter conductance (S). The default is 0.
+            filter_pars.R_fc : float, optional
+                Converter-side series resistance (Ω). The default is 0.
    
     """
 
-    def __init__(self, L, C, R=0):
+    def __init__(self, filter_pars: FilterPars):
         super().__init__()
-        self.par = SimpleNamespace(L=L, C=C, R=R)
+        self.par = SimpleNamespace(
+            L_fc=filter_pars.L_fc,
+            C_f=filter_pars.C_f,
+            R_fc=filter_pars.R_fc,
+            G_f=filter_pars.G_f)
         self.state = SimpleNamespace(i_cs=0, u_fs=0)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[])
 
@@ -40,8 +49,8 @@ class LCFilter(Subsystem):
     def rhs(self):
         """Compute state derivatives."""
         state, inp, par = self.state, self.inp, self.par
-        d_i_cs = (inp.u_cs - state.u_fs - par.R*state.i_cs)/par.L
-        d_u_fs = (state.i_cs - inp.i_fs)/par.C
+        d_i_cs = (inp.u_cs - state.u_fs - par.R_fc*state.i_cs)/par.L_fc
+        d_u_fs = (state.i_cs - inp.i_fs - par.G_f*state.u_fs)/par.C_f
 
         return [d_i_cs, d_u_fs]
 

@@ -11,14 +11,14 @@ import numpy as np
 
 from motulator.common.model import (
     Simulation, CarrierComparison, Inverter, DiodeBridge)
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.utils import BaseValues, NominalValues, DCBusPars
 
 from motulator.drive import model
 from motulator.grid.model import StiffSource
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
     plot, plot_extra, SynchronousMachinePars)
-from motulator.grid.utils import GridConverterPars
+from motulator.grid.utils import GridPars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -28,12 +28,17 @@ base = BaseValues.from_nominal(nom, n_p=3)
 
 # %%
 # Configure the system model.
-grid_par = GridConverterPars(
-    u_gN=400*np.sqrt(2/3),
-    w_gN=2*np.pi*50,
-    L_f=2e-3,
-    C_dc=235e-6
-)
+
+# Grid parameters
+grid_par = GridPars(
+    u_gN=base.u,
+    w_gN=base.w)
+
+# DC bus parameters
+dc_bus_par = DCBusPars(
+    u_dc = 400*np.sqrt(2),
+    C_dc = 235e-6,
+    L_dc = 2e-3)
 
 mdl_par = SynchronousMachinePars(
     n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
@@ -46,8 +51,8 @@ ac_source = StiffSource(
     w_gN=grid_par.w_gN,
     e_g_abs=grid_par.u_gN)
 
-diode_bridge = DiodeBridge(L=grid_par.L_f)
-converter = Inverter(u_dc=400*np.sqrt(2), C_dc=grid_par.C_dc)
+diode_bridge = DiodeBridge(dc_bus_par)
+converter = Inverter(dc_bus_par)
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
     diodebridge=diode_bridge,

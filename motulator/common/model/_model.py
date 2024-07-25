@@ -5,7 +5,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from motulator.common.utils import abc2complex, complex2abc
+from motulator.common.utils import abc2complex, complex2abc, DCBusPars, FilterPars
+from motulator.grid.utils import GridPars
 
 
 # %%
@@ -325,25 +326,30 @@ class Inverter(Subsystem):
 
     Parameters
     ----------
-    u_dc : float | callable
-        DC-bus voltage (V).
-    C_dc : float, optional
-        DC-bus capacitance (F). Default is None.
-    G_dc : float, optional
-        Parallel conductance of the DC-bus capacitor (S). Default value is 0.
+    dc_bus_par : DCBusPars
+        DC-bus parameters.
     i_ext : callable, optional
         External DC current, seen as disturbance, `i_ext(t)`. Default is zero,
         ``lambda t: 0``.
 
+    Inventer model uses following fields of the DCbusPas object:
+    
+    dc_bus_par.u_dc : float | callable
+        DC-bus voltage (V).
+    dc_bus_par.C_dc : float, optional
+        DC-bus capacitance (F). Default is None.
+    dc_bus_par.G_dc : float, optional
+        Parallel conductance of the DC-bus capacitor (S). Default value is 0.
+    
     """
 
-    def __init__(self, u_dc, C_dc=None, G_dc=0, i_ext=lambda t: 0):
+    def __init__(self, dc_bus_par : DCBusPars, i_ext=lambda t: 0):
         super().__init__()
         self.i_ext = i_ext
-        self.par = SimpleNamespace(u_dc=u_dc, C_dc=C_dc, G_dc=G_dc)
+        self.par = SimpleNamespace(u_dc=dc_bus_par.u_dc, C_dc=dc_bus_par.C_dc, G_dc=dc_bus_par.G_dc)
         # Initial values
-        self.u_dc0 = u_dc(0) if callable(u_dc) else u_dc
-        if C_dc is not None: # Only initialize states if dynamic DC model is used
+        self.u_dc0 = self.par.u_dc(0) if callable(self.par.u_dc) else self.par.u_dc
+        if self.par.C_dc is not None: # Only initialize states if dynamic DC model is used
             self.state = SimpleNamespace(u_dc = self.u_dc0)
             self.sol_states = SimpleNamespace(u_dc = [])
         self.inp = SimpleNamespace(
@@ -429,14 +435,17 @@ class DiodeBridge(Subsystem):
 
     Parameters
     ----------
-    L : float
-        DC-bus inductance (H).
+    dc_bus_par : DCBusPars
+        DC-bus parameters. Using on the following field:
+
+            dc_bus_par.L_dc : float
+                DC-bus inductance (H).
 
     """
 
-    def __init__(self, L):
+    def __init__(self, dc_bus_par : DCBusPars):
         super().__init__()
-        self.par = SimpleNamespace(L=L)
+        self.par = SimpleNamespace(L=dc_bus_par.L_dc)
         self.state = SimpleNamespace(i_L=0)
         self.sol_states = SimpleNamespace(i_L=[])
 

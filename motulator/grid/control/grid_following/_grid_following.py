@@ -8,7 +8,8 @@ import numpy as np
 
 from motulator.grid.control import (
     GridConverterControlSystem)
-from motulator.grid.utils import GridConverterPars
+from motulator.common.utils import DCBusPars, FilterPars
+from motulator.grid.utils import GridPars
 
 from motulator.common.control import (ComplexFFPIController)
 from motulator.grid.control._common import PLL
@@ -54,7 +55,9 @@ class GFLControlCfg:
         overmodulation method. The default is Minimum Phase Error "MPE".
     """
 
-    par: GridConverterPars
+    grid_par: GridPars
+    dc_bus_par: DCBusPars
+    filter_par: FilterPars
     T_s: float = 1/(16e3)
     on_u_dc: bool = False
     on_u_cap: bool = False
@@ -72,16 +75,15 @@ class GFLControlCfg:
     overmodulation: str = "MPE"
 
     def __post_init__(self):
-        par = self.par
-
+        filter_par, grid_par = self.filter_par, self.grid_par
         # Current controller gains
-        self.k_p_i = self.alpha_c*par.L_f
-        self.k_i_i = np.power(self.alpha_c,2)*par.L_f
-        self.r_i = self.alpha_c*self.par.L_f
+        self.k_p_i = self.alpha_c*filter_par.L_fc
+        self.k_i_i = np.power(self.alpha_c,2)*filter_par.L_fc
+        self.r_i = self.alpha_c*filter_par.L_fc
 
         # PLL gains
-        self.k_p_pll = 2*self.zeta*self.w0_pll/par.u_gN
-        self.k_i_pll = self.w0_pll*self.w0_pll/par.u_gN
+        self.k_p_pll = 2*self.zeta*self.w0_pll/grid_par.u_gN
+        self.k_i_pll = self.w0_pll*self.w0_pll/grid_par.u_gN
 
 
 # %%
@@ -97,14 +99,14 @@ class GFLControl(GridConverterControlSystem):
     """
 
     def __init__(self, cfg):
-        super().__init__(cfg.par, cfg.T_s, on_u_dc=cfg.on_u_dc, on_u_cap=cfg.on_u_cap)
+        super().__init__(cfg.grid_par, cfg.dc_bus_par, cfg.T_s, on_u_dc=cfg.on_u_dc, on_u_cap=cfg.on_u_cap)
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
         self.pll = PLL(cfg)
         self.current_reference = CurrentRefCalc(cfg)
 
         # Initialize the states
-        self.u_filt = cfg.par.u_gN + 1j*0
+        self.u_filt = cfg.grid_par.u_gN + 1j*0
         
 
     def get_feedback_signals(self, mdl):
@@ -123,7 +125,8 @@ class GFLControl(GridConverterControlSystem):
     
     def output(self, fbk):
         """Extend the base class method."""
-        par = self.par
+        grid_par = self.cfg.grid_par
+        dc_bus_par = self.cfg.dc_bus_par
         # Get the reference signals
         ref = super().output(fbk)
         if self.on_u_dc:
@@ -152,13 +155,13 @@ class GFLControl(GridConverterControlSystem):
         self.pll.output(fbk, ref)
 
         # Voltage reference generation in synchronous coordinates
-        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, par.w_gN)
+        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, grid_par.w_gN)
 
          # Transform the voltage reference into stator coordinates
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
         
         # get the duty ratios from the PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_gN, self.cfg.overmodulation)
+        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, grid_par.w_gN, self.cfg.overmodulation)
 
         return ref
     
@@ -189,10 +192,10 @@ class CurrentController(ComplexFFPIController):
     """
 
     def __init__(self, cfg):
-        k_t = cfg.alpha_c*cfg.par.L_f
+        k_t = cfg.alpha_c*cfg.filter_par.L_fc
         k_i = cfg.alpha_c*k_t
         k_p = 2*k_t
-        L_f = cfg.par.L_f
+        L_f = cfg.filter_par.L_fc
         super().__init__(k_p, k_i, k_t, L_f)
 
 # %%
@@ -215,7 +218,7 @@ class CurrentRefCalc:
             Model and controller configuration parameters.
     
         """
-        self.u_gN = cfg.par.u_gN
+        self.u_gN = cfg.grid_par.u_gN
         self.i_max = cfg.i_max
 
 

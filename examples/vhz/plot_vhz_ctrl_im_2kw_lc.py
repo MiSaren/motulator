@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from motulator.common.model import Simulation, CarrierComparison, Inverter
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
 
 from motulator.drive import model
 import motulator.drive.control.im as control
@@ -29,6 +29,11 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # %%
 # Create the system model. The filter parameters correspond to [#Sal2006]_.
 
+dc_bus = DCBusPars(u_dc=540)
+
+# Filter parameters
+filter_pars = FilterPars(L_fc=8e-3, C_f=9.9e-6, R_fc=.1)
+
 mdl_ig_par = InductionMachineInvGammaPars(
     n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
 mdl_par = InductionMachinePars.from_inv_gamma_model_pars(mdl_ig_par)
@@ -36,8 +41,8 @@ machine = model.InductionMachine(mdl_par)
 # Quadratic load torque profile (corresponding to pumps and fans)
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
-converter = Inverter(u_dc=540)
-lc_filter = model.LCFilter(L=8e-3, C=9.9e-6, R=.1)
+converter = Inverter(dc_bus)
+lc_filter = model.LCFilter(filter_pars)
 mdl = model.DriveWithLCFilter(converter, machine, mechanics, lc_filter)
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 

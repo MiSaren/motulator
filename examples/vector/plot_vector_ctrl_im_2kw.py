@@ -10,7 +10,7 @@ system model, while the control system assumes constant parameters.
 # %%
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues
+from motulator.common.utils import BaseValues, NominalValues, DCBusPars
 
 from motulator.drive import model
 import motulator.drive.control.im as control
@@ -37,6 +37,7 @@ def L_s(psi, L_su=.34, beta=.84, S=7):
 # %%
 # Configure the system model.
 
+dc_bus = DCBusPars(u_dc=540)
 # Γ-equivalent machine model with main-flux saturation included
 mdl_par = InductionMachinePars(n_p=2, R_s=3.7, R_r=2.5, L_ell=.023, L_s=L_s)
 # Unsaturated machine model, using its inverse-Γ parameters (uncomment to try)
@@ -45,7 +46,7 @@ mdl_par = InductionMachinePars(n_p=2, R_s=3.7, R_r=2.5, L_ell=.023, L_s=L_s)
 # mdl_par = InductionMachinePars.from_inv_gamma_model_pars(par)
 machine = model.InductionMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
-converter = Inverter(u_dc=540)
+converter = Inverter(dc_bus)
 mdl = model.Drive(converter, machine, mechanics)
 # mdl.pwm = model.CarrierComparison()  # Try to enable the PWM model
 # mdl.delay = model.Delay(2)  # Try longer computational delay

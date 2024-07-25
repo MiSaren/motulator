@@ -8,8 +8,9 @@ models are implemented with space vectors in stationary coordinates.
 """
 from types import SimpleNamespace
 
-from motulator.common.utils._utils import complex2abc
+from motulator.common.utils._utils import complex2abc, FilterPars
 from motulator.common.model import Subsystem
+from motulator.grid.utils import GridPars
 
 
 # %%
@@ -27,25 +28,24 @@ class LFilter(Subsystem):
 
     Parameters
     ----------
-    u_gN : float
-        Grid nominal voltage (V), phase-to-ground peak value. Needed to set the
-        initial value of PCC voltage.
-    L_f : float
-        Filter inductance (H).
-    R_f : float, optional
-        Filter series resistance (Ω). The default value is 0.
-    L_g : float, optional
-        Grid inductance (H). The default value is 0.
-    R_g : float, optional
-        Grid resistance (Ω). The default value is 0.
+    grid_par : GridPars
+        Grid model parameters. Needed to set the initial value of PCC voltage.
+    filter_par : FilterPars
+        Filter model parameters.
+        L-Filter model uses only following FilterPars parameters:
+
+            L_fc : float
+                Converter-side inductance of the filter (H).
+            R_fc : float (optional)
+                Converter-side series resistance (Ω). The default is 0.
 
     """
 
-    def __init__(self, u_gN, L_f, R_f=0, L_g=0, R_g=0):
+    def __init__(self, grid_par:GridPars, filter_par:FilterPars):
         super().__init__()
-        self.par = SimpleNamespace(L_f=L_f, R_f=R_f, L_g=L_g, R_g=R_g)
-        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=u_gN+0j)
-        self.out = SimpleNamespace(u_gs=u_gN+0j)  # Needed for direct feedthrough
+        self.par = SimpleNamespace(L_f=filter_par.L_fc, R_f=filter_par.R_fc, L_g=grid_par.L_g, R_g=grid_par.R_g)
+        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=grid_par.u_gN+0j)
+        self.out = SimpleNamespace(u_gs=grid_par.u_gN+0j)  # Needed for direct feedthrough
         self.state = SimpleNamespace(i_gs=0+0j)
         self.sol_states = SimpleNamespace(i_gs=[])
 
@@ -127,37 +127,28 @@ class LCLFilter(Subsystem):
 
     Parameters
     ----------
-    u_gN : float
-        Grid nominal voltage (V), phase-to-ground peak value. Needed to set the
-        initial values of capacitor and PCC voltages.
-    L_fc : float
-        Converter-side inductance of the LCL filter (H).
-    L_fg : float
-        Grid-side inductance of the LCL filter (H).
-    C_f : float
-        Capacitance of the LCL Filter (F).
-    R_fc : float, optional
-        Converter-side series resistance (Ω). The default value is 0.
-    R_fg : float, optional
-        Grid-side series resistance (Ω). The default value is 0.
-    G_f : float, optional
-        Conductance of a resistor in parallel with the LCL-filter capacitor
-        (S). The default value is 0.
-    L_g : float, optional
-        Grid inductance (H). The default value is 0.
-    R_g : float, optional
-        Grid resistance (Ω). The default value is 0.
-
+    grid_par : GridPars
+        Grid model parameters. Needed to set the initial value of PCC voltage.
+    filter_par : FilterPars
+        Filter model parameters.
     """
 
-    def __init__(self, u_gN, L_fc, L_fg, C_f,
-                 R_fc=0, R_fg=0, G_f=0, L_g=0, R_g=0):
+
+    def __init__(self, grid_par:GridPars, filter_par:FilterPars):
         super().__init__()
-        self.par = SimpleNamespace(L_fc=L_fc, R_fc=R_fc, L_fg=L_fg, R_fg=R_fg,
-                                    C_f=C_f, G_f=G_f, L_g=L_g, R_g=R_g)
-        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=u_gN+0j)
-        self.out = SimpleNamespace(u_gs=u_gN+0j)
-        self.state = SimpleNamespace(i_cs=0+0j, u_fs=u_gN+0j, i_gs=0+0j)
+        self.par = SimpleNamespace(
+            L_fc = filter_par.L_fc,
+            R_fc = filter_par.R_fc,
+            L_fg = filter_par.L_fg,
+            R_fg = filter_par.R_fg,
+            C_f = filter_par.C_f,
+            G_f = filter_par.G_f,
+            L_g = grid_par.L_g,
+            R_g = grid_par.R_g
+            )
+        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=grid_par.u_gN+0j)
+        self.out = SimpleNamespace(u_gs=grid_par.u_gN+0j)
+        self.state = SimpleNamespace(i_cs=0+0j, u_fs=grid_par.u_gN+0j, i_gs=0+0j)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[], i_gs=[])
 
     def set_outputs(self, _):

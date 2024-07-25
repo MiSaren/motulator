@@ -22,7 +22,7 @@ from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence
+from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
 
 from motulator.drive import model
 import motulator.drive.control.sm as control
@@ -146,7 +146,7 @@ psi_s0 = complex(res.x)  # psi_s0 = 0.477
 
 # %%
 # Configure the system model.
-
+dc_bus = DCBusPars(u_dc=540)
 mdl_par = SynchronousMachinePars(n_p=2, R_s=.63)
 machine = model.SynchronousMachine(mdl_par, i_s=i_s, psi_s0=psi_s0)
 # Magnetically linear PM-SyRM model for comparison
@@ -154,7 +154,7 @@ machine = model.SynchronousMachine(mdl_par, i_s=i_s, psi_s0=psi_s0)
 #     n_p=2, R_s=.63, L_d=18e-3, L_q=110e-3, psi_f=.47)
 # machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
-converter = Inverter(u_dc=540)
+converter = Inverter(dc_bus)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%

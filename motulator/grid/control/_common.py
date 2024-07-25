@@ -25,14 +25,14 @@ class PLL:
         """
         Parameters
         ----------
-        pars : GridFollowingCtrlPars
+        cfg : GFLControlCfg
            Control parameters.
     
         """
         self.cfg = cfg
 
         # Initial states
-        self.w_pll = cfg.par.w_gN
+        self.w_pll = cfg.grid_par.w_gN
         self.theta_c = 0
 
 
@@ -51,12 +51,12 @@ class PLL:
         ref : SimpleNamespace
             References, containing the following fields:
 
-                u_g : complex
-                    Grid-voltage vector
-                u_gq : float
-                    Error signal (in V, corresponds to the q-axis grid voltage).
-                abs_u_g : float
-                     magnitude of the grid voltage vector (in V).
+        ref.u_g : complex
+            Grid-voltage vector
+        ref.u_gq : float
+            Error signal (in V, corresponds to the q-axis grid voltage).
+        ref.abs_u_g : float
+            magnitude of the grid voltage vector (in V).
         """
 
         # Definition of the grid-voltage vector
@@ -135,12 +135,17 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
     Parameters
     ----------
-    par : GridModelPars
+    grid_par : GridPars
         Grid model parameters.
+    dc_bus_par : DCBusPars
+        DC-bus model parameters.
     T_s : float
         Sampling period (s).
     on_u_dc : bool
         If True, DC-bus voltage control mode is used.
+    on_u_cap : bool, optional
+        to use the filter capacitance voltage measurement or PCC voltage. 
+        The default is False
 
     Attributes
     ----------
@@ -168,9 +173,10 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
     """
 
-    def __init__(self, par, T_s, on_u_dc, on_u_cap=False):
+    def __init__(self, grid_par, dc_bus_par, T_s, on_u_dc, on_u_cap=False):
         super().__init__(T_s)
-        self.par = par
+        self.grid_par = grid_par
+        self.dc_bus_par = dc_bus_par
         self.on_u_dc = on_u_dc
         self.on_u_cap = on_u_cap
         self.dc_bus_volt_ctrl = None
@@ -249,8 +255,8 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
             # Definition of capacitance energy variables for the DC-bus controller
             ref.u_dc = self.ref.u_dc(ref.t)
-            ref_W_dc = 0.5*self.par.C_dc*ref.u_dc**2
-            W_dc = 0.5*self.par.C_dc*fbk.u_dc**2
+            ref_W_dc = 0.5*self.dc_bus_par.C_dc*ref.u_dc**2
+            W_dc = 0.5*self.dc_bus_par.C_dc*fbk.u_dc**2
             # Define the active power reference
             ref.p_g = self.dc_bus_volt_ctrl.output(ref_W_dc, W_dc)
 
