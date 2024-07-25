@@ -1,9 +1,10 @@
 """Helper functions and classes."""
 
 # %%
-import numpy as np
 from dataclasses import dataclass
 from abc import ABC
+
+import numpy as np
 
 
 # %%
