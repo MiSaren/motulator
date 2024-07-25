@@ -21,7 +21,7 @@ from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusP
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 
-from motulator.grid.utils import GridPars, plot_grid
+from motulator.grid.utils import GridPars, plot_grid, plot_voltage_vector
 
 
 
