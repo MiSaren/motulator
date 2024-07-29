@@ -2,7 +2,7 @@
 from motulator.common.model._simulation import Simulation
 from motulator.common.model._model import (
     Delay, CarrierComparison, zoh, Model, Subsystem,
-    Inverter, DiodeBridge)
+    Inverter, DiodeBridge, ACFilter)
 
 __all__ = [
     "Simulation",
@@ -12,5 +12,6 @@ __all__ = [
     "Model",
     "Subsystem",
     "Inverter",
-    "DiodeBridge"
+    "DiodeBridge",
+    "ACFilter"
 ]
