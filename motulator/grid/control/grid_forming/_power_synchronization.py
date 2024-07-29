@@ -20,8 +20,12 @@ class PSCControlCfg:
 
     Parameters
     ----------
-    par : GridConverterPars
+    grid_par : GridConverterPars
         Grid and grid converter model parameters.
+    dc_bus_par : DCBusPars
+        DC-bus model parameters.
+    filter_par : FilterPars
+        Filter model parameters.
     T_s : float, optional
         Sampling period of the controller (s). Default is 1/(16e3).
     on_rf : bool, optional
@@ -78,6 +82,12 @@ class PSCControl(GridConverterControlSystem):
     ----------
     cfg : PSCControlCfg
         Model and controller configuration parameters.
+
+    Attributes
+    ----------
+    current_ctrl : PSCCurrentController
+        Current controller object.
+    
 
     References
     ----------

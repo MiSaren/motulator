@@ -327,20 +327,18 @@ class Inverter(Subsystem):
     Parameters
     ----------
     dc_bus_par : DCBusPars
-        DC-bus parameters.
-    i_ext : callable, optional
+        DC-bus parameters. 
+        Inventer model uses following fields of the DCbusPas object:
+    
+            dc_bus_par.u_dc : float | callable
+                DC-bus voltage (V).
+            dc_bus_par.C_dc : float, optional
+                DC-bus capacitance (F). Default is None.
+            dc_bus_par.G_dc : float, optional
+                Parallel conductance of the DC-bus capacitor (S). Default value is 0.
+     i_ext : callable, optional
         External DC current, seen as disturbance, `i_ext(t)`. Default is zero,
         ``lambda t: 0``.
-
-    Inventer model uses following fields of the DCbusPas object:
-    
-    dc_bus_par.u_dc : float | callable
-        DC-bus voltage (V).
-    dc_bus_par.C_dc : float, optional
-        DC-bus capacitance (F). Default is None.
-    dc_bus_par.G_dc : float, optional
-        Parallel conductance of the DC-bus capacitor (S). Default value is 0.
-    
     """
 
     def __init__(self, dc_bus_par : DCBusPars, i_ext=lambda t: 0):
