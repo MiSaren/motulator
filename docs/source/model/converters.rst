@@ -60,6 +60,14 @@ This model is implemented in the class :class:`motulator.common.model.DiodeBridg
    :target: .
 
    Six-pulse diode bridge rectifier.
+
+The model is implemented as 
+
+.. math:: 
+   \frac{\mathrm{d}i_{L}}{\mathrm{d}t} = \frac{1}{L_{\mathrm{dc}}}(u_\mathrm{di} - u_\mathrm{dc})
+   :label: diode_bridge
+
+where :math:`i_\mathrm{L}` is the DC-bus current, :math:`u_\mathrm{di}` is the diode bridges output DC voltage, :math:`u_\mathrm{dc}` is the dc bus voltage, and :math:`L_{\mathrm{dc}}` is the inductance of the DC link.
    
 The use case example of six-pulse diode bridge can be found in :doc:`/auto_examples/vhz/plot_vhz_ctrl_im_2kw` and 
 :doc:`/auto_examples/vector/plot_vector_ctrl_pmsm_2kw_diode`
