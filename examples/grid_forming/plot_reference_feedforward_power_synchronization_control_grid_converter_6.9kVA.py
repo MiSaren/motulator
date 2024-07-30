@@ -13,8 +13,9 @@ the current oscillations, enhanced with a reference-feedforward term.
 import time
 import numpy as np
 
-from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, DCBusPars, FilterPars
+from motulator.common.model import (Simulation, Inverter, ACFilter)
+from motulator.common.utils import (BaseValues, NominalValues, FilterPars,
+                                    DCBusPars)
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
@@ -43,7 +44,7 @@ filter_par = FilterPars(L_fc = 8e-3)
 # DC bus parameters
 dc_bus_par = DCBusPars(u_dc=650)
 
-grid_filter = model.LFilter(grid_par, filter_par)
+grid_filter = ACFilter(filter_par, grid_par)
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs = grid_par.u_gN)
 converter = Inverter(dc_bus_par)
 

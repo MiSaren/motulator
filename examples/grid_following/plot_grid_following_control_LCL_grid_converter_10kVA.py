@@ -16,7 +16,8 @@ import time
 
 from motulator.common.model import (Simulation, Inverter, ACFilter,
                                     CarrierComparison)
-from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
+from motulator.common.utils import (BaseValues, NominalValues, FilterPars,
+                                    DCBusPars)
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
@@ -49,7 +50,7 @@ dc_bus_par = DCBusPars(
     u_dc = 650,
     C_dc = 100e-3)
 
-grid_filter = ACFilter(grid_par, filter_par)
+grid_filter = ACFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var =  lambda t: grid_par.u_gN

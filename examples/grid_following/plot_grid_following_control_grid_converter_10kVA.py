@@ -13,11 +13,11 @@ current controller.
 # Imports.
 
 import time
-import numpy as np
 
 from motulator.common.model import (Simulation, Inverter, ACFilter,
                                     CarrierComparison)
-from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
+from motulator.common.utils import (BaseValues, NominalValues, FilterPars,
+                                    DCBusPars)
 
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
@@ -43,7 +43,7 @@ filter_par = FilterPars(L_fc = 10e-3)
 
 dc_bus_par = DCBusPars(u_dc = 650)
 
-grid_filter = ACFilter(grid_par, filter_par)
+grid_filter = ACFilter(filter_par, grid_par)
 
 # AC grid model with constant voltage magnitude and frequency
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)

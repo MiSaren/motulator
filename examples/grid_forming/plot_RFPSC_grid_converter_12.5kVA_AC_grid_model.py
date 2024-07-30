@@ -21,8 +21,9 @@ found in [#ENT2013]_.
 import time
 import numpy as np
 
-from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
+from motulator.common.model import (Simulation, Inverter, ACFilter)
+from motulator.common.utils import (BaseValues, NominalValues, FilterPars,
+                                    DCBusPars)
 
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
@@ -54,7 +55,7 @@ filter_par = FilterPars(
 # DC bus parameters
 dc_bus_par = DCBusPars(u_dc=650)
 
-grid_filter = model.LCLFilter(grid_par, filter_par)
+grid_filter = ACFilter(filter_par, grid_par)
 grid_model = model.FlexSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN,
                               S_grid=500e3, H_g=2, r_d=0.05)
 converter = Inverter(dc_bus_par)

@@ -8,7 +8,9 @@ import numpy as np
 from motulator.common.utils import abc2complex, complex2abc, DCBusPars, FilterPars
 from motulator.grid.utils import GridPars
 
-
+# TODO: divide contents of this file to multiple files, e.g., _converter.py
+# and _ac_filter.py. Before doing so, a way to resolve Sphinx cyclic imports
+# should be found, however.
 # %%
 class Delay:
     """
@@ -499,9 +501,21 @@ class ACFilter(Subsystem):
     """
     Base class for converter AC-side filters.
 
+    This provides a base class and wrapper for converter AC-side filters
+    (LFilter, LCLFilter, LCFilter). Calling this class returns one of the three
+    subclasses depending on whether values for filter capacitance C_f and
+    filter grid-side inductance L_fg are included in the FilterPars object.
+
+    Parameters
+    ----------
+    filter_par : FilterPars
+        Filter model parameters.
+    grid_par : GridPars, optional
+        Grid model parameters.
+
     """
 
-    def __new__(cls, _, filter_par:FilterPars):
+    def __new__(cls, filter_par:FilterPars, grid_par:GridPars=None):
         if filter_par.C_f != 0:
             if filter_par.L_fg != 0:
                 return super().__new__(LCLFilter)
@@ -583,7 +597,7 @@ class LFilter(ACFilter):
         Grid model parameters. Needed to set the initial value of PCC voltage.
     filter_par : FilterPars
         Filter model parameters.
-        L-Filter model uses only following FilterPars parameters:
+        L-Filter model uses only the following FilterPars parameters:
 
             L_fc : float
                 Converter-side inductance of the filter (H).
@@ -592,7 +606,7 @@ class LFilter(ACFilter):
 
     """
 
-    def __init__(self, grid_par:GridPars, filter_par:FilterPars):
+    def __init__(self, filter_par:FilterPars, grid_par:GridPars):
         super().__init__()
         self.par = SimpleNamespace(
             L_f=filter_par.L_fc,
@@ -662,7 +676,7 @@ class LCLFilter(ACFilter):
     """
 
 
-    def __init__(self, grid_par:GridPars, filter_par:FilterPars):
+    def __init__(self, filter_par:FilterPars, grid_par:GridPars):
         super().__init__()
         self.par = SimpleNamespace(
             L_fc = filter_par.L_fc,
