@@ -11,6 +11,8 @@ from motulator.common.utils import complex2abc, FilterPars
 
 
 # %%
+# TODO: remove this file as LCFilter class has moved to
+# motulator.common.model._ac_filter.py
 class LCFilter(Subsystem):
     """
     LC-filter model.

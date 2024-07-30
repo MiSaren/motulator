@@ -14,8 +14,8 @@ from motulator.grid.utils import GridPars
 
 
 # %%
-# TODO: move filter models to motulator/common along with LCFilter from drive,
-# if feasible
+# TODO: remove this file as LFilter and LCLFilter classes have moved to
+# motulator.common.model._ac_filter.py
 class LFilter(Subsystem):
     """
     Dynamic model for an inductive L filter and an inductive-resistive grid.
