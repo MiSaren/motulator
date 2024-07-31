@@ -53,6 +53,9 @@ autoapi_options = [
     "imported-members",
 ]  # "private-members", "imported-members", "undoc-members", "special-members",
 
+# Add the custom template directory
+autoapi_template_dir = "_templates/autoapi"
+
 # Add the autoapi_ignore option to exclude specific modules
 #autoapi_ignore = ["grid/control/grid_following"]
 
@@ -103,3 +106,11 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
+
+def skip_submodules(app, what, name, obj, skip, options):
+    if "Inverter" in name:
+        skip = True
+    return skip
+
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_submodules)
