@@ -34,9 +34,9 @@ class LFilter(Subsystem):
         Filter model parameters.
         L-Filter model uses only following FilterPars parameters:
 
-            L_fc : float
+            filter_par.L_fc : float
                 Converter-side inductance of the filter (H).
-            R_fc : float (optional)
+            filter_par.R_fc : float (optional)
                 Converter-side series resistance (Ω). The default is 0.
 
     """

@@ -7,6 +7,7 @@ import numpy as np
 
 from motulator.common.utils import abc2complex
 
+
 # TODO: should this module be further divided into multiple ones, or partly
 # moved to _simulation.py?
 # %%

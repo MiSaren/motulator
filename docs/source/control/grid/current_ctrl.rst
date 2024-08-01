@@ -22,18 +22,18 @@ The continuous-time counterpart of the controller is
     \boldsymbol{u}_\mathrm{c,ref} = k_\mathrm{p}(\boldsymbol{i}_\mathrm{c,ref} - \boldsymbol{i}_\mathrm{c}) + k_\mathrm{i}/s \cdot (\boldsymbol{i}_\mathrm{c,ref} - \boldsymbol{i}_\mathrm{c}) + \mathrm{j}\omega L_\mathrm{f} \boldsymbol{i}_\mathrm{c} + \boldsymbol{u}_\mathrm{g,filt} 
     :label: ComplexFFPI
 
-where :math:`\boldsymbol{u}_\mathrm{c,ref}` is the reference voltage, :math:`\boldsymbol{k}_\mathrm{p}` and :math:`\boldsymbol{k}_\mathrm{i}` are the proportional and integral gains,
-:math:`\boldsymbol{k}_t` is reference-feedforward gain, :math:`\boldsymbol{i}_\mathrm{c,ref}` is the reference current, :math:`\boldsymbol{i}_\mathrm{c}` is the measured current, 
+where :math:`\boldsymbol{u}_\mathrm{c,ref}` is the reference voltage, :math:`k_\mathrm{p}` and :math:`k_\mathrm{i}` are the proportional and integral gains,
+:math:`k_t` is reference-feedforward gain, :math:`\boldsymbol{i}_\mathrm{c,ref}` is the reference current, :math:`\boldsymbol{i}_\mathrm{c}` is the measured current, 
 :math:`\boldsymbol{u}_\mathrm{g,filt}` is the filtered feedforward grid voltage, 
-and :math:`\mathrm{j} \omega L_\mathrm{f}` is the decoupling term estimate.
+and :math:`\mathrm{j} \omega L_\mathrm{f}` is the optional decoupling term estimate.
 
 The gain selection corresponding to internal-model-control (IMC) is
 equivalent to the continuous-time version given in [#Har2009]_.
 
 .. math::                
-    \boldsymbol{k}_\mathrm{p} = 2L_\mathrm{f}\alpha_\mathrm{c} \qquad\qquad
-    \boldsymbol{k}_\mathrm{i} = L_\mathrm{f}\alpha_\mathrm{c}^2  \qquad \qquad
-    \boldsymbol{k}_\mathrm{t} = L_\mathrm{f}\alpha_\mathrm{c} 
+    k_\mathrm{p} = 2L_\mathrm{f}\alpha_\mathrm{c} \qquad\qquad
+    k_\mathrm{i} = L_\mathrm{f}\alpha_\mathrm{c}^2  \qquad \qquad
+    k_\mathrm{t} = L_\mathrm{f}\alpha_\mathrm{c} 
     :label: ComplexFFPI_gains
 
 Notice that selecting :math:`k_\mathrm{t} = k_\mathrm{p}` yields the standard (1DOF) PI controller.

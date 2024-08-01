@@ -1,9 +1,7 @@
 """grid following control methods for grid onverters."""
 
 # %%
-from __future__ import annotations
 from dataclasses import dataclass
-
 import numpy as np
 
 from motulator.grid.control import (
@@ -11,8 +9,8 @@ from motulator.grid.control import (
 from motulator.common.utils import DCBusPars, FilterPars
 from motulator.grid.utils import GridPars
 
-from motulator.common.control import (ComplexFFPIController)
-from motulator.grid.control._common import PLL
+from motulator.common.control import ComplexFFPIController
+from motulator.grid.control import PLL
 
 # %%
 @dataclass
@@ -99,7 +97,15 @@ class GFLControl(GridConverterControlSystem):
     ----------
     cfg : GFLControlCfg
         Control configuration.
-    
+
+    Attributes
+    ----------
+    current_ctrl : CurrentController
+        Current controller.
+    pll : PLL
+        Phase locked loop.
+    current_reference : CurrentRefCalc
+        Current reference calculator.
     """
 
     def __init__(self, cfg):
