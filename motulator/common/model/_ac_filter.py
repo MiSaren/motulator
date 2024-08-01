@@ -26,10 +26,14 @@ class ACFilter(Subsystem):
 
     """
 
-    def __new__(cls, filter_par:FilterPars, grid_par:GridPars=None):
+    def __new__(cls, filter_par: FilterPars, grid_par: GridPars = None):
         if filter_par.C_f != 0:
             if filter_par.L_fg != 0:
                 return super().__new__(LCLFilter)
+            if grid_par is not None:
+                raise SyntaxError(
+                    "Could not create filter with given parameters. Did you " +
+                    "forget to specify L_fg?")
             return super().__new__(LCFilter)
         return super().__new__(LFilter)
 
@@ -117,25 +121,26 @@ class LFilter(ACFilter):
 
     """
 
-    def __init__(self, filter_par:FilterPars, grid_par:GridPars):
+    def __init__(self, filter_par: FilterPars, grid_par: GridPars):
         super().__init__()
         self.par = SimpleNamespace(
             L_f=filter_par.L_fc,
             R_f=filter_par.R_fc,
             L_g=grid_par.L_g,
-            R_g=grid_par.R_g
-            )
-        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=grid_par.u_gN+0j)
-        self.out = SimpleNamespace(u_gs=grid_par.u_gN+0j)  # Needed for direct feedthrough
-        self.state = SimpleNamespace(i_cs=0+0j)
+            R_g=grid_par.R_g)
+        self.inp = SimpleNamespace(u_cs=0 + 0j, e_gs=grid_par.u_gN + 0j)
+        self.out = SimpleNamespace(
+            u_gs=grid_par.u_gN + 0j)  # Needed for direct feedthrough
+        self.state = SimpleNamespace(i_cs=0 + 0j)
         self.sol_states = SimpleNamespace(i_cs=[])
 
     def set_outputs(self, _):
         """Set output variables."""
         state, par, inp, out = self.state, self.par, self.inp, self.out
-        u_gs = (par.L_g*inp.u_cs + par.L_f*inp.e_gs +
-            (par.R_g*par.L_f - par.R_f*par.L_g)*
-            state.i_cs)/(par.L_g+par.L_f)
+        u_gs = (
+            par.L_g*inp.u_cs + par.L_f*inp.e_gs +
+            (par.R_g*par.L_f - par.R_f*par.L_g)*state.i_cs)/(
+                par.L_g + par.L_f)
         out.i_cs, out.i_gs, out.u_gs = state.i_cs, state.i_cs, u_gs
 
     def rhs(self):
@@ -156,14 +161,15 @@ class LFilter(ACFilter):
 
     def post_process_states(self):
         """Post-process data."""
-        self.data.i_gs=self.data.i_cs
+        self.data.i_gs = self.data.i_cs
 
     def post_process_with_inputs(self):
         """Post-process data with inputs."""
         data = self.data
-        data.u_gs = (self.par.L_g*data.u_cs + self.par.L_f*data.e_gs +
+        data.u_gs = (
+            self.par.L_g*data.u_cs + self.par.L_f*data.e_gs +
             (self.par.R_g*self.par.L_f - self.par.R_f*self.par.L_g)*
-            data.i_cs)/(self.par.L_g+self.par.L_f)
+            data.i_cs)/(self.par.L_g + self.par.L_f)
 
 
 # %%
@@ -186,31 +192,32 @@ class LCLFilter(ACFilter):
         Filter model parameters.
     """
 
-
-    def __init__(self, filter_par:FilterPars, grid_par:GridPars):
+    def __init__(self, filter_par: FilterPars, grid_par: GridPars):
         super().__init__()
         self.par = SimpleNamespace(
-            L_fc = filter_par.L_fc,
-            R_fc = filter_par.R_fc,
-            L_fg = filter_par.L_fg,
-            R_fg = filter_par.R_fg,
-            C_f = filter_par.C_f,
-            G_f = filter_par.G_f,
-            L_g = grid_par.L_g,
-            R_g = grid_par.R_g
-            )
-        self.inp = SimpleNamespace(u_cs=0+0j, e_gs=grid_par.u_gN+0j)
-        self.out = SimpleNamespace(u_gs=grid_par.u_gN+0j)
-        self.state = SimpleNamespace(i_cs=0+0j, u_fs=grid_par.u_gN+0j, i_gs=0+0j)
+            L_fc=filter_par.L_fc,
+            R_fc=filter_par.R_fc,
+            L_fg=filter_par.L_fg,
+            R_fg=filter_par.R_fg,
+            C_f=filter_par.C_f,
+            G_f=filter_par.G_f,
+            L_g=grid_par.L_g,
+            R_g=grid_par.R_g)
+        self.inp = SimpleNamespace(u_cs=0 + 0j, e_gs=grid_par.u_gN + 0j)
+        self.out = SimpleNamespace(u_gs=grid_par.u_gN + 0j)
+        self.state = SimpleNamespace(
+            i_cs=0 + 0j, u_fs=grid_par.u_gN + 0j, i_gs=0 + 0j)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[], i_gs=[])
 
     def set_outputs(self, _):
         """Set output variables."""
         state, par, inp, out = self.state, self.par, self.inp, self.out
-        u_gs = (par.L_fg*inp.e_gs + par.L_g*state.u_fs + (par.R_g*par.L_fg -
-                par.R_fg*par.L_g)*state.i_gs)/(par.L_g+par.L_fg)
-        out.i_cs, out.u_fs, out.i_gs, out.u_gs = (state.i_cs, state.u_fs,
-                                                state.i_gs, u_gs)
+        u_gs = (
+            par.L_fg*inp.e_gs + par.L_g*state.u_fs +
+            (par.R_g*par.L_fg - par.R_fg*par.L_g)*state.i_gs)/(
+                par.L_g + par.L_fg)
+        out.i_cs, out.u_fs, out.i_gs, out.u_gs = (
+            state.i_cs, state.u_fs, state.i_gs, u_gs)
 
     def rhs(self):
         """
@@ -239,8 +246,10 @@ class LCLFilter(ACFilter):
     def post_process_with_inputs(self):
         """Post-process data with inputs."""
         data, par = self.data, self.par
-        data.u_gs = (par.L_fg*data.e_gs+par.L_g*data.u_fs+(par.R_g*par.L_fg-
-                    par.R_fg*par.L_g)*data.i_gs)/(par.L_g+par.L_fg)
+        data.u_gs = (
+            par.L_fg*data.e_gs + par.L_g*data.u_fs +
+            (par.R_g*par.L_fg - par.R_fg*par.L_g)*data.i_gs)/(
+                par.L_g + par.L_fg)
 
 
 # %%

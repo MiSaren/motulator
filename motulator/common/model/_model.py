@@ -7,9 +7,8 @@ import numpy as np
 
 from motulator.common.utils import abc2complex
 
-# TODO: divide contents of this file to multiple files, e.g., _converter.py
-# and _ac_filter.py. Before doing so, a way to resolve Sphinx cyclic imports
-# should be found, however.
+# TODO: should this module be further divided into multiple ones, or partly
+# moved to _simulation.py?
 # %%
 class Delay:
     """
