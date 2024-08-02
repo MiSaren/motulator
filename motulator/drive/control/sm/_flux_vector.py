@@ -5,9 +5,9 @@ from dataclasses import dataclass, InitVar
 import numpy as np
 
 from motulator.drive.control import DriveControlSystem, SpeedController
-from motulator.drive.utils import SynchronousMachinePars
 from motulator.drive.control.sm._common import Observer, ObserverCfg
 from motulator.drive.control.sm._torque import TorqueCharacteristics
+from motulator.drive.utils import SynchronousMachinePars
 
 
 # %%

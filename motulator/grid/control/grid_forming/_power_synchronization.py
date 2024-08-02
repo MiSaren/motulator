@@ -5,11 +5,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.common.utils import wrap
-
+from motulator.common.utils import wrap, DCBusPars, FilterPars
 from motulator.grid.control import GridConverterControlSystem
 from motulator.grid.utils import GridPars
-from motulator.common.utils import DCBusPars, FilterPars
 
 
 # %%
@@ -20,8 +18,8 @@ class PSCControlCfg:
 
     Parameters
     ----------
-    grid_par : GridConverterPars
-        Grid and grid converter model parameters.
+    grid_par : GridPars
+        Grid model parameters.
     dc_bus_par : DCBusPars
         DC-bus model parameters.
     filter_par : FilterPars
@@ -102,7 +100,12 @@ class PSCControl(GridConverterControlSystem):
     """
 
     def __init__(self, cfg):
-        super().__init__(cfg.grid_par, cfg.dc_bus_par, cfg.T_s, on_u_dc=cfg.on_u_dc)
+        super().__init__(
+            cfg.grid_par,
+            cfg.dc_bus_par,
+            cfg.T_s,
+            on_u_dc=cfg.on_u_dc,
+        )
         self.cfg = cfg
         self.current_ctrl = PSCCurrentController(cfg)
         self.ref.q_g = 0
@@ -146,7 +149,13 @@ class PSCControl(GridConverterControlSystem):
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
 
         # Get duty ratios from PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, par.w_gN, cfg.overmodulation)
+        ref.d_abc = self.pwm(
+            ref.T_s,
+            ref.u_cs,
+            fbk.u_dc,
+            par.w_gN,
+            cfg.overmodulation,
+        )
 
         return ref
 
@@ -206,22 +215,24 @@ class PSCCurrentController:
         if i_abs > 0:
             i_ratio = cfg.i_max/i_abs
             i_cd_ref = np.sign(i_cd_ref)*np.min(
-                [i_ratio*np.abs(i_cd_ref),np.abs(i_cd_ref)])
+                [i_ratio*np.abs(i_cd_ref),
+                 np.abs(i_cd_ref)])
             i_cq_ref = np.sign(i_cq_ref)*np.min(
-                [i_ratio*np.abs(i_cq_ref),np.abs(i_cq_ref)])
+                [i_ratio*np.abs(i_cq_ref),
+                 np.abs(i_cq_ref)])
             i_c_ref = i_cd_ref + 1j*i_cq_ref
 
         ref.i_c = i_c_ref
 
         # Calculation of converter voltage output (reference sent to PWM)
         ref.u_c = ((ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c) +
-           cfg.on_u_g*1j*self.cfg.filter_par.L_fc*par.w_gN*fbk.i_c)
+                   cfg.on_u_g*1j*self.cfg.filter_par.L_fc*par.w_gN*fbk.i_c)
 
         return ref
 
     def update(self, fbk, ref):
         """Update the integral state for the current low pass filter."""
-        cfg=self.cfg
+        cfg = self.cfg
 
         self.i_c_filt = (1 - ref.T_s*cfg.w_0_cc)*self.i_c_filt + (
             cfg.K_cc*ref.T_s*cfg.w_0_cc*fbk.i_c)

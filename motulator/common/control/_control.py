@@ -472,8 +472,7 @@ class ComplexFFPIController:
 
         """
         # Disturbance input estimate
-        self.v = self.u_i - (self.k_p - self.k_t)*i + (u_ff
-        + 1j*w*self.L_f*i)
+        self.v = self.u_i - (self.k_p - self.k_t)*i + (u_ff + 1j*w*self.L_f*i)
 
         # Controller output
         u = self.k_t*(i_ref - i) + self.v

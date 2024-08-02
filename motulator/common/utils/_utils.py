@@ -297,6 +297,7 @@ class FilterPars(ABC):
     R_fg: float = 0
     G_f: float = 0
 
+
 # %%
 @dataclass
 class DCBusPars(ABC):

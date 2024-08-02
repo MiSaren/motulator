@@ -3,11 +3,11 @@
 from motulator.grid.control._common import (
     GridConverterControlSystem,
     DCBusVoltageController,
-    PLL
+    PLL,
 )
 
 __all__ = [
     "GridConverterControlSystem",
     "DCBusVoltageController",
-    "PLL"
+    "PLL",
 ]

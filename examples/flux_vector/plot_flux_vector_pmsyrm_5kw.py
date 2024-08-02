@@ -22,11 +22,15 @@ from scipy.optimize import minimize_scalar
 import matplotlib.pyplot as plt
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
-
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    Sequence,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.sm as control
-from motulator.drive.utils import (plot, SynchronousMachinePars)
+from motulator.drive.utils import plot, SynchronousMachinePars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -164,7 +168,11 @@ mdl = model.Drive(converter, machine, mechanics)
 par = SynchronousMachinePars(n_p=2, R_s=.63, L_d=18e-3, L_q=110e-3, psi_f=.47)
 # Limit the maximum reference flux to the base value
 cfg = control.FluxTorqueReferenceCfg(
-    par, max_i_s=2*base.i, k_u=1, max_psi_s=base.psi)
+    par,
+    max_i_s=2*base.i,
+    k_u=1,
+    max_psi_s=base.psi,
+)
 ctrl = control.FluxVectorControl(par, cfg, J=.015, sensorless=True)
 # Select a lower speed-estimation bandwidth to mitigate the saturation effects
 ctrl.observer = control.Observer(

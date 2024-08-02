@@ -2,12 +2,14 @@
 
 from motulator.grid.control.grid_following._grid_following import (
     GFLControl,
-    GFLControlCfg, 
-    CurrentRefCalc
+    GFLControlCfg,
+    CurrentRefCalc,
+    CurrentController,
 )
 
 __all__ = [
     "GFLControl",
     "GFLControlCfg",
     "CurrentRefCalc",
+    "CurrentController",
 ]

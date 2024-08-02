@@ -10,14 +10,20 @@ drive, equipped with a diode bridge rectifier.
 import numpy as np
 
 from motulator.common.model import (
-    Simulation, CarrierComparison, Inverter, DiodeBridge)
+    Simulation,
+    CarrierComparison,
+    Inverter,
+    DiodeBridge,
+)
 from motulator.common.utils import BaseValues, NominalValues, DCBusPars
-
 from motulator.drive import model
 from motulator.grid.model import StiffSource
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
-    plot, plot_extra, SynchronousMachinePars)
+    plot,
+    plot_extra,
+    SynchronousMachinePars,
+)
 from motulator.grid.utils import GridPars
 
 # %%
@@ -32,16 +38,23 @@ base = BaseValues.from_nominal(nom, n_p=3)
 # Grid parameters
 grid_par = GridPars(
     u_gN=base.u,
-    w_gN=base.w)
+    w_gN=base.w,
+)
 
 # DC bus parameters
 dc_bus_par = DCBusPars(
-    u_dc = 400*np.sqrt(2),
-    C_dc = 235e-6,
-    L_dc = 2e-3)
+    u_dc=400*np.sqrt(2),
+    C_dc=235e-6,
+    L_dc=2e-3,
+)
 
 mdl_par = SynchronousMachinePars(
-    n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
+    n_p=3,
+    R_s=3.6,
+    L_d=.036,
+    L_q=.051,
+    psi_f=.545,
+)
 machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
 
@@ -49,7 +62,8 @@ mechanics = model.StiffMechanicalSystem(J=.015)
 # Frequency converter with a diode bridge
 ac_source = StiffSource(
     w_gN=grid_par.w_gN,
-    e_g_abs=grid_par.u_gN)
+    e_g_abs=grid_par.u_gN,
+)
 
 diode_bridge = DiodeBridge(dc_bus_par)
 converter = Inverter(dc_bus_par)
@@ -58,7 +72,7 @@ mdl = model.DriveWithDiodebridge(
     diodebridge=diode_bridge,
     converter=converter,
     machine=machine,
-    mechanics=mechanics
+    mechanics=mechanics,
 )
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 
@@ -68,7 +82,12 @@ mdl.pwm = CarrierComparison()  # Enable the PWM model
 par = mdl_par  # Assume accurate machine model parameter estimates
 ref = control.CurrentReferenceCfg(par, nom_w_m=base.w, max_i_s=1.5*base.i)
 ctrl = control.CurrentVectorControl(
-    par, ref, J=.015, T_s=250e-6, sensorless=True)
+    par,
+    ref,
+    J=.015,
+    T_s=250e-6,
+    sensorless=True,
+)
 
 # %%
 # Set the speed reference and the external load torque.

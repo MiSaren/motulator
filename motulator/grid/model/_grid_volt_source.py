@@ -9,7 +9,8 @@ from types import SimpleNamespace
 import numpy as np
 
 from motulator.common.model import Subsystem
-from motulator.common.utils._utils import (complex2abc, abc2complex, wrap)
+from motulator.common.utils import complex2abc, abc2complex, wrap
+
 
 # %%
 # TODO: implement modeling of harmonics
@@ -59,19 +60,29 @@ class StiffSource(Subsystem):
 
     """
 
-    def __init__(self, w_gN, e_g_abs, phi=lambda t: 0, e_g_neg_abs=0,
-                 phi_neg=0, w_g=None, e_ga_abs=None, e_gb_abs=None,
-                 e_gc_abs=None):
+    def __init__(
+            self,
+            w_gN,
+            e_g_abs,
+            phi=lambda t: 0,
+            e_g_neg_abs=0,
+            phi_neg=0,
+            w_g=None,
+            e_ga_abs=None,
+            e_gb_abs=None,
+            e_gc_abs=None):
         super().__init__()
-        self.par = SimpleNamespace(w_gN=w_gN,
-                                   e_g_abs=e_g_abs,
-                                   phi=phi,
-                                   e_g_neg_abs=e_g_neg_abs,
-                                   phi_neg=phi_neg,
-                                   w_g=w_g,
-                                   e_ga_abs=e_ga_abs,
-                                   e_gb_abs=e_gb_abs,
-                                   e_gc_abs=e_gc_abs)
+        self.par = SimpleNamespace(
+            w_gN=w_gN,
+            e_g_abs=e_g_abs,
+            phi=phi,
+            e_g_neg_abs=e_g_neg_abs,
+            phi_neg=phi_neg,
+            w_g=w_g,
+            e_ga_abs=e_ga_abs,
+            e_gb_abs=e_gb_abs,
+            e_gc_abs=e_gc_abs,
+        )
         # states
         self.state = SimpleNamespace(exp_j_theta_p=complex(1))
         # Store the solutions in these lists
@@ -112,7 +123,8 @@ class StiffSource(Subsystem):
         if par.e_g_neg_abs is not None:
             e_g_neg_abs = par.e_g_neg_abs(t) if callable(
                 par.e_g_neg_abs) else par.e_g_neg_abs
-            e_gs += e_g_neg_abs*np.exp(-1j*(theta_p + par.phi_neg + par.phi(t)))
+            e_gs += e_g_neg_abs*np.exp(
+                -1j*(theta_p + par.phi_neg + par.phi(t)))
 
         return e_gs
 
@@ -206,20 +218,42 @@ class FlexSource(Subsystem):
     
     """
 
-    def __init__(self, w_gN, e_g_abs, S_grid, T_D=10, T_N=3, H_g=3, D_g=0,
-                 r_d=.05, T_gov=0.5, p_m_ref=lambda t: 0, p_e=lambda t: 0):
+    def __init__(
+            self,
+            w_gN,
+            e_g_abs,
+            S_grid,
+            T_D=10,
+            T_N=3,
+            H_g=3,
+            D_g=0,
+            r_d=.05,
+            T_gov=0.5,
+            p_m_ref=lambda t: 0,
+            p_e=lambda t: 0):
         super().__init__()
         self.p_m_ref = p_m_ref
         self.p_e = p_e
-        self.par = SimpleNamespace(T_D=T_D, T_N=T_N, H_g=H_g, D_g=D_g,
-                                   r_d=r_d*w_gN/S_grid, T_gov=T_gov, w_gN=w_gN,
-                                   S_grid=S_grid, e_g_abs=e_g_abs)
+        self.par = SimpleNamespace(
+            T_D=T_D,
+            T_N=T_N,
+            H_g=H_g,
+            D_g=D_g,
+            r_d=r_d*w_gN/S_grid,
+            T_gov=T_gov,
+            w_gN=w_gN,
+            S_grid=S_grid,
+            e_g_abs=e_g_abs,
+        )
         # States
-        self.state = SimpleNamespace(err_w_g=0, p_gov=0, x_turb=0,
-                                     theta_g=0)
+        self.state = SimpleNamespace(err_w_g=0, p_gov=0, x_turb=0, theta_g=0)
         # Store the solutions in these lists
-        self.sol_states = SimpleNamespace(err_w_g=[], p_gov=[],
-                                          x_turb=[], theta_g=[])
+        self.sol_states = SimpleNamespace(
+            err_w_g=[],
+            p_gov=[],
+            x_turb=[],
+            theta_g=[],
+        )
 
     def voltages(self, t, theta_g):
         """
@@ -243,8 +277,8 @@ class FlexSource(Subsystem):
         e_g_abs = self.par.e_g_abs(t) if callable(
             self.par.e_g_abs) else self.par.e_g_abs
         e_g_a = e_g_abs*np.cos(theta_g)
-        e_g_b = e_g_abs*np.cos(theta_g-2*np.pi/3)
-        e_g_c = e_g_abs*np.cos(theta_g-4*np.pi/3)
+        e_g_b = e_g_abs*np.cos(theta_g - 2*np.pi/3)
+        e_g_c = e_g_abs*np.cos(theta_g - 4*np.pi/3)
 
         e_gs = abc2complex([e_g_a, e_g_b, e_g_c])
         return e_gs
@@ -277,7 +311,7 @@ class FlexSource(Subsystem):
         # calculation of mechanical power from the turbine output
         p_m = (par.T_N/par.T_D)*p_gov + (1 - (par.T_N/par.T_D))*x_turb
         # swing equation
-        p_diff = (p_m - inp.p_e)/par.S_grid # in per units
+        p_diff = (p_m - inp.p_e)/par.S_grid  # in per units
         d_err_w_g = par.w_gN*(p_diff - par.D_g*err_w_g)/(2*par.H_g)
         # governor dynamics
         d_p_gov = (inp.p_m_ref - (1/par.r_d)*err_w_g - p_gov)/par.T_gov
@@ -335,4 +369,4 @@ class FlexSource(Subsystem):
         """Post-process the solution."""
         self.data.w_g = self.par.w_gN + self.data.err_w_g.real
         self.data.theta_g = wrap(self.data.theta_g.real)
-        self.data.e_gs=self.voltages(self.data.t, self.data.theta_g)
+        self.data.e_gs = self.voltages(self.data.t, self.data.theta_g)

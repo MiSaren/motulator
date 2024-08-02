@@ -280,16 +280,25 @@ class TorqueCharacteristics:
         # Create an interpolant that can be used as a look-up table. If needed,
         # more interpolants can be easily added.
         abs_psi_s_vs_tau_M = interp1d(
-            tau_M, abs_psi_s, fill_value=abs_psi_s[-1], bounds_error=False)
+            tau_M,
+            abs_psi_s,
+            fill_value=abs_psi_s[-1],
+            bounds_error=False,
+        )
         i_sd_vs_tau_M = interp1d(
-            tau_M, i_s.real, fill_value=i_s.real[-1], bounds_error=False)
+            tau_M,
+            i_s.real,
+            fill_value=i_s.real[-1],
+            bounds_error=False,
+        )
 
         return SimpleNamespace(
             psi_s=psi_s,
             i_s=i_s,
             tau_M=tau_M,
             abs_psi_s_vs_tau_M=abs_psi_s_vs_tau_M,
-            i_sd_vs_tau_M=i_sd_vs_tau_M)
+            i_sd_vs_tau_M=i_sd_vs_tau_M,
+        )
 
     def mtpv_locus(self, max_psi_s=None, max_i_s=None, N=20):
         """
@@ -342,7 +351,8 @@ class TorqueCharacteristics:
             psi_s=psi_s,
             i_s=i_s,
             tau_M=tau_M,
-            tau_M_vs_abs_psi_s=tau_M_vs_abs_psi_s)
+            tau_M_vs_abs_psi_s=tau_M_vs_abs_psi_s,
+        )
 
     def current_limit(self, max_i_s, gamma1=np.pi, gamma2=0, N=20):
         """
@@ -390,13 +400,15 @@ class TorqueCharacteristics:
             np.abs(psi_s),
             tau_M,
             bounds_error=False,
-            fill_value=(tau_M[0], tau_M[-1]))
+            fill_value=(tau_M[0], tau_M[-1]),
+        )
 
         return SimpleNamespace(
             psi_s=psi_s,
             i_s=i_s,
             tau_M=tau_M,
-            tau_M_vs_abs_psi_s=tau_M_vs_abs_psi_s)
+            tau_M_vs_abs_psi_s=tau_M_vs_abs_psi_s,
+        )
 
     def mtpv_and_current_limits(self, max_i_s, N=20):
         """
@@ -425,7 +437,8 @@ class TorqueCharacteristics:
             max_i_s=max_i_s,
             N=N,
             gamma1=np.angle(mtpv.i_s[-1]),
-            gamma2=np.angle(mtpa.i_s[-1]))
+            gamma2=np.angle(mtpa.i_s[-1]),
+        )
 
         if np.isnan(mtpv.i_s).any():
             # No MTPV, only the current limit
@@ -443,11 +456,14 @@ class TorqueCharacteristics:
             np.abs(psi_s),
             tau_M,
             bounds_error=False,
-            fill_value=(tau_M[0], tau_M[-1]))
+            fill_value=(tau_M[0], tau_M[-1]),
+        )
         i_sd_vs_tau_M = interp1d(tau_M, i_sd, fill_value="extrapolate")
 
         return SimpleNamespace(
-            tau_M_vs_abs_psi_s=tau_M_vs_abs_psi_s, i_sd_vs_tau_M=i_sd_vs_tau_M)
+            tau_M_vs_abs_psi_s=tau_M_vs_abs_psi_s,
+            i_sd_vs_tau_M=i_sd_vs_tau_M,
+        )
 
     def plot_flux_loci(self, max_i_s, base, N=20):
         """
@@ -470,7 +486,8 @@ class TorqueCharacteristics:
             max_i_s=max_i_s,
             N=N,
             gamma1=np.angle(mtpv.i_s[-1]),
-            gamma2=np.angle(mtpa.i_s[-1]))
+            gamma2=np.angle(mtpa.i_s[-1]),
+        )
 
         # Plot the i_sd--i_sq current plane
         _, ax = plt.subplots()
@@ -561,7 +578,8 @@ class TorqueCharacteristics:
             max_i_s=max_i_s,
             N=N,
             gamma1=np.angle(mtpv.i_s[-1]),
-            gamma2=np.angle(mtpa.i_s[-1]))
+            gamma2=np.angle(mtpa.i_s[-1]),
+        )
 
         # Plot i_sd vs. tau_M
         _, (ax1, ax2) = plt.subplots(2, 1)
@@ -615,7 +633,8 @@ class TorqueCharacteristics:
             max_i_s=max_i_s,
             N=N,
             gamma1=np.angle(mtpv.i_s[-1]),
-            gamma2=np.angle(mtpa.i_s[-1]))
+            gamma2=np.angle(mtpa.i_s[-1]),
+        )
 
         # Plot
         _, ax = plt.subplots(1, 1)
