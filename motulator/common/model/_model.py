@@ -101,11 +101,10 @@ class CarrierComparison:
            [1, 1, 1]])
 
     """
-
     def __init__(self, N=2**12, return_complex=True):
-        self.N = N
-        self.return_complex = return_complex
-        self._rising_edge = True  # Stores the carrier direction
+            self.N = N
+            self.return_complex = return_complex
+            self._rising_edge = True  # Stores the carrier direction
 
     def __call__(self, T_s, d_c_abc):
         """
@@ -137,8 +136,18 @@ class CarrierComparison:
 
         # Assume falling edge and compute the normalized switching instants:
         t_n = np.append(0, np.sort(d_c_abc))
+        t_n1 = t_n/2
+        t_n2 = 0.5 + t_n1
         # Compute the corresponding switching states:
         q_c_abc = (t_n[:, np.newaxis] < d_c_abc).astype(int)
+
+        q_abc1 = (t_n1[:, np.newaxis] < d_c_abc).astype(int)
+        q_abc2 = (t_n2[:, np.newaxis] < d_c_abc).astype(int)
+
+        q_c_abc3 = q_abc1 + q_abc2
+        q_c_abc3 = q_c_abc3 /2
+
+        q_c_abc = q_c_abc3
 
         # Durations of switching states
         t_steps = T_s*np.diff(t_n, append=1)

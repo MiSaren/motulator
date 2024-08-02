@@ -4,13 +4,13 @@
 from dataclasses import dataclass
 import numpy as np
 
-from motulator.grid.control import (
-    GridConverterControlSystem)
+from motulator.grid.control import GridConverterControlSystem
 from motulator.common.utils import DCBusPars, FilterPars
 from motulator.grid.utils import GridPars
 
 from motulator.common.control import ComplexFFPIController
 from motulator.grid.control import PLL
+
 
 # %%
 @dataclass
@@ -80,7 +80,7 @@ class GFLControlCfg:
         filter_par, grid_par = self.filter_par, self.grid_par
         # Current controller gains
         self.k_p_i = self.alpha_c*filter_par.L_fc
-        self.k_i_i = np.power(self.alpha_c,2)*filter_par.L_fc
+        self.k_i_i = np.power(self.alpha_c, 2)*filter_par.L_fc
         self.r_i = self.alpha_c*filter_par.L_fc
 
         # PLL gains
@@ -109,7 +109,12 @@ class GFLControl(GridConverterControlSystem):
     """
 
     def __init__(self, cfg):
-        super().__init__(cfg.grid_par, cfg.dc_bus_par, cfg.T_s, on_u_dc=cfg.on_u_dc, on_u_cap=cfg.on_u_cap)
+        super().__init__(
+            cfg.grid_par,
+            cfg.dc_bus_par,
+            cfg.T_s,
+            on_u_dc=cfg.on_u_dc,
+            on_u_cap=cfg.on_u_cap)
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
         self.pll = PLL(cfg)
@@ -117,7 +122,6 @@ class GFLControl(GridConverterControlSystem):
 
         # Initialize the states
         self.u_filt = cfg.grid_par.u_gN + 1j*0
-        
 
     def get_feedback_signals(self, mdl):
         fbk = super().get_feedback_signals(mdl)
@@ -130,9 +134,9 @@ class GFLControl(GridConverterControlSystem):
         # Calculating of active and reactive powers
         fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
         fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
-    
+
         return fbk
-    
+
     def output(self, fbk):
         """Extend the base class method."""
         grid_par = self.cfg.grid_par
@@ -152,11 +156,13 @@ class GFLControl(GridConverterControlSystem):
         if i_abs > 0:
             i_ratio = self.cfg.i_max/i_abs
             i_cd_ref = np.sign(i_cd_ref)*np.min(
-                [i_ratio*np.abs(i_cd_ref),np.abs(i_cd_ref)])
+                [i_ratio*np.abs(i_cd_ref),
+                 np.abs(i_cd_ref)])
             i_cq_ref = np.sign(i_cq_ref)*np.min(
-                [i_ratio*np.abs(i_cq_ref),np.abs(i_cq_ref)])
+                [i_ratio*np.abs(i_cq_ref),
+                 np.abs(i_cq_ref)])
             ref.i_c = i_cd_ref + 1j*i_cq_ref
-        
+
         # Low pass filter for the feedforward PCC voltage:
         u_filt = self.u_filt
 
@@ -164,23 +170,26 @@ class GFLControl(GridConverterControlSystem):
         self.pll.output(fbk, ref)
 
         # Voltage reference generation in synchronous coordinates
-        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt, grid_par.w_gN)
+        ref.u_c = self.current_ctrl.output(
+            ref.i_c, fbk.i_c, u_filt, grid_par.w_gN)
 
-         # Transform the voltage reference into stator coordinates
+        # Transform the voltage reference into stator coordinates
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
-        
+
         # get the duty ratios from the PWM
-        ref.d_abc = self.pwm(ref.T_s, ref.u_cs, fbk.u_dc, grid_par.w_gN, self.cfg.overmodulation)
+        ref.d_abc = self.pwm(
+            ref.T_s, ref.u_cs, fbk.u_dc, grid_par.w_gN,
+            self.cfg.overmodulation)
 
         return ref
-    
+
     def update(self, fbk, ref):
         """Extend the base class method."""
         super().update(fbk, ref)
         self.current_ctrl.update(ref.T_s, fbk.u_c)
         self.pll.update(ref.u_gq)
         self.u_filt = (1 - ref.T_s*self.cfg.alpha_ff)*self.u_filt + (
-            ref.T_s*self.cfg.alpha_ff*fbk.u_g)     
+            ref.T_s*self.cfg.alpha_ff*fbk.u_g)
 
 
 # %%
@@ -207,9 +216,9 @@ class CurrentController(ComplexFFPIController):
         L_f = cfg.filter_par.L_fc
         super().__init__(k_p, k_i, k_t, L_f)
 
+
 # %%
 class CurrentRefCalc:
-
     """
     Current controller reference generator
     
@@ -219,7 +228,6 @@ class CurrentRefCalc:
     """
 
     def __init__(self, cfg):
-
         """
         Parameters
         ----------
@@ -230,9 +238,7 @@ class CurrentRefCalc:
         self.u_gN = cfg.grid_par.u_gN
         self.i_max = cfg.i_max
 
-
     def get_current_reference(self, ref):
-
         """
         Current reference genetator.
     
@@ -245,4 +251,4 @@ class CurrentRefCalc:
         """
 
         # Calculation of the current references in the stationary frame:
-        ref.i_c = 2*ref.p_g/(3*self.u_gN) -2*1j*ref.q_g/(3*self.u_gN)
+        ref.i_c = 2*ref.p_g/(3*self.u_gN) - 2*1j*ref.q_g/(3*self.u_gN)
