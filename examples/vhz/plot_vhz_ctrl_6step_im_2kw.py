@@ -14,13 +14,20 @@ frequency and the sampling frequency.
 import numpy as np
 
 from motulator.common.model import Simulation, CarrierComparison, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
-
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    Sequence,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    InductionMachinePars, InductionMachineInvGammaPars,
-    plot, plot_extra)
+    InductionMachinePars,
+    InductionMachineInvGammaPars,
+    plot,
+    plot_extra,
+)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -35,7 +42,12 @@ dc_bus = DCBusPars(u_dc=540)
 
 # Configure the induction machine using its inverse-Γ parameters
 mdl_ig_par = InductionMachineInvGammaPars(
-    n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
+    n_p=2,
+    R_s=3.7,
+    R_R=2.1,
+    L_sgm=.021,
+    L_M=.224,
+)
 mdl_par = InductionMachinePars.from_inv_gamma_model_pars(mdl_ig_par)
 machine = model.InductionMachine(mdl_par)
 # Mechanics with quadratic load torque coefficient
@@ -51,7 +63,12 @@ mdl.pwm = CarrierComparison()  # Enable the PWM model
 par = InductionMachineInvGammaPars(R_s=0*3.7, R_R=0*2.1, L_sgm=.021, L_M=.224)
 ctrl = control.VHzControl(
     control.VHzControlCfg(
-        par, nom_psi_s=base.psi, k_u=0, k_w=0, six_step=True))
+        par,
+        nom_psi_s=base.psi,
+        k_u=0,
+        k_w=0,
+        six_step=True,
+    ))
 
 # %%
 # Set the speed reference and the external load torque.

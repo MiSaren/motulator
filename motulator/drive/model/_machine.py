@@ -135,10 +135,14 @@ class SynchronousMachine(Subsystem):
         # Initial values
         if psi_s0 is not None:
             self.state = SimpleNamespace(
-                psi_s=complex(psi_s0), exp_j_theta_m=complex(1))
+                psi_s=complex(psi_s0),
+                exp_j_theta_m=complex(1),
+            )
         else:
             self.state = SimpleNamespace(
-                psi_s=complex(par.psi_f), exp_j_theta_m=complex(1))
+                psi_s=complex(par.psi_f),
+                exp_j_theta_m=complex(1),
+            )
         # Store the solutions in these lists
         self.sol_states = SimpleNamespace(psi_s=[], exp_j_theta_m=[])
 

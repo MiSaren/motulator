@@ -114,7 +114,11 @@ class TwoMassMechanicalSystem(StiffMechanicalSystem):
         self.par = par
         self.state = SimpleNamespace(w_M=0, exp_j_theta_M=0, w_L=0, theta_ML=0)
         self.sol_states = SimpleNamespace(
-            w_M=[], exp_j_theta_M=[], w_L=[], theta_ML=[])
+            w_M=[],
+            exp_j_theta_M=[],
+            w_L=[],
+            theta_ML=[],
+        )
 
     @property
     def B_L(self):

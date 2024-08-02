@@ -3,10 +3,12 @@
 from types import SimpleNamespace
 import numpy as np
 
+from motulator.common.utils import wrap
 from motulator.drive.control import DriveControlSystem, SpeedController
 from motulator.drive.control.sm._current_vector import (
-    CurrentController, CurrentReference)
-from motulator.common.utils import wrap
+    CurrentController,
+    CurrentReference,
+)
 
 
 # %%

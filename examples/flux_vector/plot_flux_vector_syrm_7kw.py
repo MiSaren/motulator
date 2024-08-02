@@ -16,11 +16,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
-
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    Sequence,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.sm as control
-from motulator.drive.utils import (plot, SynchronousMachinePars)
+from motulator.drive.utils import plot, SynchronousMachinePars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -68,10 +72,20 @@ mdl = model.Drive(converter, machine, mechanics)
 # lower values in order to demonstrate the PM-flux disturbance estimation.
 
 par = SynchronousMachinePars(
-    n_p=2, R_s=.54, L_d=.7*37e-3, L_q=.8*6.2e-3, psi_f=0)
+    n_p=2,
+    R_s=.54,
+    L_d=.7*37e-3,
+    L_q=.8*6.2e-3,
+    psi_f=0,
+)
 # Disable MTPA since the control system does not consider the saturation
 cfg = control.FluxTorqueReferenceCfg(
-    par, max_i_s=2*base.i, k_u=.9, min_psi_s=base.psi, max_psi_s=base.psi)
+    par,
+    max_i_s=2*base.i,
+    k_u=.9,
+    min_psi_s=base.psi,
+    max_psi_s=base.psi,
+)
 ctrl = control.FluxVectorControl(par, cfg, J=.015, sensorless=True)
 # Since the saturation is not considered in the control system, the speed
 # estimation bandwidth is set to a lower value. Furthermore, the PM-flux
@@ -81,7 +95,8 @@ ctrl.observer = control.Observer(
         par,
         alpha_o=2*np.pi*40,
         k_f=lambda w_m: max(.05*(np.abs(w_m) - 2*np.pi*20), 0),
-        sensorless=True))
+        sensorless=True,
+    ))
 
 # %%
 # Set the speed reference and the external load torque.

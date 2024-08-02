@@ -12,12 +12,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
-
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    Sequence,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.sm as control
-from motulator.drive.utils import (
-    plot, SynchronousMachinePars)
+from motulator.drive.utils import plot, SynchronousMachinePars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -30,7 +33,12 @@ base = BaseValues.from_nominal(nom, n_p=3)
 
 dc_bus = DCBusPars(u_dc=540)
 mdl_par = SynchronousMachinePars(
-    n_p=3, R_s=3.6, L_d=.036, L_q=.051, psi_f=.545)
+    n_p=3,
+    R_s=3.6,
+    L_d=.036,
+    L_q=.051,
+    psi_f=.545,
+)
 machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
 converter = Inverter(dc_bus)

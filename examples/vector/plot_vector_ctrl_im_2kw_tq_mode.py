@@ -11,12 +11,13 @@ import numpy as np
 
 from motulator.common.model import Simulation, Inverter
 from motulator.common.utils import BaseValues, NominalValues, DCBusPars
-
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    plot, InductionMachinePars,
-    InductionMachineInvGammaPars)
+    plot,
+    InductionMachinePars,
+    InductionMachineInvGammaPars,
+)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -31,7 +32,12 @@ dc_bus = DCBusPars(u_dc=540)
 
 # Parametrize the machine model using its inverse-Γ parameters
 par = InductionMachineInvGammaPars(
-    n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
+    n_p=2,
+    R_s=3.7,
+    R_R=2.1,
+    L_sgm=.021,
+    L_M=.224,
+)
 mdl_par = InductionMachinePars.from_inv_gamma_model_pars(par)
 machine = model.InductionMachine(mdl_par)
 # Use externally specified actual speed w_M(t), defined subsequently below
@@ -44,10 +50,19 @@ mdl = model.Drive(converter, machine, mechanics)
 
 # Machine model parameter estimates
 par = InductionMachineInvGammaPars(
-    n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
+    n_p=2,
+    R_s=3.7,
+    R_R=2.1,
+    L_sgm=.021,
+    L_M=.224,
+)
 # Set nominal values and limits for reference generation
 cfg = control.CurrentReferenceCfg(
-    par, max_i_s=1.5*base.i, nom_u_s=base.u, nom_w_s=base.w)
+    par,
+    max_i_s=1.5*base.i,
+    nom_u_s=base.u,
+    nom_w_s=base.w,
+)
 # Create the control system
 ctrl = control.CurrentVectorControl(par, cfg, T_s=250e-6, sensorless=True)
 
