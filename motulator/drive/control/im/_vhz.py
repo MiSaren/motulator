@@ -6,10 +6,10 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from motulator.drive.control import DriveControlSystem
-from motulator.drive.utils import InductionMachineInvGammaPars
 from motulator.common.control import PWM, RateLimiter
 from motulator.common.utils import wrap
+from motulator.drive.control import DriveControlSystem
+from motulator.drive.utils import InductionMachineInvGammaPars
 
 
 # %%
@@ -34,7 +34,11 @@ class VHzControlCfg:
         alpha_f = .1*w_rb if alpha_f is None else alpha_f
         alpha_i = .1*w_rb if alpha_i is None else alpha_f
         self.gain = SimpleNamespace(
-            k_u=k_u, k_w=k_w, alpha_f=alpha_f, alpha_i=alpha_i)
+            k_u=k_u,
+            k_w=k_w,
+            alpha_f=alpha_f,
+            alpha_i=alpha_i,
+        )
 
 
 # %%

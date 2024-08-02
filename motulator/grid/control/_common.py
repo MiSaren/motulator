@@ -3,9 +3,9 @@ from abc import ABC
 from types import SimpleNamespace
 
 import numpy as np
-from motulator.common.control import (ControlSystem, PIController)
-from motulator.common.utils import (abc2complex)
-from motulator.common.utils import wrap
+
+from motulator.common.control import ControlSystem, PIController
+from motulator.common.utils import abc2complex, wrap
 
 
 # %%
@@ -21,7 +21,6 @@ class PLL:
     """
 
     def __init__(self, cfg):
-
         """
         Parameters
         ----------
@@ -35,9 +34,7 @@ class PLL:
         self.w_pll = cfg.grid_par.w_gN
         self.theta_c = 0
 
-
     def output(self, fbk, ref):
-
         """
         Compute the estimated frequency and phase angle using the PLL.
     
@@ -67,7 +64,7 @@ class PLL:
         ref.abs_ug = np.abs(ref.u_g)
 
         return ref
-    
+
     def update(self, u_gq):
         """
         Update the integral state.
@@ -86,7 +83,7 @@ class PLL:
         self.w_pll = self.w_pll + cfg.T_s*cfg.k_i_pll*u_gq
         # Update the grid-voltage angle state
         self.theta_c = self.theta_c + cfg.T_s*w_g_pll
-        self.theta_c = wrap(self.theta_c)    # Limit to [-pi, pi]
+        self.theta_c = wrap(self.theta_c)  # Limit to [-pi, pi]
 
 
 # %%
@@ -266,7 +263,8 @@ class GridConverterControlSystem(ControlSystem, ABC):
             ref.p_g = self.ref.p_g(ref.t)
 
         # Define the reactive power reference
-        ref.q_g = self.ref.q_g(ref.t) if callable(self.ref.q_g) else self.ref.q_g
+        ref.q_g = self.ref.q_g(ref.t) if callable(
+            self.ref.q_g) else self.ref.q_g
 
         return ref
 

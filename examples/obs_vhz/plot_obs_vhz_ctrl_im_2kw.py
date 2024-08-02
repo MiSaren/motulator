@@ -11,12 +11,19 @@ drive.
 import numpy as np
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
-
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    Sequence,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    InductionMachinePars, InductionMachineInvGammaPars, plot)
+    InductionMachinePars,
+    InductionMachineInvGammaPars,
+    plot,
+)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -31,7 +38,12 @@ dc_bus = DCBusPars(u_dc=540)
 
 # Configure the induction machine using its inverse-Γ parameters
 mdl_ig_par = InductionMachineInvGammaPars(
-    n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
+    n_p=2,
+    R_s=3.7,
+    R_R=2.1,
+    L_sgm=.021,
+    L_M=.224,
+)
 mdl_par = InductionMachinePars.from_inv_gamma_model_pars(mdl_ig_par)
 machine = model.InductionMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
@@ -44,7 +56,10 @@ mdl = model.Drive(converter, machine, mechanics)
 # Inverse-Γ model parameter estimates
 par = mdl_ig_par  # Assume accurate machine model parameter estimates
 cfg = control.ObserverBasedVHzControlCfg(
-    nom_psi_s=base.psi, max_i_s=1.5*base.i, slip_compensation=False)
+    nom_psi_s=base.psi,
+    max_i_s=1.5*base.i,
+    slip_compensation=False,
+)
 ctrl = control.ObserverBasedVHzControl(par, cfg, T_s=250e-6)
 
 # %%
