@@ -127,10 +127,12 @@ class LFilter(ACFilter):
             L_f=filter_par.L_fc,
             R_f=filter_par.R_fc,
             L_g=grid_par.L_g,
-            R_g=grid_par.R_g)
+            R_g=grid_par.R_g,
+        )
         self.inp = SimpleNamespace(u_cs=0 + 0j, e_gs=grid_par.u_gN + 0j)
         self.out = SimpleNamespace(
-            u_gs=grid_par.u_gN + 0j)  # Needed for direct feedthrough
+            u_gs=grid_par.u_gN + 0j,  # Needed for direct feedthrough
+        )
         self.state = SimpleNamespace(i_cs=0 + 0j)
         self.sol_states = SimpleNamespace(i_cs=[])
 
@@ -202,11 +204,15 @@ class LCLFilter(ACFilter):
             C_f=filter_par.C_f,
             G_f=filter_par.G_f,
             L_g=grid_par.L_g,
-            R_g=grid_par.R_g)
+            R_g=grid_par.R_g,
+        )
         self.inp = SimpleNamespace(u_cs=0 + 0j, e_gs=grid_par.u_gN + 0j)
         self.out = SimpleNamespace(u_gs=grid_par.u_gN + 0j)
         self.state = SimpleNamespace(
-            i_cs=0 + 0j, u_fs=grid_par.u_gN + 0j, i_gs=0 + 0j)
+            i_cs=0 + 0j,
+            u_fs=grid_par.u_gN + 0j,
+            i_gs=0 + 0j,
+        )
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[], i_gs=[])
 
     def set_outputs(self, _):
@@ -279,7 +285,8 @@ class LCFilter(ACFilter):
             L_fc=filter_par.L_fc,
             C_f=filter_par.C_f,
             R_fc=filter_par.R_fc,
-            G_f=filter_par.G_f)
+            G_f=filter_par.G_f,
+        )
         self.state = SimpleNamespace(i_cs=0, u_fs=0)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[])
 

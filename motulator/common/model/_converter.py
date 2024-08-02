@@ -37,17 +37,27 @@ class Inverter(Subsystem):
     
     """
 
-    def __init__(self, dc_bus_par : DCBusPars, i_ext=lambda t: 0):
+    def __init__(self, dc_bus_par: DCBusPars, i_ext=lambda t: 0):
         super().__init__()
         self.i_ext = i_ext
-        self.par = SimpleNamespace(u_dc=dc_bus_par.u_dc, C_dc=dc_bus_par.C_dc, G_dc=dc_bus_par.G_dc)
+        self.par = SimpleNamespace(
+            u_dc=dc_bus_par.u_dc,
+            C_dc=dc_bus_par.C_dc,
+            G_dc=dc_bus_par.G_dc,
+        )
         # Initial values
-        self.u_dc0 = self.par.u_dc(0) if callable(self.par.u_dc) else self.par.u_dc
-        if self.par.C_dc is not None: # Only initialize states if dynamic DC model is used
-            self.state = SimpleNamespace(u_dc = self.u_dc0)
-            self.sol_states = SimpleNamespace(u_dc = [])
+        self.u_dc0 = self.par.u_dc(0) if callable(
+            self.par.u_dc) else self.par.u_dc
+        # Only initialize states if dynamic DC model is used
+        if self.par.C_dc is not None:
+            self.state = SimpleNamespace(u_dc=self.u_dc0)
+            self.sol_states = SimpleNamespace(u_dc=[])
         self.inp = SimpleNamespace(
-            u_dc=self.u_dc0, i_ext=i_ext(0), q_cs=None, i_cs=0j)
+            u_dc=self.u_dc0,
+            i_ext=i_ext(0),
+            q_cs=None,
+            i_cs=0j,
+        )
         self.sol_q_cs = []
 
     @property
@@ -89,7 +99,7 @@ class Inverter(Subsystem):
 
         """
         state, inp, par = self.state, self.inp, self.par
-        if par.C_dc is None: # Check whether dynamic DC model is used
+        if par.C_dc is None:  # Check whether dynamic DC model is used
             return None
         d_u_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
         return [d_u_dc]
@@ -137,7 +147,7 @@ class DiodeBridge(Subsystem):
 
     """
 
-    def __init__(self, dc_bus_par : DCBusPars):
+    def __init__(self, dc_bus_par: DCBusPars):
         super().__init__()
         self.par = SimpleNamespace(L=dc_bus_par.L_dc)
         self.state = SimpleNamespace(i_L=0)
