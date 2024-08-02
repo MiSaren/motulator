@@ -62,6 +62,8 @@ class CarrierComparison:
     return_complex : bool, optional
         Complex switching state space vectors are returned if True. Otherwise
         phase switching states are returned. The default is True.
+    level : int, optional
+        Number of inverter levels. The default is 2.
 
     Examples
     --------
@@ -101,10 +103,12 @@ class CarrierComparison:
            [1, 1, 1]])
 
     """
-    def __init__(self, N=2**12, return_complex=True):
-            self.N = N
-            self.return_complex = return_complex
-            self._rising_edge = True  # Stores the carrier direction
+
+    def __init__(self, N=2**12, return_complex=True, level=2):
+        self.N = N
+        self.level = level
+        self.return_complex = return_complex
+        self._rising_edge = True  # Stores the carrier direction
 
     def __call__(self, T_s, d_c_abc):
         """
@@ -136,18 +140,15 @@ class CarrierComparison:
 
         # Assume falling edge and compute the normalized switching instants:
         t_n = np.append(0, np.sort(d_c_abc))
-        t_n1 = t_n/2
-        t_n2 = 0.5 + t_n1
-        # Compute the corresponding switching states:
-        q_c_abc = (t_n[:, np.newaxis] < d_c_abc).astype(int)
-
-        q_abc1 = (t_n1[:, np.newaxis] < d_c_abc).astype(int)
-        q_abc2 = (t_n2[:, np.newaxis] < d_c_abc).astype(int)
-
-        q_c_abc3 = q_abc1 + q_abc2
-        q_c_abc3 = q_c_abc3 /2
-
-        q_c_abc = q_c_abc3
+        if self.level == 2:
+            # Compute the corresponding switching states:
+            q_c_abc = (t_n[:, np.newaxis] < d_c_abc).astype(int)
+        elif self.level == 3:
+            t_n1 = t_n/2
+            t_n2 = 0.5 + t_n1
+            q_abc1 = (t_n1[:, np.newaxis] < d_c_abc).astype(int)
+            q_abc2 = (t_n2[:, np.newaxis] < d_c_abc).astype(int)
+            q_c_abc = (q_abc1 + q_abc2)/2
 
         # Durations of switching states
         t_steps = T_s*np.diff(t_n, append=1)
@@ -350,15 +351,17 @@ class Inverter(Subsystem):
         ``lambda t: 0``.
     """
 
-    def __init__(self, dc_bus_par : DCBusPars, i_ext=lambda t: 0):
+    def __init__(self, dc_bus_par: DCBusPars, i_ext=lambda t: 0):
         super().__init__()
         self.i_ext = i_ext
-        self.par = SimpleNamespace(u_dc=dc_bus_par.u_dc, C_dc=dc_bus_par.C_dc, G_dc=dc_bus_par.G_dc)
+        self.par = SimpleNamespace(
+            u_dc=dc_bus_par.u_dc, C_dc=dc_bus_par.C_dc, G_dc=dc_bus_par.G_dc)
         # Initial values
-        self.u_dc0 = self.par.u_dc(0) if callable(self.par.u_dc) else self.par.u_dc
-        if self.par.C_dc is not None: # Only initialize states if dynamic DC model is used
-            self.state = SimpleNamespace(u_dc = self.u_dc0)
-            self.sol_states = SimpleNamespace(u_dc = [])
+        self.u_dc0 = self.par.u_dc(0) if callable(
+            self.par.u_dc) else self.par.u_dc
+        if self.par.C_dc is not None:  # Only initialize states if dynamic DC model is used
+            self.state = SimpleNamespace(u_dc=self.u_dc0)
+            self.sol_states = SimpleNamespace(u_dc=[])
         self.inp = SimpleNamespace(
             u_dc=self.u_dc0, i_ext=i_ext(0), q_cs=None, i_cs=0j)
         self.sol_q_cs = []
@@ -402,7 +405,7 @@ class Inverter(Subsystem):
 
         """
         state, inp, par = self.state, self.inp, self.par
-        if par.C_dc is None: # Check whether dynamic DC model is used
+        if par.C_dc is None:  # Check whether dynamic DC model is used
             return None
         d_u_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
         return [d_u_dc]
@@ -450,7 +453,7 @@ class DiodeBridge(Subsystem):
 
     """
 
-    def __init__(self, dc_bus_par : DCBusPars):
+    def __init__(self, dc_bus_par: DCBusPars):
         super().__init__()
         self.par = SimpleNamespace(L=dc_bus_par.L_dc)
         self.state = SimpleNamespace(i_L=0)
