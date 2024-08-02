@@ -45,7 +45,7 @@ doc = [
     "matplotlib",
     "numpydoc",
     "sphinx==7.1.2",
-    "sphinx-autoapi",
+    "sphinx-autoapi==3.1.1",
     "sphinx-copybutton",
     "sphinx-gallery",
     "sphinx-book-theme",

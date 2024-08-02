@@ -53,6 +53,9 @@ autoapi_options = [
     "imported-members",
 ]  # "private-members", "imported-members", "undoc-members", "special-members",
 
+# Add the custom template directory
+autoapi_template_dir = "../_templates/autoapi"
+
 # Add the autoapi_ignore option to exclude specific modules
 #autoapi_ignore = ["grid/control/grid_following"]
 
