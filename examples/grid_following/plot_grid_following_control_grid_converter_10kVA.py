@@ -63,8 +63,7 @@ cfg = control.GFLControlCfg(
     dc_bus_par=dc_bus_par,
     filter_par=filter_par,
     i_max=1.5*base.i,
-    p_max=base.p,
-)
+    p_max=base.p)
 ctrl = control.GFLControl(cfg)
 
 # %%
@@ -80,7 +79,7 @@ ctrl.ref.q_g = lambda t: (t > 0.04)*(4e3)
 # %%
 # Create the simulation object and simulate it.
 
-#mdl.pwm = CarrierComparison()  # Enable the PWM model
+mdl.pwm = CarrierComparison(level=3)  # Enable the PWM model
 start_time = time.time()
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=.1)

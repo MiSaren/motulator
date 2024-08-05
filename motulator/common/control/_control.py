@@ -29,6 +29,8 @@ class PWM:
     overmodulation : str, optional
         Overmodulation method. The default is Minimum Magnitude Error "MME".
         For grid-connected converters, the Minimum Phase Error "MPE" is recommended.
+    levels : int, optional
+        Number of voltage levels. The default is 2.
 
     
 
@@ -44,12 +46,18 @@ class PWM:
     
     """
 
-    def __init__(self, six_step=False, k_comp=1.5, overmodulation="MME"):
+    def __init__(
+            self,
+            six_step=False,
+            k_comp=1.5,
+            overmodulation="MME",
+            inverter_level=2):
         self.six_step = six_step
         self.k_comp = k_comp
         self.realized_voltage = 0
         self._old_u_cs = 0
         self.overmodulation = overmodulation
+        self.levels = inverter_level
 
     @staticmethod
     def six_step_overmodulation(ref_u_cs, u_dc):
@@ -121,6 +129,8 @@ class PWM:
         overmodulation : str, optional
             Overmodulation method. The default is Minimum Magnitude Error "MME".
             For grid-connected converters, the Minimum Phase Error "MPE" is recommended.
+        levels : int, optional
+            Number of voltage levels in inverter. The default is 2.
 
         Returns
         -------
@@ -141,7 +151,7 @@ class PWM:
                 u_abc = u_abc/m
 
         # Duty ratios
-        d_abc = .5 + u_abc/u_dc
+        d_abc = u_abc/u_dc + .5
 
         if overmodulation == "MME":
             d_abc = np.clip(d_abc, 0, 1)
@@ -212,6 +222,7 @@ class PWM:
     def __call__(self, T_s, ref_u_cs, u_dc, w, overmodulation="MME"):
         d_abc, u_cs = self.output(T_s, ref_u_cs, u_dc, w, overmodulation)
         self.update(u_cs)
+
         return d_abc
 
 
