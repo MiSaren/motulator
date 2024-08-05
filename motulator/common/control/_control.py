@@ -144,23 +144,6 @@ class PWM:
         # Zero-sequence voltage resulting in space-vector PWM
         u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
         u_abc -= u_0
-        # u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
-        # u_abc = u_abc + u_dc/2 - u_0
-
-        if levels == 3:
-            u_abc = u_abc + u_dc/2
-            # Shift
-            idx = u_abc >= (u_dc/2)
-            u_abc = np.mod(u_abc, u_dc/2)
-
-            # Add another zero sequence component
-            u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
-            u_abc = u_abc + u_dc/4 - u_0
-
-            # Shift back
-            u_abc = u_abc + idx*u_dc/2
-
-            #u_abc = u_abc - u_dc/2
 
         if overmodulation == "MPE":
             m = (2./u_dc)*np.amax(u_abc)
