@@ -138,16 +138,22 @@ class CarrierComparison:
         # Quantize the duty ratios to N levels
         d_c_abc = np.round(self.N*np.asarray(d_c_abc))/self.N
 
-        # Assume falling edge and compute the normalized switching instants:
-        t_n = np.append(0, np.sort(d_c_abc))
         if self.level == 2:
+            # Assume falling edge and compute the normalized switching instants:
+            t_n = np.append(0, np.sort(d_c_abc))
             # Compute the corresponding switching states:
             q_c_abc = (t_n[:, np.newaxis] < d_c_abc).astype(int)
+
         elif self.level == 3:
-            t_n1 = t_n/2
-            t_n2 = 0.5 + t_n1
-            q_abc1 = (t_n1[:, np.newaxis] < d_c_abc).astype(int)
-            q_abc2 = (t_n2[:, np.newaxis] < d_c_abc).astype(int)
+            # Assume falling edge and compute the normalized switching instants:
+            t_n = np.append(0, 2*d_c_abc)
+            t_n = t_n - (t_n > 1).astype(float)
+            t_n.sort()
+
+            # Compute the corresponding switching states:
+            q_abc1 = (0.5*t_n[:, np.newaxis] < d_c_abc).astype(int)
+            q_abc2 = (0.5 + 0.5*t_n[:, np.newaxis] < d_c_abc).astype(int)
+
             q_c_abc = (q_abc1 + q_abc2)/2
 
         # Durations of switching states

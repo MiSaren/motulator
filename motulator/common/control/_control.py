@@ -46,7 +46,12 @@ class PWM:
     
     """
 
-    def __init__(self, six_step=False, k_comp=1.5, overmodulation="MME", inverter_level=2):
+    def __init__(
+            self,
+            six_step=False,
+            k_comp=1.5,
+            overmodulation="MME",
+            inverter_level=2):
         self.six_step = six_step
         self.k_comp = k_comp
         self.realized_voltage = 0
@@ -139,6 +144,23 @@ class PWM:
         # Zero-sequence voltage resulting in space-vector PWM
         u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
         u_abc -= u_0
+        # u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
+        # u_abc = u_abc + u_dc/2 - u_0
+
+        if levels == 3:
+            u_abc = u_abc + u_dc/2
+            # Shift
+            idx = u_abc >= (u_dc/2)
+            u_abc = np.mod(u_abc, u_dc/2)
+
+            # Add another zero sequence component
+            u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
+            u_abc = u_abc + u_dc/4 - u_0
+
+            # Shift back
+            u_abc = u_abc + idx*u_dc/2
+
+            #u_abc = u_abc - u_dc/2
 
         if overmodulation == "MPE":
             m = (2./u_dc)*np.amax(u_abc)
@@ -217,7 +239,7 @@ class PWM:
     def __call__(self, T_s, ref_u_cs, u_dc, w, overmodulation="MME"):
         d_abc, u_cs = self.output(T_s, ref_u_cs, u_dc, w, overmodulation)
         self.update(u_cs)
-        
+
         return d_abc
 
 
@@ -478,8 +500,7 @@ class ComplexFFPIController:
 
         """
         # Disturbance input estimate
-        self.v = self.u_i - (self.k_p - self.k_t)*i + (u_ff
-        + 1j*w*self.L_f*i)
+        self.v = self.u_i - (self.k_p - self.k_t)*i + (u_ff + 1j*w*self.L_f*i)
 
         # Controller output
         u = self.k_t*(i_ref - i) + self.v
