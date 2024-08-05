@@ -11,15 +11,21 @@ parameters in this example yield open-loop V/Hz control.
 import numpy as np
 
 from motulator.common.model import (
-    Simulation, CarrierComparison, Inverter, DiodeBridge)
+    Simulation,
+    CarrierComparison,
+    Inverter,
+    DiodeBridge,
+)
 from motulator.common.utils import BaseValues, NominalValues, DCBusPars
-
 from motulator.drive import model
-from motulator.grid.model import StiffSource
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    InductionMachinePars, InductionMachineInvGammaPars,
-    plot, plot_extra)
+    InductionMachinePars,
+    InductionMachineInvGammaPars,
+    plot,
+    plot_extra,
+)
+from motulator.grid.model import StiffSource
 from motulator.grid.utils import GridPars
 
 # %%
@@ -46,13 +52,11 @@ mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 # Grid parameters
 grid_par = GridPars(
     u_gN=base.u,
-    w_gN=base.w,)
+    w_gN=base.w,
+)
 
 # Dc bus parameters
-dc_bus_par = DCBusPars(
-    u_dc = 400*np.sqrt(2),
-    L_dc = 2e-3,
-    C_dc = 235e-6)
+dc_bus_par = DCBusPars(u_dc=400*np.sqrt(2), L_dc=2e-3, C_dc=235e-6)
 ac_source = StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
 diode_bridge = DiodeBridge(dc_bus_par)
 converter = Inverter(dc_bus_par)
@@ -62,7 +66,8 @@ mdl = model.DriveWithDiodebridge(
     diodebridge=diode_bridge,
     converter=converter,
     machine=machine,
-    mechanics=mechanics)
+    mechanics=mechanics,
+)
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 
 # %%
@@ -71,7 +76,12 @@ mdl.pwm = CarrierComparison()  # Enable the PWM model
 # Inverse-Γ model parameter estimates
 par = InductionMachineInvGammaPars(R_s=0*3.7, R_R=0*2.1, L_sgm=.021, L_M=.224)
 ctrl = control.VHzControl(
-    control.VHzControlCfg(par, nom_psi_s=base.psi, k_u=0, k_w=0))
+    control.VHzControlCfg(
+        par,
+        nom_psi_s=base.psi,
+        k_u=0,
+        k_w=0,
+    ))
 
 # %%
 # Set the speed reference and the external load torque.

@@ -11,12 +11,13 @@ system model, while the control system assumes constant parameters.
 
 from motulator.common.model import Simulation, Inverter
 from motulator.common.utils import BaseValues, NominalValues, DCBusPars
-
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    plot, InductionMachinePars,
-    InductionMachineInvGammaPars)
+    plot,
+    InductionMachinePars,
+    InductionMachineInvGammaPars,
+)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -56,13 +57,27 @@ mdl = model.Drive(converter, machine, mechanics)
 
 # Machine model parameter estimates
 par = InductionMachineInvGammaPars(
-    n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
+    n_p=2,
+    R_s=3.7,
+    R_R=2.1,
+    L_sgm=.021,
+    L_M=.224,
+)
 # Set nominal values and limits for reference generation
 cfg = control.CurrentReferenceCfg(
-    par, max_i_s=1.5*base.i, nom_u_s=base.u, nom_w_s=base.w)
+    par,
+    max_i_s=1.5*base.i,
+    nom_u_s=base.u,
+    nom_w_s=base.w,
+)
 # Create the control system
 ctrl = control.CurrentVectorControl(
-    par, cfg, J=.015, T_s=250e-6, sensorless=True)
+    par,
+    cfg,
+    J=.015,
+    T_s=250e-6,
+    sensorless=True,
+)
 # As an example, you may replace the default 2DOF PI speed controller with the
 # regular PI speed controller by uncommenting the following line
 # from motulator.common.control import PIController

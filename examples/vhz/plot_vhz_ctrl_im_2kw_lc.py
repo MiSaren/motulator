@@ -11,14 +11,25 @@ drive equipped with an LC filter.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from motulator.common.model import Simulation, CarrierComparison, Inverter
-from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
-
+from motulator.common.model import (
+    Simulation,
+    Inverter,
+    ACFilter,
+    CarrierComparison,
+)
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    FilterPars,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
-    InductionMachinePars, InductionMachineInvGammaPars,
-    plot)
+    InductionMachinePars,
+    InductionMachineInvGammaPars,
+    plot,
+)
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -35,14 +46,19 @@ dc_bus = DCBusPars(u_dc=540)
 filter_pars = FilterPars(L_fc=8e-3, C_f=9.9e-6, R_fc=.1)
 
 mdl_ig_par = InductionMachineInvGammaPars(
-    n_p=2, R_s=3.7, R_R=2.1, L_sgm=.021, L_M=.224)
+    n_p=2,
+    R_s=3.7,
+    R_R=2.1,
+    L_sgm=.021,
+    L_M=.224,
+)
 mdl_par = InductionMachinePars.from_inv_gamma_model_pars(mdl_ig_par)
 machine = model.InductionMachine(mdl_par)
 # Quadratic load torque profile (corresponding to pumps and fans)
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 converter = Inverter(dc_bus)
-lc_filter = model.LCFilter(filter_pars)
+lc_filter = ACFilter(filter_pars)
 mdl = model.DriveWithLCFilter(converter, machine, mechanics, lc_filter)
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 
@@ -52,7 +68,12 @@ mdl.pwm = CarrierComparison()  # Enable the PWM model
 # Inverse-Γ model parameter estimates
 par = InductionMachineInvGammaPars(R_s=0*3.7, R_R=0*2.1, L_sgm=.021, L_M=.224)
 ctrl = control.VHzControl(
-    control.VHzControlCfg(par, nom_psi_s=base.psi, k_u=0, k_w=0))
+    control.VHzControlCfg(
+        par,
+        nom_psi_s=base.psi,
+        k_u=0,
+        k_w=0,
+    ))
 
 # %%
 # Set the speed reference. The external load torque is zero (by default).

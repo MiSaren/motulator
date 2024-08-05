@@ -6,9 +6,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.drive.control import DriveControlSystem
 from motulator.common.control import RateLimiter
 from motulator.common.utils import wrap
+from motulator.drive.control import DriveControlSystem
 
 
 # %%

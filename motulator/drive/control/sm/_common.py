@@ -5,8 +5,8 @@ from dataclasses import dataclass, field, InitVar
 
 import numpy as np
 
-from motulator.drive.utils import SynchronousMachinePars
 from motulator.common.utils import wrap
+from motulator.drive.utils import SynchronousMachinePars
 
 
 # %%
@@ -92,7 +92,11 @@ class Observer:
         self.par, self.gain = cfg.par, cfg.gain
         # Initialize the state estimates
         self.est = SimpleNamespace(
-            theta_m=0, w_m=0, psi_s=self.par.psi_f, psi_f=self.par.psi_f)
+            theta_m=0,
+            w_m=0,
+            psi_s=self.par.psi_f,
+            psi_f=self.par.psi_f,
+        )
         # Private work variables for the update method
         self._work = SimpleNamespace(d_psi_s=0, d_psi_d=0, d_w_m=0)
 

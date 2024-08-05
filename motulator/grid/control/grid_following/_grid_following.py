@@ -2,14 +2,14 @@
 
 # %%
 from dataclasses import dataclass
+
 import numpy as np
 
-from motulator.grid.control import GridConverterControlSystem
+from motulator.common.control import ComplexFFPIController
 from motulator.common.utils import DCBusPars, FilterPars
+from motulator.grid.control import GridConverterControlSystem, PLL
 from motulator.grid.utils import GridPars
 
-from motulator.common.control import ComplexFFPIController
-from motulator.grid.control import PLL
 
 
 # %%
@@ -114,7 +114,8 @@ class GFLControl(GridConverterControlSystem):
             cfg.dc_bus_par,
             cfg.T_s,
             on_u_dc=cfg.on_u_dc,
-            on_u_cap=cfg.on_u_cap)
+            on_u_cap=cfg.on_u_cap,
+        )
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
         self.pll = PLL(cfg)
@@ -178,8 +179,12 @@ class GFLControl(GridConverterControlSystem):
 
         # get the duty ratios from the PWM
         ref.d_abc = self.pwm(
-            ref.T_s, ref.u_cs, fbk.u_dc, grid_par.w_gN,
-            self.cfg.overmodulation)
+            ref.T_s,
+            ref.u_cs,
+            fbk.u_dc,
+            grid_par.w_gN,
+            self.cfg.overmodulation,
+        )
 
         return ref
 
@@ -203,9 +208,14 @@ class CurrentController(ComplexFFPIController):
 
     Parameters
     ----------
-    cfg : ModelPars
-        Grid converter parameters, contains the filter inductance `L_fc` (H)
-        and the Closed-loop bandwidth 'alpha_c' (rad/s).
+    cfg : GFLControlCfg
+        Control configuration parameters, of which the following fields
+        are used:
+
+            filter_par.L_fc : float
+                Converter-side filter inductance (H).
+            alpha_c : float
+                Closed-loop bandwidth of the current controller (rad/s).
 
     """
 

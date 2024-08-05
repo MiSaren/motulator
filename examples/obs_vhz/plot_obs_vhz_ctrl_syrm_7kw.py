@@ -12,12 +12,15 @@ in the control method (only in the system model).
 import numpy as np
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, Sequence, DCBusPars
-
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    Sequence,
+    DCBusPars,
+)
 from motulator.drive import model
 import motulator.drive.control.sm as control
-from motulator.drive.utils import (
-    plot, SynchronousMachinePars)
+from motulator.drive.utils import plot, SynchronousMachinePars
 
 # %%
 # Compute base values based on the nominal values (just for figures).

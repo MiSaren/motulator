@@ -14,16 +14,21 @@ PI-based current controller.
 
 import time
 
-from motulator.common.model import Simulation, Inverter, CarrierComparison
-from motulator.common.utils import BaseValues, NominalValues, FilterPars, DCBusPars
-
+from motulator.common.model import (
+    Simulation,
+    Inverter,
+    ACFilter,
+    CarrierComparison,
+)
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+    FilterPars,
+    DCBusPars,
+)
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 from motulator.grid.utils import GridPars, plot_grid
-
-# To check the computation time of the program
-
-start_time = time.time()
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -31,36 +36,26 @@ start_time = time.time()
 nom = NominalValues(U=400, I=14.5, f=50, P=10e3)
 base = BaseValues.from_nominal(nom)
 
-
 # %%
 # Configure the system model.
 
-grid_par = GridPars(
-    u_gN = base.u,
-    w_gN = base.w)
+grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 
-filter_par = FilterPars(
-    L_fc = 3.7e-3,
-    L_fg = 3.7e-3,
-    C_f = 8e-6)
+filter_par = FilterPars(L_fc=3.7e-3, L_fg=3.7e-3, C_f=8e-6)
 
-dc_bus_par = DCBusPars(
-    u_dc = 650,
-    C_dc = 100e-3)
+dc_bus_par = DCBusPars(u_dc=650, C_dc=100e-3)
 
-grid_filter = model.LCLFilter(grid_par, filter_par)
+grid_filter = ACFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
-e_g_abs_var =  lambda t: grid_par.u_gN
+e_g_abs_var = lambda t: grid_par.u_gN
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs = e_g_abs_var)
+grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
 # Inverter model with constant DC voltage
 converter = Inverter(dc_bus_par)
 
 # Create system model
-mdl = model.StiffSourceAndGridFilterModel(
-    converter, grid_filter, grid_model)
-
+mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 
 # %%
 # Configure the control system.
@@ -70,11 +65,10 @@ cfg = control.GFLControlCfg(
     grid_par=grid_par,
     dc_bus_par=dc_bus_par,
     filter_par=filter_par,
-    on_u_cap = True,
-    i_max=1.5*base.i
-    )
+    on_u_cap=True,
+    i_max=1.5*base.i,
+)
 ctrl = control.GFLControl(cfg)
-
 
 # %%
 # Set the time-dependent reference and disturbance signals.
@@ -87,12 +81,12 @@ ctrl.ref.q_g = lambda t: (t > .04)*(4e3)
 # Create the simulation object and simulate it.
 
 #mdl.pwm = CarrierComparison()  # Enable the PWM model
+start_time = time.time()
 sim = Simulation(mdl, ctrl)
-sim.simulate(t_stop = .1)
+sim.simulate(t_stop=.1)
 
 # Print the execution time
 #print('\nExecution time: {:.2f} s'.format((time.time() - start_time)))
-
 
 # %%
 # Plot results in SI or per unit values.

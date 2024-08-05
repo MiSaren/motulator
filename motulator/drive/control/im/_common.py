@@ -5,8 +5,8 @@ from dataclasses import dataclass, field, InitVar
 
 import numpy as np
 
-from motulator.drive.utils import InductionMachineInvGammaPars
 from motulator.common.utils import wrap
+from motulator.drive.utils import InductionMachineInvGammaPars
 
 
 # %%
@@ -250,7 +250,7 @@ class FullOrderObserver:
         """Output."""
 
         # Unpack
-        par, gain = self.par, self.gain,
+        par, gain = self.par, self.gain
         par.R_sgm, par.alpha = par.R_s + par.R_R, par.R_R/par.L_M
 
         # Get the estimates

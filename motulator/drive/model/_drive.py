@@ -85,7 +85,10 @@ class DriveWithLCFilter(Model):
         self.mechanics = mechanics
         self.lc_filter = lc_filter
         self.subsystems = [
-            self.converter, self.machine, self.mechanics, self.lc_filter
+            self.converter,
+            self.machine,
+            self.mechanics,
+            self.lc_filter,
         ]
 
     def interconnect(self, _):
@@ -149,7 +152,13 @@ class DriveWithDiodebridge(Model):
         self.converter = converter
         self.machine = machine
         self.mechanics = mechanics
-        self.subsystems = [self.voltage_source, self.diodebridge, self.converter, self.machine, self.mechanics]
+        self.subsystems = [
+            self.voltage_source,
+            self.diodebridge,
+            self.converter,
+            self.machine,
+            self.mechanics,
+        ]
 
     def interconnect(self, _):
         """Interconnect the subsystems."""

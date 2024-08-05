@@ -11,6 +11,8 @@ from motulator.common.utils import complex2abc, FilterPars
 
 
 # %%
+# TODO: remove this file as LCFilter class has moved to
+# motulator.common.model._ac_filter.py
 class LCFilter(Subsystem):
     """
     LC-filter model.
@@ -59,7 +61,7 @@ class LCFilter(Subsystem):
         i_c_abc = complex2abc(self.state.i_cs)
         return i_c_abc
 
-    def meas_voltages(self):
+    def meas_cap_voltage(self):
         """Measure the capacitor phase voltages."""
-        u_s_abc = complex2abc(self.state.u_fs)
-        return u_s_abc
+        u_f_abc = complex2abc(self.state.u_fs)
+        return u_f_abc
