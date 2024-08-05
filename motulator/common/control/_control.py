@@ -113,7 +113,7 @@ class PWM:
         return ref_u_cs
 
     @staticmethod
-    def duty_ratios(ref_u_cs, u_dc, overmodulation="MME", levels=2):
+    def duty_ratios(ref_u_cs, u_dc, overmodulation="MME"):
         """
         Compute the duty ratios for three-phase space-vector PWM.
 
