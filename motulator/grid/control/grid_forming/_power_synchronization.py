@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from motulator.common.utils import wrap, DCBusPars, FilterPars
-from motulator.grid.control import GridConverterControlSystem
+from motulator.grid.control import GridConverterControlSystem, CurrentLimiter
 from motulator.grid.utils import GridPars
 
 
@@ -183,6 +183,7 @@ class PSCCurrentController:
 
     def __init__(self, cfg):
         self.cfg = cfg
+        self.current_limiter = CurrentLimiter(cfg.i_max)
 
         #initial states
         self.i_c_filt = 0j
@@ -200,23 +201,7 @@ class PSCCurrentController:
         else:
             i_c_ref = i_c_filt
 
-        # Calculation of the modulus of current reference
-        i_abs = np.abs(i_c_ref)
-        i_cd_ref = np.real(i_c_ref)
-        i_cq_ref = np.imag(i_c_ref)
-
-        # Current limitation algorithm
-        if i_abs > 0:
-            i_ratio = cfg.i_max/i_abs
-            i_cd_ref = np.sign(i_cd_ref)*np.min(
-                [i_ratio*np.abs(i_cd_ref),
-                 np.abs(i_cd_ref)])
-            i_cq_ref = np.sign(i_cq_ref)*np.min(
-                [i_ratio*np.abs(i_cq_ref),
-                 np.abs(i_cq_ref)])
-            i_c_ref = i_cd_ref + 1j*i_cq_ref
-
-        ref.i_c = i_c_ref
+        ref.i_c = self.current_limiter(i_c_ref)
 
         # Calculation of converter voltage output (reference sent to PWM)
         ref.u_c = ((ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c) +

@@ -7,7 +7,7 @@ import numpy as np
 
 from motulator.common.control import ComplexFFPIController
 from motulator.common.utils import DCBusPars, FilterPars
-from motulator.grid.control import GridConverterControlSystem, PLL
+from motulator.grid.control import GridConverterControlSystem, PLL, CurrentLimiter
 from motulator.grid.utils import GridPars
 
 
@@ -90,6 +90,7 @@ class GFLControl(GridConverterControlSystem):
         self.current_ctrl = CurrentController(cfg)
         self.pll = PLL(cfg)
         self.current_reference = CurrentRefCalc(cfg)
+        self.current_limiter = CurrentLimiter(cfg.i_max)
 
         # Initialize the states
         self.u_filt = cfg.grid_par.u_gN + 1j*0
@@ -116,21 +117,23 @@ class GFLControl(GridConverterControlSystem):
         ref = super().get_power_reference(fbk, ref)
         self.current_reference.get_current_reference(ref)
 
-        # Calculation of the modulus of current reference
-        i_abs = np.abs(ref.i_c)
-        i_cd_ref = np.real(ref.i_c)
-        i_cq_ref = np.imag(ref.i_c)
+        ref.i_c = self.current_limiter(ref.i_c)
 
-        # And current limitation algorithm
-        if i_abs > 0:
-            i_ratio = self.cfg.i_max/i_abs
-            i_cd_ref = np.sign(i_cd_ref)*np.min(
-                [i_ratio*np.abs(i_cd_ref),
-                 np.abs(i_cd_ref)])
-            i_cq_ref = np.sign(i_cq_ref)*np.min(
-                [i_ratio*np.abs(i_cq_ref),
-                 np.abs(i_cq_ref)])
-            ref.i_c = i_cd_ref + 1j*i_cq_ref
+        # # Calculation of the modulus of current reference
+        # i_abs = np.abs(ref.i_c)
+        # i_cd_ref = np.real(ref.i_c)
+        # i_cq_ref = np.imag(ref.i_c)
+
+        # # And current limitation algorithm
+        # if i_abs > 0:
+        #     i_ratio = self.cfg.i_max/i_abs
+        #     i_cd_ref = np.sign(i_cd_ref)*np.min(
+        #         [i_ratio*np.abs(i_cd_ref),
+        #          np.abs(i_cd_ref)])
+        #     i_cq_ref = np.sign(i_cq_ref)*np.min(
+        #         [i_ratio*np.abs(i_cq_ref),
+        #          np.abs(i_cq_ref)])
+        #     ref.i_c = i_cd_ref + 1j*i_cq_ref
 
         # Low pass filter for the feedforward PCC voltage:
         u_filt = self.u_filt

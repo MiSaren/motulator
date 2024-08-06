@@ -274,3 +274,49 @@ class GridConverterControlSystem(ControlSystem, ABC):
         super().update(fbk, ref)
         if self.dc_bus_volt_ctrl:
             self.dc_bus_volt_ctrl.update(ref.T_s, ref.p_g)
+
+
+# %%
+class CurrentLimiter:
+    """
+    Current limiter.
+
+    Parameters
+    ----------
+    i:max : float
+        Maximum current (A).
+
+    """
+
+    def __init__(self, i_max: float):
+        self.i_max = i_max
+
+    def __call__(self, i):
+        """
+        Simple current limiter for grid converters.
+
+        Parameters
+        ----------
+        i : float
+            Current (A).
+
+        Returns
+        -------
+        i_limited : float
+            Current limited output signal.
+
+        """
+        # Calculation of the modulus of current reference
+        i_abs = np.abs(i)
+        i_d = np.real(i)
+        i_q = np.imag(i)
+
+        i_limited = i
+        # Current limitation algorithm
+        if i_abs > 0:
+            i_ratio = self.i_max/i_abs
+            i_d = np.sign(i_d)*np.min([i_ratio*np.abs(i_d), np.abs(i_d)])
+            i_q = np.sign(i_q)*np.min([i_ratio*np.abs(i_q), np.abs(i_q)])
+            i_limited = i_d + 1j*i_q
+
+        return i_limited
