@@ -311,12 +311,13 @@ class CurrentLimiter:
         i_d = np.real(i)
         i_q = np.imag(i)
 
-        i_limited = i
         # Current limitation algorithm
         if i_abs > 0:
             i_ratio = self.i_max/i_abs
             i_d = np.sign(i_d)*np.min([i_ratio*np.abs(i_d), np.abs(i_d)])
             i_q = np.sign(i_q)*np.min([i_ratio*np.abs(i_q), np.abs(i_q)])
             i_limited = i_d + 1j*i_q
+        else:
+            i_limited = i
 
         return i_limited

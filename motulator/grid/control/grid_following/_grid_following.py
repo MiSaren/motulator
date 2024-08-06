@@ -119,22 +119,6 @@ class GFLControl(GridConverterControlSystem):
 
         ref.i_c = self.current_limiter(ref.i_c)
 
-        # # Calculation of the modulus of current reference
-        # i_abs = np.abs(ref.i_c)
-        # i_cd_ref = np.real(ref.i_c)
-        # i_cq_ref = np.imag(ref.i_c)
-
-        # # And current limitation algorithm
-        # if i_abs > 0:
-        #     i_ratio = self.cfg.i_max/i_abs
-        #     i_cd_ref = np.sign(i_cd_ref)*np.min(
-        #         [i_ratio*np.abs(i_cd_ref),
-        #          np.abs(i_cd_ref)])
-        #     i_cq_ref = np.sign(i_cq_ref)*np.min(
-        #         [i_ratio*np.abs(i_cq_ref),
-        #          np.abs(i_cq_ref)])
-        #     ref.i_c = i_cd_ref + 1j*i_cq_ref
-
         # Low pass filter for the feedforward PCC voltage:
         u_filt = self.u_filt
 
