@@ -279,12 +279,19 @@ class GridConverterControlSystem(ControlSystem, ABC):
 # %%
 class CurrentLimiter:
     """
-    Current limiter.
+     Simple current limiter for grid converters.
 
     Parameters
     ----------
-    i:max : float
+    i_max : float
         Maximum current (A).
+    i : float
+        Current (A).
+
+    Returns
+    -------
+    i_limited : float
+        Current limited output signal.
 
     """
 
@@ -292,20 +299,7 @@ class CurrentLimiter:
         self.i_max = i_max
 
     def __call__(self, i):
-        """
-        Simple current limiter for grid converters.
 
-        Parameters
-        ----------
-        i : float
-            Current (A).
-
-        Returns
-        -------
-        i_limited : float
-            Current limited output signal.
-
-        """
         # Calculation of the modulus of current reference
         i_abs = np.abs(i)
         i_d = np.real(i)
