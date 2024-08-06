@@ -26,8 +26,6 @@ class GFLControlCfg:
         Filter parameters.
     T_s : float, optional
         Sampling period (s). The default is 1/(16e3).
-    on_u_dc : bool, optional
-        to activate dc voltage controller. The default is False.
     on_u_cap : bool, optional
         to use the filter capacitance voltage measurement or PCC voltage. The default is False.
     i_max : float, optional
@@ -36,52 +34,29 @@ class GFLControlCfg:
         current controller bandwidth. The default is 2*np.pi*400.
     alpha_ff : float, optional
         low pass filter bandwidth for voltage feedforward term. The default is 2*np.pi*(4*50).
+    overmodulation : str, optional
+        overmodulation method, either Minimum magnitude error (MME) or Minimum Phase Error "MPE". 
+        The default is Minimum Phase Error "MPE".
         
     Parameters for the Phase Locked Loop (PLL)
     w0_pll : float, optional
         undamped natural frequency of the PLL. The default is 2*np.pi*20.
-    zeta : float, optional
+    zeta_pll : float, optional
         damping ratio of the PLL. The default is 1.
-
-    parameters for the DC-voltage controller
-    p_max : float, optional
-        maximum power reference in W. The default is 10e3.
-    zeta_dc : float, optional
-        damping ratio of the DC-voltage controller. The default is 1.
-    w_0_dc : float, optional
-        controller undamped natural frequency in rad/s. The default is 2*np.pi*30.
-    overmodulation : str, optional
-        overmodulation method. The default is Minimum Phase Error "MPE".
     """
 
     grid_par: GridPars
     dc_bus_par: DCBusPars
     filter_par: FilterPars
     T_s: float = 1/(16e3)
-    on_u_dc: bool = False
     on_u_cap: bool = False
     i_max: float = 20
     alpha_c: float = 2*np.pi*400
     alpha_ff: float = 2*np.pi*(4*50)
 
     w0_pll: float = 2*np.pi*20
-    zeta: float = 1
-
-    p_max: float = 10e3
-    zeta_dc: float = 1
-    w_0_dc: float = 2*np.pi*30
+    zeta_pll: float = 1
     overmodulation: str = "MPE"
-
-    def __post_init__(self):
-        filter_par, grid_par = self.filter_par, self.grid_par
-        # Current controller gains
-        self.k_p_i = self.alpha_c*filter_par.L_fc
-        self.k_i_i = np.power(self.alpha_c, 2)*filter_par.L_fc
-        self.r_i = self.alpha_c*filter_par.L_fc
-
-        # PLL gains
-        self.k_p_pll = 2*self.zeta*self.w0_pll/grid_par.u_gN
-        self.k_i_pll = self.w0_pll*self.w0_pll/grid_par.u_gN
 
 
 # %%
@@ -109,7 +84,6 @@ class GFLControl(GridConverterControlSystem):
             cfg.grid_par,
             cfg.dc_bus_par,
             cfg.T_s,
-            on_u_dc=cfg.on_u_dc,
             on_u_cap=cfg.on_u_cap,
         )
         self.cfg = cfg
@@ -139,8 +113,6 @@ class GFLControl(GridConverterControlSystem):
         grid_par = self.cfg.grid_par
         # Get the reference signals
         ref = super().output(fbk)
-        if self.on_u_dc:
-            ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
         self.current_reference.get_current_reference(ref)
 

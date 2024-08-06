@@ -30,6 +30,10 @@ class PLL:
         """
         self.cfg = cfg
 
+        # PLL gains
+        self.k_p_pll = 2*cfg.zeta_pll*cfg.w0_pll/cfg.grid_par.u_gN
+        self.k_i_pll = cfg.w0_pll*cfg.w0_pll/cfg.grid_par.u_gN
+
         # Initial states
         self.w_pll = cfg.grid_par.w_gN
         self.theta_c = 0
@@ -77,10 +81,10 @@ class PLL:
         """
         cfg = self.cfg
         # Calculation of the estimated PLL frequency
-        w_g_pll = cfg.k_p_pll*u_gq + self.w_pll
+        w_g_pll = self.k_p_pll*u_gq + self.w_pll
 
         # Update the integrator state
-        self.w_pll = self.w_pll + cfg.T_s*cfg.k_i_pll*u_gq
+        self.w_pll = self.w_pll + cfg.T_s*self.k_i_pll*u_gq
         # Update the grid-voltage angle state
         self.theta_c = self.theta_c + cfg.T_s*w_g_pll
         self.theta_c = wrap(self.theta_c)  # Limit to [-pi, pi]
@@ -99,10 +103,10 @@ class DCBusVoltageController(PIController):
 
     Parameters
     ----------
-    zeta : float
-        Damping ratio of the closed-loop system.
-    alpha_dc : float
-        Closed-loop bandwidth (rad/s). 
+    zeta : float, optional
+        Damping ratio of the closed-loop system. The default is 1.
+    alpha_dc : float, optional
+        Closed-loop bandwidth (rad/s). The default is 2*np.pi*30.
     p_max : float, optional
         Maximum converter power (W). The default is `inf`.
         
@@ -114,7 +118,7 @@ class DCBusVoltageController(PIController):
 
     """
 
-    def __init__(self, zeta, alpha_dc, p_max=np.inf):
+    def __init__(self, zeta=1, alpha_dc=2*np.pi*30, p_max=np.inf):
         k_p = -2*zeta*alpha_dc
         k_i = -(alpha_dc**2)
         k_t = k_p
@@ -138,8 +142,6 @@ class GridConverterControlSystem(ControlSystem, ABC):
         DC-bus model parameters.
     T_s : float
         Sampling period (s).
-    on_u_dc : bool
-        If True, DC-bus voltage control mode is used.
     on_u_cap : bool, optional
         to use the filter capacitance voltage measurement or PCC voltage. 
         The default is False
@@ -170,11 +172,10 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
     """
 
-    def __init__(self, grid_par, dc_bus_par, T_s, on_u_dc, on_u_cap=False):
+    def __init__(self, grid_par, dc_bus_par, T_s, on_u_cap=False):
         super().__init__(T_s)
         self.grid_par = grid_par
         self.dc_bus_par = dc_bus_par
-        self.on_u_dc = on_u_dc
         self.on_u_cap = on_u_cap
         self.dc_bus_volt_ctrl = None
         self.ref = SimpleNamespace()
@@ -247,7 +248,7 @@ class GridConverterControlSystem(ControlSystem, ABC):
                     Reactive power reference (VAr).  
 
         """
-        if self.on_u_dc:
+        if self.dc_bus_volt_ctrl:
             # DC-bus voltage control mode
 
             # Definition of capacitance energy variables for the DC-bus controller

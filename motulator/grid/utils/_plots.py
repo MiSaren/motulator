@@ -80,7 +80,7 @@ def plot_grid(
     # %%
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 7))
 
-    if not sim.ctrl.on_u_dc:
+    if not sim.ctrl.dc_bus_volt_ctrl:
         if not plot_pcc_voltage:
             # Subplot 1: Grid voltage
             ax1.plot(mdl.grid_model.data.t, e_g_abc/base.u, linewidth=LW)
