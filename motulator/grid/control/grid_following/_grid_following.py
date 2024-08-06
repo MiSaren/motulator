@@ -90,7 +90,6 @@ class GFLControl(GridConverterControlSystem):
         self.current_ctrl = CurrentController(cfg)
         self.pll = PLL(cfg)
         self.current_reference = CurrentRefCalc(cfg)
-        self.current_limiter = CurrentLimiter(cfg.i_max)
 
         # Initialize the states
         self.u_filt = cfg.grid_par.u_gN + 1j*0
@@ -114,10 +113,10 @@ class GFLControl(GridConverterControlSystem):
         grid_par = self.cfg.grid_par
         # Get the reference signals
         ref = super().output(fbk)
-        ref = super().get_power_reference(fbk, ref)
-        self.current_reference.get_current_reference(ref)
+        super().get_power_reference(fbk, ref)
 
-        ref.i_c = self.current_limiter(ref.i_c)
+        # current reference calculation, with current limitation
+        self.current_reference.get_current_reference(ref)
 
         # Low pass filter for the feedforward PCC voltage:
         u_filt = self.u_filt
@@ -188,7 +187,8 @@ class CurrentRefCalc:
     Current controller reference generator
     
     This class is used to generate the current references for the current
-    controllers based on the active and reactive power references.
+    controllers based on the active and reactive power references. The current
+    limiting algorithm is used to limit the current references.
     
     """
 
@@ -201,7 +201,7 @@ class CurrentRefCalc:
     
         """
         self.u_gN = cfg.grid_par.u_gN
-        self.i_max = cfg.i_max
+        self.current_limiter = CurrentLimiter(cfg.i_max)
 
     def get_current_reference(self, ref):
         """
@@ -217,3 +217,6 @@ class CurrentRefCalc:
 
         # Calculation of the current references in the stationary frame:
         ref.i_c = 2*ref.p_g/(3*self.u_gN) - 2*1j*ref.q_g/(3*self.u_gN)
+        ref.i_c = self.current_limiter(ref.i_c)
+
+        return ref
