@@ -101,7 +101,6 @@ class PSCControl(GridConverterControlSystem):
             cfg.grid_par,
             cfg.dc_bus_par,
             cfg.T_s,
-            on_u_dc=cfg.on_u_dc,
         )
         self.cfg = cfg
         self.current_ctrl = PSCCurrentController(cfg)
@@ -130,8 +129,6 @@ class PSCControl(GridConverterControlSystem):
 
         # Get the reference signals
         ref = super().output(fbk)
-        if self.on_u_dc:
-            ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
         # Voltage magnitude reference
         ref.U = self.ref.U(ref.t) if callable(self.ref.U) else self.ref.U
@@ -199,7 +196,7 @@ class PSCCurrentController:
 
         # Use of reference feedforward for d-axis current
         if cfg.on_rf:
-            i_c_ref = ref.p_g/(ref.U*cfg.k_scal) + 1j*np.imag(i_c_filt)
+            i_c_ref = ref.p_g/(ref.U*1.5) + 1j*np.imag(i_c_filt)
         else:
             i_c_ref = i_c_filt
 
