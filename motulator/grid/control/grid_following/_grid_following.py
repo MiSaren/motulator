@@ -205,7 +205,7 @@ class CurrentRefCalc:
 
     def get_current_reference(self, ref):
         """
-        Current reference genetator.
+        Current reference generator.
     
         Parameters
         ----------
@@ -213,6 +213,14 @@ class CurrentRefCalc:
             active power reference
         q_g_ref : float
             reactive power reference
+
+        Returns
+        -------
+        ref : SimpleNamespace
+            Reference signals, containing the following fields:
+                
+                i_c : complex
+                    Current reference in the stationary frame (A).
         """
 
         # Calculation of the current references in the stationary frame:
