@@ -11,7 +11,6 @@ from motulator.grid.control import GridConverterControlSystem, PLL
 from motulator.grid.utils import GridPars
 
 
-
 # %%
 @dataclass
 class GFLControlCfg:
@@ -37,8 +36,6 @@ class GFLControlCfg:
         current controller bandwidth. The default is 2*np.pi*400.
     alpha_ff : float, optional
         low pass filter bandwidth for voltage feedforward term. The default is 2*np.pi*(4*50).
-    k_scal : float, optional
-        scaling ratio of the abc/dq transformation. The default is 3/2.
         
     Parameters for the Phase Locked Loop (PLL)
     w0_pll : float, optional
@@ -66,7 +63,6 @@ class GFLControlCfg:
     i_max: float = 20
     alpha_c: float = 2*np.pi*400
     alpha_ff: float = 2*np.pi*(4*50)
-    k_scal: float = 3/2
 
     w0_pll: float = 2*np.pi*20
     zeta: float = 1
@@ -133,8 +129,8 @@ class GFLControl(GridConverterControlSystem):
         fbk.u_c = np.exp(-1j*fbk.theta_c)*fbk.u_cs
 
         # Calculating of active and reactive powers
-        fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
-        fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
+        fbk.p_g = 1.5*np.real(fbk.u_c*np.conj(fbk.i_c))
+        fbk.q_g = 1.5*np.imag(fbk.u_c*np.conj(fbk.i_c))
 
         return fbk
 

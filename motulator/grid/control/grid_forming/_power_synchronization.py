@@ -37,8 +37,6 @@ class PSCControlCfg:
         Maximum current modulus (A). Default is 20.
     R_a : float, optional
         Damping resistance (Ω). Default is 4.6.
-    k_scal : float, optional
-        Scaling ratio of the space vector transformation. Default is 3/2.
     w_0_cc : float, optional
         Current controller undamped natural frequency (rad/s).
         Default is 2*pi*5.
@@ -57,14 +55,13 @@ class PSCControlCfg:
     on_u_g: bool = False
     i_max: float = 20
     R_a: float = 4.6
-    k_scal: float = 3/2
     w_0_cc: float = 2*np.pi*5
     K_cc: float = 1
     overmodulation: str = "MPE"
 
     def __post_init__(self):
         par = self.grid_par
-        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.u_gN*par.u_gN)
+        self.k_p_psc = par.w_gN*self.R_a/(1.5*par.u_gN*par.u_gN)
 
 
 # %%
@@ -122,8 +119,8 @@ class PSCControl(GridConverterControlSystem):
         fbk.u_c = np.exp(-1j*fbk.theta_c)*fbk.u_cs
 
         # Calculation of active and reactive powers
-        fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
-        fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
+        fbk.p_g = 1.5*np.real(fbk.u_c*np.conj(fbk.i_c))
+        fbk.q_g = 1.5*np.imag(fbk.u_c*np.conj(fbk.i_c))
 
         return fbk
 
