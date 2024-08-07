@@ -88,7 +88,12 @@ class GFLControl(GridConverterControlSystem):
         )
         self.cfg = cfg
         self.current_ctrl = CurrentController(cfg)
-        self.pll = PLL(cfg)
+        self.pll = PLL(
+            T_s=cfg.T_s,
+            w0=cfg.w0_pll,
+            zeta=cfg.zeta_pll,
+            grid_par=cfg.grid_par,
+        )
         self.current_reference = CurrentRefCalc(cfg)
 
         # Initialize the states

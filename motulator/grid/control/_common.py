@@ -15,27 +15,31 @@ class PLL:
 
     Parameters
     ----------
-    cfg: GFLControlCfg
-        Model and controller configuration parameters.
+    T_s : float, optional
+        Sampling period (s). The default is 1/(16e3).
+    w0 : float, optional
+        Natural frequency of the PLL (rad/s). The default is 2*np.pi*20.
+    zeta : float, optional
+        Damping ratio of the PLL. The default is 1.
+    grid_par : GridPars
+        Grid model parameters. Using the following fields:
+            
+                w_gN : float
+                    Nominal grid frequency (rad/s).
+                u_gN : float
+                    Nominal grid voltage (V).
         
     """
 
-    def __init__(self, cfg):
-        """
-        Parameters
-        ----------
-        cfg : GFLControlCfg
-           Control parameters.
-    
-        """
-        self.cfg = cfg
+    def __init__(self, T_s=1/(16e3), w0=2*np.pi*20, zeta=1, grid_par=None):
 
+        self.T_s = T_s
         # PLL gains
-        self.k_p_pll = 2*cfg.zeta_pll*cfg.w0_pll/cfg.grid_par.u_gN
-        self.k_i_pll = cfg.w0_pll*cfg.w0_pll/cfg.grid_par.u_gN
+        self.k_p_pll = 2*zeta*w0/grid_par.u_gN
+        self.k_i_pll = np.power(w0, 2)/grid_par.u_gN
 
         # Initial states
-        self.w_pll = cfg.grid_par.w_gN
+        self.w_pll = grid_par.w_gN
         self.theta_c = 0
 
     def output(self, fbk, ref):
@@ -52,12 +56,12 @@ class PLL:
         ref : SimpleNamespace
             References, containing the following fields:
 
-        ref.u_g : complex
-            Grid-voltage vector
-        ref.u_gq : float
-            Error signal (in V, corresponds to the q-axis grid voltage).
-        ref.abs_u_g : float
-            magnitude of the grid voltage vector (in V).
+                ref.u_g : complex
+                    Grid-voltage vector
+                ref.u_gq : float
+                    Error signal (in V, corresponds to the q-axis grid voltage).
+                ref.abs_u_g : float
+                    magnitude of the grid voltage vector (in V).
         """
 
         # Definition of the grid-voltage vector
@@ -79,14 +83,13 @@ class PLL:
             Error signal (in V, corresponds to the q-axis grid voltage).
     
         """
-        cfg = self.cfg
         # Calculation of the estimated PLL frequency
         w_g_pll = self.k_p_pll*u_gq + self.w_pll
 
         # Update the integrator state
-        self.w_pll = self.w_pll + cfg.T_s*self.k_i_pll*u_gq
+        self.w_pll = self.w_pll + self.T_s*self.k_i_pll*u_gq
         # Update the grid-voltage angle state
-        self.theta_c = self.theta_c + cfg.T_s*w_g_pll
+        self.theta_c = self.theta_c + self.T_s*w_g_pll
         self.theta_c = wrap(self.theta_c)  # Limit to [-pi, pi]
 
 
@@ -295,7 +298,7 @@ class CurrentLimiter:
 
     """
 
-    def __init__(self, i_max: float):
+    def __init__(self, i_max):
         self.i_max = i_max
 
     def __call__(self, i):
