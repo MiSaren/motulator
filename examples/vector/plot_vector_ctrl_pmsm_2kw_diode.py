@@ -73,8 +73,7 @@ mdl = model.DriveWithDiodebridge(
     converter=converter,
     machine=machine,
     mechanics=mechanics)
-mdl.pwm = CarrierComparison(level=3)  # Enable the PWM model
-
+mdl.pwm = CarrierComparison()  # Enable the PWM model
 
 # %%
 # Configure the control system.

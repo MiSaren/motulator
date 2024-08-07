@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from motulator.common.utils import wrap, DCBusPars, FilterPars
-from motulator.grid.control import GridConverterControlSystem
+from motulator.grid.control import GridConverterControlSystem, CurrentLimiter
 from motulator.grid.utils import GridPars
 
 
@@ -37,8 +37,6 @@ class PSCControlCfg:
         Maximum current modulus (A). Default is 20.
     R_a : float, optional
         Damping resistance (Ω). Default is 4.6.
-    k_scal : float, optional
-        Scaling ratio of the space vector transformation. Default is 3/2.
     w_0_cc : float, optional
         Current controller undamped natural frequency (rad/s).
         Default is 2*pi*5.
@@ -57,14 +55,13 @@ class PSCControlCfg:
     on_u_g: bool = False
     i_max: float = 20
     R_a: float = 4.6
-    k_scal: float = 3/2
     w_0_cc: float = 2*np.pi*5
     K_cc: float = 1
     overmodulation: str = "MPE"
 
     def __post_init__(self):
         par = self.grid_par
-        self.k_p_psc = par.w_gN*self.R_a/(self.k_scal*par.u_gN*par.u_gN)
+        self.k_p_psc = par.w_gN*self.R_a/(1.5*par.u_gN*par.u_gN)
 
 
 # %%
@@ -104,7 +101,6 @@ class PSCControl(GridConverterControlSystem):
             cfg.grid_par,
             cfg.dc_bus_par,
             cfg.T_s,
-            on_u_dc=cfg.on_u_dc,
         )
         self.cfg = cfg
         self.current_ctrl = PSCCurrentController(cfg)
@@ -122,8 +118,8 @@ class PSCControl(GridConverterControlSystem):
         fbk.u_c = np.exp(-1j*fbk.theta_c)*fbk.u_cs
 
         # Calculation of active and reactive powers
-        fbk.p_g = self.cfg.k_scal*np.real(fbk.u_c*np.conj(fbk.i_c))
-        fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_c*np.conj(fbk.i_c))
+        fbk.p_g = 1.5*np.real(fbk.u_c*np.conj(fbk.i_c))
+        fbk.q_g = 1.5*np.imag(fbk.u_c*np.conj(fbk.i_c))
 
         return fbk
 
@@ -133,8 +129,6 @@ class PSCControl(GridConverterControlSystem):
 
         # Get the reference signals
         ref = super().output(fbk)
-        if self.on_u_dc:
-            ref.u_dc = self.ref.u_dc(ref.t)
         ref = super().get_power_reference(fbk, ref)
         # Voltage magnitude reference
         ref.U = self.ref.U(ref.t) if callable(self.ref.U) else self.ref.U
@@ -189,6 +183,7 @@ class PSCCurrentController:
 
     def __init__(self, cfg):
         self.cfg = cfg
+        self.current_limiter = CurrentLimiter(cfg.i_max)
 
         #initial states
         self.i_c_filt = 0j
@@ -202,27 +197,11 @@ class PSCCurrentController:
 
         # Use of reference feedforward for d-axis current
         if cfg.on_rf:
-            i_c_ref = ref.p_g/(ref.U*cfg.k_scal) + 1j*np.imag(i_c_filt)
+            i_c_ref = ref.p_g/(ref.U*1.5) + 1j*np.imag(i_c_filt)
         else:
             i_c_ref = i_c_filt
 
-        # Calculation of the modulus of current reference
-        i_abs = np.abs(i_c_ref)
-        i_cd_ref = np.real(i_c_ref)
-        i_cq_ref = np.imag(i_c_ref)
-
-        # Current limitation algorithm
-        if i_abs > 0:
-            i_ratio = cfg.i_max/i_abs
-            i_cd_ref = np.sign(i_cd_ref)*np.min(
-                [i_ratio*np.abs(i_cd_ref),
-                 np.abs(i_cd_ref)])
-            i_cq_ref = np.sign(i_cq_ref)*np.min(
-                [i_ratio*np.abs(i_cq_ref),
-                 np.abs(i_cq_ref)])
-            i_c_ref = i_cd_ref + 1j*i_cq_ref
-
-        ref.i_c = i_c_ref
+        ref.i_c = self.current_limiter(i_c_ref)
 
         # Calculation of converter voltage output (reference sent to PWM)
         ref.u_c = ((ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c) +

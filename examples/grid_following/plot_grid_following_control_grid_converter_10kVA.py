@@ -63,7 +63,7 @@ cfg = control.GFLControlCfg(
     dc_bus_par=dc_bus_par,
     filter_par=filter_par,
     i_max=1.5*base.i,
-    p_max=base.p)
+)
 ctrl = control.GFLControl(cfg)
 
 # %%
