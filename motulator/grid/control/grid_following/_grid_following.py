@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.common.control import ComplexFFPIController
+from motulator.common.control import ComplexPIController
 from motulator.common.utils import DCBusPars, FilterPars
 from motulator.grid.control import GridConverterControlSystem, PLL, CurrentLimiter
 from motulator.grid.utils import GridPars
@@ -130,8 +130,7 @@ class GFLControl(GridConverterControlSystem):
         self.pll.output(fbk, ref)
 
         # Voltage reference generation in synchronous coordinates
-        ref.u_c = self.current_ctrl.output(
-            ref.i_c, fbk.i_c, u_filt, grid_par.w_gN)
+        ref.u_c = self.current_ctrl.output(ref.i_c, fbk.i_c, u_filt)
 
         # Transform the voltage reference into stator coordinates
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
@@ -150,14 +149,14 @@ class GFLControl(GridConverterControlSystem):
     def update(self, fbk, ref):
         """Extend the base class method."""
         super().update(fbk, ref)
-        self.current_ctrl.update(ref.T_s, fbk.u_c)
+        self.current_ctrl.update(ref.T_s, fbk.u_c, self.grid_par.w_gN)
         self.pll.update(ref.u_gq)
         self.u_filt = (1 - ref.T_s*self.cfg.alpha_ff)*self.u_filt + (
             ref.T_s*self.cfg.alpha_ff*fbk.u_g)
 
 
 # %%
-class CurrentController(ComplexFFPIController):
+class CurrentController(ComplexPIController):
     """
     2DOF PI current controller for grid converters.
 
@@ -183,7 +182,7 @@ class CurrentController(ComplexFFPIController):
         k_i = cfg.alpha_c*k_t
         k_p = 2*k_t
         L_f = cfg.filter_par.L_fc
-        super().__init__(k_p, k_i, k_t, L_f)
+        super().__init__(k_p, k_i, k_t)
 
 
 # %%
