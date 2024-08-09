@@ -55,8 +55,8 @@ class ObserverBasedGFMControlCfg:
     def __post_init__(self):
         par = self.filter_par
         self.L = par.L_fc + par.L_fg + self.grid_par.L_g  # Total inductance
+        self.R = par.R_fc + par.R_fg + self.grid_par.R_g  # Series resistance
         self.k_c = self.alpha_c*self.L  # Current control gain
-        self.k_scal = 3/2  # Space vector scaling constant, peak-value scaling
 
 
 # %%
@@ -66,7 +66,7 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
     
     This implements the disturbance observer-based control method described in
     [#Nur2024]_. More specifically, the grid-forming mode using RFPSC-type
-    gains and the current control mode are implemented.
+    gains is implemented, with transparent current control.
 
     Parameters
     ----------
@@ -90,14 +90,24 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
     def __init__(self, cfg):
         super().__init__(cfg.grid_par, cfg.dc_bus_par, cfg.T_s, on_u_dc=False)
         self.cfg = cfg
-        self.observer = DisturbanceObserver(cfg)
+        self.observer = DisturbanceObserver(
+            w_g=cfg.grid_par.w_gN,
+            L=cfg.L,
+            alpha_o=cfg.alpha_o,
+            v_c0=cfg.grid_par.u_gN,
+        )
         self.ref.q_g = 0
 
     def get_feedback_signals(self, mdl):
         """Get the feedback signals."""
         fbk = super().get_feedback_signals(mdl)
+        fbk.theta_c = self.observer.theta_c
+
         # Transform the measured values into synchronous coordinates
         fbk.i_c = np.exp(-1j*fbk.theta_c)*fbk.i_cs
+
+        # Get estimates from the observer
+        fbk = self.observer.output(fbk)
 
         return fbk
 
@@ -114,11 +124,8 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
         ref.v_c = self.ref.v_c(ref.t) if callable(
             self.ref.v_c) else self.ref.v_c
 
-        # Get estimates from the observer
-        fbk = self.observer.output(fbk)
-
         # Calculation of complex gains (grid-forming)
-        abs_k_p = cfg.R_a/(cfg.k_scal*ref.v_c)
+        abs_k_p = cfg.R_a/(1.5*ref.v_c)
         abs_v_c = np.abs(fbk.v_c)
         k_p = abs_k_p*fbk.v_c/abs_v_c if abs_v_c > 0 else 0
         k_v = (1 - cfg.k_v*1j)*fbk.v_c/abs_v_c if abs_v_c > 0 else 0
@@ -131,10 +138,12 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
         if np.abs(ref.i_c) > cfg.i_max:
             ref.i_c_lim = ref.i_c/np.abs(ref.i_c)*cfg.i_max
             fbk.e_c = cfg.k_c*(ref.i_c_lim - fbk.i_c)
-            #self.k_o = 2*np.pi*200 + 1j*self.w_g*0
 
         # Calculation of voltage reference
         ref.u_c = fbk.e_c + fbk.v_c
+
+        # Compensation for series resistance of the inductance
+        ref.u_c += cfg.R*fbk.i_c
 
         # Transform voltage reference into stator coordinates
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
@@ -148,6 +157,14 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
             cfg.overmodulation,
         )
 
+        # Apply a coordinate transformation to values that are plotted in
+        # synchronous coordinates, as by default the coordinate system of the
+        # observer is not fixed to the converter voltage vector.
+        T = np.conj(fbk.v_c)/np.abs(fbk.v_c) if np.abs(fbk.v_c) > 0 else 0
+        ref.u_c = T*ref.u_c
+        fbk.i_c = T*fbk.i_c
+        ref.i_c = T*ref.i_c
+
         return ref
 
     def update(self, fbk, ref):
@@ -160,39 +177,48 @@ class DisturbanceObserver:
     """
     Disturbance observer.
     
-    This implements a disturbance observer for grid converters.
+    This implements a disturbance observer, which estimates the converter
+    output voltage. The observer could be implemented in any coordinates, here
+    coordinates rotating at the nominal grid angular frequency are used.
 
     Parameters
     ----------
-    cfg : ObserverBasedGFMControlCfg
-        Model and controller configuration parameters.
+    w_g : float
+        Estimate of grid angular frequency (rad/s).
+    L : float
+        Estimate of total inductance between converter and grid (H).
+    alpha_o : float
+        Observer gain (rad/s).
+    v_c0 : float
+        Initial value of converter voltage state (V).
       
     """
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.w_c = cfg.grid_par.w_gN
-        self.k_o = cfg.alpha_o - 1j*cfg.grid_par.w_gN
+    def __init__(self, w_g, L, alpha_o, v_c0):
+        self.w_g = w_g
+        self.w_c = w_g
+        self.L = L
+        self.k_o = alpha_o - 1j*w_g
         # Initial states
-        self.v_cp = cfg.grid_par.U_gN
+        self.v_cp = v_c0
         self.theta_c = 0
 
     def output(self, fbk):
         """Compute the signal estimates."""
         # Quasi-static converter voltage
-        fbk.v_c = self.v_cp - self.k_o*self.cfg.L*fbk.i_c
+        fbk.v_c = self.v_cp - self.k_o*self.L*fbk.i_c
         # Grid voltage
-        fbk.u_g = fbk.v_c - 1j*self.cfg.grid_par.w_gN*self.cfg.L*fbk.i_c
+        fbk.u_g = fbk.v_c - 1j*self.w_g*self.L*fbk.i_c
         # Active and reactive power
-        fbk.p_g = self.cfg.k_scal*np.real(fbk.v_c*np.conj(fbk.i_c))
-        fbk.q_g = self.cfg.k_scal*np.imag(fbk.u_g*np.conj(fbk.i_c))
+        fbk.p_g = 1.5*np.real(fbk.v_c*np.conj(fbk.i_c))
+        fbk.q_g = 1.5*np.imag(fbk.u_g*np.conj(fbk.i_c))
 
         return fbk
 
     def update(self, fbk, ref):
         """Update the observer integral states."""
         self.v_cp += ref.T_s*(self.k_o + 1j*self.w_c)*fbk.e_c + 1j*(
-            self.cfg.grid_par.w_gN - self.w_c)*self.v_cp
+            self.w_g - self.w_c)*self.v_cp
         self.theta_c += ref.T_s*self.w_c
         # Limit to [-pi, pi]
         self.theta_c = wrap(self.theta_c)
