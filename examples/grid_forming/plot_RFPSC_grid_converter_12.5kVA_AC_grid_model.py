@@ -73,7 +73,6 @@ cfg = control.PSCControlCfg(
     on_rf=True,
     i_max=1.5*base.i,
     R_a=.2*base.Z,
-    w_0_cc=2*np.pi*5,
 )
 
 # Create the control system

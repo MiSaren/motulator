@@ -32,11 +32,8 @@ class PSCControlCfg:
         Maximum current modulus (A). Default is 20.
     R_a : float, optional
         Damping resistance (Ω). Default is 4.6.
-    w_0_cc : float, optional
-        Current controller undamped natural frequency (rad/s).
-        Default is 2*pi*5.
-    K_cc : float, optional
-        Current controller low-pass filter gain. Default is 1.
+    w_b : float, optional
+        Current low-pass filter bandwidth (rad/s). Default is 2*pi*5.
     overmodulation : str, optional
         Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
     """
@@ -48,8 +45,7 @@ class PSCControlCfg:
     on_rf: bool = False
     i_max: float = 20
     R_a: float = 4.6
-    w_0_cc: float = 2*np.pi*5
-    K_cc: float = 1
+    w_b: float = 2*np.pi*5
     overmodulation: str = "MPE"
 
     def __post_init__(self):
@@ -165,5 +161,5 @@ class PSCControl(GridConverterControlSystem):
         self.theta_c = wrap(self.theta_c)
         # Low-pass filtering of converter current
         cfg = self.cfg
-        self.i_c_filt = (1 - ref.T_s*cfg.w_0_cc)*self.i_c_filt + (
-            cfg.K_cc*ref.T_s*cfg.w_0_cc*fbk.i_c)
+        self.i_c_filt = (1 - ref.T_s*cfg.w_b)*self.i_c_filt + (
+            ref.T_s*cfg.w_b*fbk.i_c)
