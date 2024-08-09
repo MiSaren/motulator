@@ -28,11 +28,6 @@ class PSCControlCfg:
         Sampling period of the controller (s). Default is 1/(16e3).
     on_rf : bool, optional
         Enable reference-feedforward for the control. Default is False.
-    on_u_dc : bool, optional
-        Enable DC-bus voltage control mode. Default is False.
-    on_u_g : bool, optional
-        Enable control of PCC voltage. Default is False (converter output
-        voltage is controlled).
     i_max : float, optional
         Maximum current modulus (A). Default is 20.
     R_a : float, optional
@@ -51,8 +46,6 @@ class PSCControlCfg:
     filter_par: FilterPars
     T_s: float = 1/(16e3)
     on_rf: bool = False
-    on_u_dc: bool = False
-    on_u_g: bool = False
     i_max: float = 20
     R_a: float = 4.6
     w_0_cc: float = 2*np.pi*5
@@ -80,10 +73,9 @@ class PSCControl(GridConverterControlSystem):
 
     Attributes
     ----------
-    current_ctrl : PSCCurrentController
-        Current controller object.
+    current_limiter : CurrentLimiter
+        Transparent current controller used for current limitation.
     
-
     References
     ----------
     .. [#Har2019] Harnefors, Hinkkanen, Riaz, Rahman, Zhang, "Robust Analytic
@@ -103,15 +95,17 @@ class PSCControl(GridConverterControlSystem):
             cfg.T_s,
         )
         self.cfg = cfg
-        self.current_ctrl = PSCCurrentController(cfg)
+        self.current_limiter = CurrentLimiter(cfg.i_max)
         self.ref.q_g = 0
         # Initialize the states
         self.theta_c = 0
+        self.i_c_filt = 0j
 
     def get_feedback_signals(self, mdl):
         """Get the feedback signals."""
         fbk = super().get_feedback_signals(mdl)
         fbk.theta_c = self.theta_c
+        fbk.i_c_filt = self.i_c_filt
         # Transform the measured values into synchronous coordinates
         fbk.u_g = np.exp(-1j*fbk.theta_c)*fbk.u_gs
         fbk.i_c = np.exp(-1j*fbk.theta_c)*fbk.i_cs
@@ -136,8 +130,17 @@ class PSCControl(GridConverterControlSystem):
         # Calculation of power droop
         fbk.w_c = par.w_gN + (cfg.k_p_psc)*(ref.p_g - fbk.p_g)
 
-        # Get voltage reference from current controller
-        ref = self.current_ctrl.output(fbk, ref, par)
+        # Optionally, use of reference feedforward for d-axis current
+        if cfg.on_rf:
+            ref.i_c = ref.p_g/(ref.U*1.5) + 1j*np.imag(fbk.i_c_filt)
+        else:
+            ref.i_c = fbk.i_c_filt
+
+        # Transparent current control
+        ref.i_c = self.current_limiter(ref.i_c)
+
+        # Calculation of converter voltage output reference
+        ref.u_c = (ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c)
 
         # Transform voltage reference into stator coordinates
         ref.u_cs = np.exp(1j*fbk.theta_c)*ref.u_c
@@ -160,58 +163,7 @@ class PSCControl(GridConverterControlSystem):
         self.theta_c = fbk.theta_c + ref.T_s*fbk.w_c
         # Limit to [-pi, pi]
         self.theta_c = wrap(self.theta_c)
-        self.current_ctrl.update(fbk, ref)
-
-
-class PSCCurrentController:
-    """
-    PSC-based current controller.
-    
-    PSC makes the converter operate as a voltage source, however, this block
-    is used to damp the current oscillations and limit the current
-    flowing through the converter to avoid physical damages of the device.
-    
-    It is important to note that this block uses P-type controller and can thus
-    encounter steady-state error when the current reference is saturated.
-
-    Parameters
-    ----------
-    cfg : PSCControlCfg
-        Model and controller configuration parameters.
-      
-    """
-
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.current_limiter = CurrentLimiter(cfg.i_max)
-
-        #initial states
-        self.i_c_filt = 0j
-
-    def output(self, fbk, ref, par):
-        """Compute the converter voltage reference signal."""
+        # Low-pass filtering of converter current
         cfg = self.cfg
-
-        # Low pass filter for the current:
-        i_c_filt = self.i_c_filt
-
-        # Use of reference feedforward for d-axis current
-        if cfg.on_rf:
-            i_c_ref = ref.p_g/(ref.U*1.5) + 1j*np.imag(i_c_filt)
-        else:
-            i_c_ref = i_c_filt
-
-        ref.i_c = self.current_limiter(i_c_ref)
-
-        # Calculation of converter voltage output (reference sent to PWM)
-        ref.u_c = ((ref.U + 0j) + cfg.R_a*(ref.i_c - fbk.i_c) +
-                   cfg.on_u_g*1j*self.cfg.filter_par.L_fc*par.w_gN*fbk.i_c)
-
-        return ref
-
-    def update(self, fbk, ref):
-        """Update the integral state for the current low pass filter."""
-        cfg = self.cfg
-
         self.i_c_filt = (1 - ref.T_s*cfg.w_0_cc)*self.i_c_filt + (
             cfg.K_cc*ref.T_s*cfg.w_0_cc*fbk.i_c)
