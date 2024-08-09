@@ -2,7 +2,10 @@
 12.5-kVA grid converter, disturbance observer-based GFM control
 ===============================================================
     
-This example simulates
+This example simulates a converter using disturbance observer-based control in
+grid-forming mode. Converter output voltage and active power are directly
+controlled, and grid synchronization is provided by the disturbance observer.
+A transparent current controller is also implemented.
 
 """
 
