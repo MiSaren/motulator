@@ -18,9 +18,6 @@ found in [#ENT2013]_.
 """
 
 # %%
-import time
-import numpy as np
-
 from motulator.common.model import Simulation, Inverter, ACFilter
 from motulator.common.utils import (
     BaseValues,
@@ -96,13 +93,8 @@ mdl.grid_model.p_m_ref = lambda t: 0
 # %%
 # Create the simulation object and simulate it.
 
-start_time = time.time()
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=6)
-
-# Print the execution time
-#stop_time = time.time()
-#print(f"Simulation time: {stop_time-start_time:.2f} s")
 
 # %%
 # Plot results in per-unit values. By omitting the argument `base` you can plot
