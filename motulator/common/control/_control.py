@@ -317,8 +317,9 @@ class ComplexPIController:
     """
     2DOF synchronous-frame complex-vector PI controller.
 
-    This implements a discrete-time 2DOF synchronous-frame complex-vector PI
-    controller, whose continuous-time counterpart is [#Bri2000]_::
+    This implements a discrete-time 2DOF, disturbance-Observer, 
+    synchronous-frame complex-vector PI controller, whose continuous-time 
+    counterpart is [#Bri2000]_::
 
         u = k_t*ref_i - k_p*i + (k_i + 1j*w*k_t)/s*(ref_i - i) + u_ff
 
