@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from motulator.common.control import ComplexFFPIController
-from motulator.common.utils import DCBusPars, FilterPars
+from motulator.common.utils import FilterPars
 from motulator.grid.control import GridConverterControlSystem, PLL, CurrentLimiter
 from motulator.grid.utils import GridPars
 
@@ -20,10 +20,10 @@ class GFLControlCfg:
     ----------
     grid_par : GridPars
         Grid model parameters.
-    dc_bus_par : DCBusPars
-        DC bus parameters.
     filter_par : FilterPars
         Filter parameters.
+    C_dc : float, optional
+        DC bus capacitance (F). The default is None.
     T_s : float, optional
         Sampling period (s). The default is 1/(16e3).
     on_u_cap : bool, optional
@@ -46,8 +46,8 @@ class GFLControlCfg:
     """
 
     grid_par: GridPars
-    dc_bus_par: DCBusPars
     filter_par: FilterPars
+    C_dc: float = None
     T_s: float = 1/(16e3)
     on_u_cap: bool = False
     i_max: float = 20
@@ -82,7 +82,7 @@ class GFLControl(GridConverterControlSystem):
     def __init__(self, cfg):
         super().__init__(
             cfg.grid_par,
-            cfg.dc_bus_par,
+            cfg.C_dc,
             cfg.T_s,
             on_u_cap=cfg.on_u_cap,
         )

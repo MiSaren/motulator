@@ -15,7 +15,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     Sequence,
-    DCBusPars,
 )
 from motulator.drive import model
 import motulator.drive.control.im as control
@@ -34,8 +33,6 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # %%
 # Configure the system model.
 
-dc_bus = DCBusPars(u_dc=540)
-
 # Configure the induction machine using its inverse-Γ parameters
 mdl_ig_par = InductionMachineInvGammaPars(
     n_p=2,
@@ -47,7 +44,7 @@ mdl_ig_par = InductionMachineInvGammaPars(
 mdl_par = InductionMachinePars.from_inv_gamma_model_pars(mdl_ig_par)
 machine = model.InductionMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
-converter = Inverter(dc_bus)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
