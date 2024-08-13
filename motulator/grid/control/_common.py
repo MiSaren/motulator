@@ -141,8 +141,8 @@ class GridConverterControlSystem(ControlSystem, ABC):
     ----------
     grid_par : GridPars
         Grid model parameters.
-    dc_bus_par : DCBusPars
-        DC-bus model parameters.
+    C_dc : float, optional
+        DC-bus capacitance (F). The default is None.
     T_s : float
         Sampling period (s).
     on_u_cap : bool, optional
@@ -175,10 +175,10 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
     """
 
-    def __init__(self, grid_par, dc_bus_par, T_s, on_u_cap=False):
+    def __init__(self, grid_par, C_dc, T_s, on_u_cap=False):
         super().__init__(T_s)
         self.grid_par = grid_par
-        self.dc_bus_par = dc_bus_par
+        self.C_dc = C_dc
         self.on_u_cap = on_u_cap
         self.dc_bus_volt_ctrl = None
         self.ref = SimpleNamespace()
@@ -256,8 +256,8 @@ class GridConverterControlSystem(ControlSystem, ABC):
 
             # Definition of capacitance energy variables for the DC-bus controller
             ref.u_dc = self.ref.u_dc(ref.t)
-            ref_W_dc = 0.5*self.dc_bus_par.C_dc*ref.u_dc**2
-            W_dc = 0.5*self.dc_bus_par.C_dc*fbk.u_dc**2
+            ref_W_dc = 0.5*self.C_dc*ref.u_dc**2
+            W_dc = 0.5*self.C_dc*fbk.u_dc**2
             # Define the active power reference
             ref.p_g = self.dc_bus_volt_ctrl.output(ref_W_dc, W_dc)
 
