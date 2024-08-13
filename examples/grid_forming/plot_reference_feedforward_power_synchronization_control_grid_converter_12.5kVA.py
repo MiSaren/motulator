@@ -15,7 +15,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     FilterPars,
-    DCBusPars,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
@@ -38,12 +37,9 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=0.74*base.L)
 # Filter parameters
 filter_par = FilterPars(L_fc=0.15*base.L)
 
-# DC bus parameters
-dc_bus_par = DCBusPars(u_dc=650)
-
 grid_filter = ACFilter(filter_par, grid_par)
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
-converter = Inverter(dc_bus_par)
+converter = Inverter(u_dc=650)
 
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 
@@ -54,7 +50,6 @@ mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 cfg = control.PSCControlCfg(
     grid_par=grid_par,
     filter_par=filter_par,
-    dc_bus_par=dc_bus_par,
     T_s=1/(10e3),
     on_rf=True,
     i_max=1.3*base.i,

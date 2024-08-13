@@ -5,7 +5,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.common.utils import wrap, DCBusPars, FilterPars
+from motulator.common.utils import (
+    wrap,
+    FilterPars,
+)
 from motulator.grid.control import GridConverterControlSystem, CurrentLimiter
 from motulator.grid.utils import GridPars
 
@@ -20,10 +23,10 @@ class PSCControlCfg:
     ----------
     grid_par : GridPars
         Grid model parameters.
-    dc_bus_par : DCBusPars
-        DC-bus model parameters.
     filter_par : FilterPars
         Filter model parameters.
+    C_dc : float, optional
+        DC-bus capacitance (F). Default is None.
     T_s : float, optional
         Sampling period of the controller (s). Default is 1/(16e3).
     on_rf : bool, optional
@@ -39,8 +42,8 @@ class PSCControlCfg:
     """
 
     grid_par: GridPars
-    dc_bus_par: DCBusPars
     filter_par: FilterPars
+    C_dc: float = None
     T_s: float = 1/(16e3)
     on_rf: bool = False
     i_max: float = 20
@@ -87,7 +90,7 @@ class PSCControl(GridConverterControlSystem):
     def __init__(self, cfg):
         super().__init__(
             cfg.grid_par,
-            cfg.dc_bus_par,
+            cfg.C_dc,
             cfg.T_s,
         )
         self.cfg = cfg
