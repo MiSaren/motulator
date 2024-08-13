@@ -2,7 +2,6 @@
 from motulator.grid.control.grid_forming._power_synchronization import (
     PSCControl,
     PSCControlCfg,
-    PSCCurrentController,
 )
 
 from motulator.grid.control.grid_forming._observer_gfm import (
@@ -13,7 +12,6 @@ from motulator.grid.control.grid_forming._observer_gfm import (
 __all__ = [
     "PSCControl",
     "PSCControlCfg",
-    "PSCCurrentController",
     "ObserverBasedGFMControl",
     "ObserverBasedGFMControlCfg",
 ]

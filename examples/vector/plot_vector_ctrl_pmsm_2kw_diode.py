@@ -15,7 +15,10 @@ from motulator.common.model import (
     Inverter,
     DiodeBridge,
 )
-from motulator.common.utils import BaseValues, NominalValues, DCBusPars
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+)
 from motulator.drive import model
 from motulator.grid.model import StiffSource
 import motulator.drive.control.sm as control
@@ -41,13 +44,6 @@ grid_par = GridPars(
     w_gN=base.w,
 )
 
-# DC bus parameters
-dc_bus_par = DCBusPars(
-    u_dc=400*np.sqrt(2),
-    C_dc=235e-6,
-    L_dc=2e-3,
-)
-
 mdl_par = SynchronousMachinePars(
     n_p=3,
     R_s=3.6,
@@ -65,15 +61,17 @@ ac_source = StiffSource(
     e_g_abs=grid_par.u_gN,
 )
 
-diode_bridge = DiodeBridge(dc_bus_par)
-converter = Inverter(dc_bus_par)
+diode_bridge = DiodeBridge(L_dc=2e-3, )
+converter = Inverter(
+    u_dc=400*np.sqrt(2),
+    C_dc=235e-6,
+)
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
     diodebridge=diode_bridge,
     converter=converter,
     machine=machine,
-    mechanics=mechanics,
-)
+    mechanics=mechanics)
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 
 # %%

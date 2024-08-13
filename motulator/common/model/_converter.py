@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from motulator.common.model._model import Subsystem
-from motulator.common.utils import abc2complex, complex2abc, DCBusPars
+from motulator.common.utils import abc2complex, complex2abc
 
 
 # %%
@@ -20,30 +20,22 @@ class Inverter(Subsystem):
 
     Parameters
     ----------
-    dc_bus_par : DCBusPars
-        DC-bus parameters.
+    u_dc : float | callable
+        DC-bus voltage (V).
+    C_dc : float, optional
+        DC-bus capacitance (F). Default is None.
     i_ext : callable, optional
         External DC current, seen as disturbance, `i_ext(t)`. Default is zero,
         ``lambda t: 0``.
-
-    Inventer model uses following fields of the DCbusPas object:
-    
-    dc_bus_par.u_dc : float | callable
-        DC-bus voltage (V).
-    dc_bus_par.C_dc : float, optional
-        DC-bus capacitance (F). Default is None.
-    dc_bus_par.G_dc : float, optional
-        Parallel conductance of the DC-bus capacitor (S). Default value is 0.
     
     """
 
-    def __init__(self, dc_bus_par: DCBusPars, i_ext=lambda t: 0):
+    def __init__(self, u_dc, C_dc=None, i_ext=lambda t: 0):
         super().__init__()
         self.i_ext = i_ext
         self.par = SimpleNamespace(
-            u_dc=dc_bus_par.u_dc,
-            C_dc=dc_bus_par.C_dc,
-            G_dc=dc_bus_par.G_dc,
+            u_dc=u_dc,
+            C_dc=C_dc,
         )
         # Initial values
         self.u_dc0 = self.par.u_dc(0) if callable(
@@ -98,10 +90,10 @@ class Inverter(Subsystem):
             Time derivative of the complex state vector, [d_u_dc].
 
         """
-        state, inp, par = self.state, self.inp, self.par
+        inp, par = self.inp, self.par
         if par.C_dc is None:  # Check whether dynamic DC model is used
             return None
-        d_u_dc = (inp.i_ext - self.i_dc - par.G_dc*state.u_dc)/par.C_dc
+        d_u_dc = (inp.i_ext - self.i_dc)/par.C_dc
         return [d_u_dc]
 
     def meas_dc_voltage(self):
@@ -139,17 +131,15 @@ class DiodeBridge(Subsystem):
 
     Parameters
     ----------
-    dc_bus_par : DCBusPars
-        DC-bus parameters. Using on the following field:
-
-            dc_bus_par.L_dc : float
-                DC-bus inductance (H).
+    L_dc : float
+        DC-bus inductance (H).
 
     """
 
-    def __init__(self, dc_bus_par: DCBusPars):
+    def __init__(self, L_dc):
         super().__init__()
-        self.par = SimpleNamespace(L=dc_bus_par.L_dc)
+        # TODO: add series resistance for inductor
+        self.par = SimpleNamespace(L=L_dc)
         self.state = SimpleNamespace(i_L=0)
         self.sol_states = SimpleNamespace(i_L=[])
 

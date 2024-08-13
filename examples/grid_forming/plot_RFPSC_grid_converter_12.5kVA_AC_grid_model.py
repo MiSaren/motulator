@@ -18,15 +18,11 @@ found in [#ENT2013]_.
 """
 
 # %%
-import time
-import numpy as np
-
 from motulator.common.model import Simulation, Inverter, ACFilter
 from motulator.common.utils import (
     BaseValues,
     NominalValues,
     FilterPars,
-    DCBusPars,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
@@ -47,9 +43,6 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=20e-3)
 # Filter parameters
 filter_par = FilterPars(L_fc=3e-3, L_fg=3e-3, C_f=10e-6)
 
-# DC bus parameters
-dc_bus_par = DCBusPars(u_dc=650)
-
 grid_filter = ACFilter(filter_par, grid_par)
 grid_model = model.FlexSource(
     w_gN=grid_par.w_gN,
@@ -58,7 +51,7 @@ grid_model = model.FlexSource(
     H_g=2,
     r_d=0.05,
 )
-converter = Inverter(dc_bus_par)
+converter = Inverter(u_dc=650)
 
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 
@@ -68,12 +61,10 @@ mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 cfg = control.PSCControlCfg(
     grid_par=grid_par,
     filter_par=filter_par,
-    dc_bus_par=dc_bus_par,
     T_s=1/(10e3),
     on_rf=True,
     i_max=1.5*base.i,
     R_a=.2*base.Z,
-    w_0_cc=2*np.pi*5,
 )
 
 # Create the control system
@@ -97,13 +88,8 @@ mdl.grid_model.p_m_ref = lambda t: 0
 # %%
 # Create the simulation object and simulate it.
 
-start_time = time.time()
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=6)
-
-# Print the execution time
-#stop_time = time.time()
-#print(f"Simulation time: {stop_time-start_time:.2f} s")
 
 # %%
 # Plot results in per-unit values. By omitting the argument `base` you can plot
