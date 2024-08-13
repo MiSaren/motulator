@@ -205,6 +205,8 @@ class BaseValues:
         Impedance (Ω).
     L : float
         Inductance (H).
+    C : float
+        Capacitance (F).
     tau : float, optional
         Torque (Nm). Default is None.
     n_p : int, optional
@@ -218,6 +220,7 @@ class BaseValues:
     p: float
     Z: float
     L: float
+    C: float
     tau: float = None
     n_p: int = None
 
@@ -260,11 +263,13 @@ class BaseValues:
         p = 1.5*u*i
         Z = u/i
         L = Z/w
+        C = 1/(Z*w)
 
         if n_p is not None:
             tau = n_p*p/w
-            return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L, tau=tau, n_p=n_p)
-        return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L)
+            return cls(
+                u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L, C=C, tau=tau, n_p=n_p)
+        return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L, C=C)
 
 
 # %%

@@ -42,7 +42,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 # DC-bus parameters
 C_dc = 100e-3
 
-filter_par = FilterPars(L_fc=0.073*base.L, L_fg=0.073*base.L, C_f=8e-6)
+filter_par = FilterPars(L_fc=0.073*base.L, L_fg=0.073*base.L, C_f=0.043*base.C)
 
 grid_filter = ACFilter(filter_par, grid_par)
 
