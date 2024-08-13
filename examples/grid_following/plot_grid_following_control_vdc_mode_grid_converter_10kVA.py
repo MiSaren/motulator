@@ -49,7 +49,7 @@ base = BaseValues.from_nominal(nom)
 grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 
 # Filter parameters
-filter_par = FilterPars(L_fc=10e-3)
+filter_par = FilterPars(L_fc=0.2*base.L)
 
 # DC-bus parameters
 C_dc = 1e-3

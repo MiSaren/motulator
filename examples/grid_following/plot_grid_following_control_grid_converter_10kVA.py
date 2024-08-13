@@ -40,7 +40,7 @@ base = BaseValues.from_nominal(nom)
 
 grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 
-filter_par = FilterPars(L_fc=10e-3)
+filter_par = FilterPars(L_fc=0.2*base.L)
 
 grid_filter = ACFilter(filter_par, grid_par)
 

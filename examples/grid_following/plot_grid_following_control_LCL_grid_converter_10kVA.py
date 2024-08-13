@@ -34,7 +34,6 @@ from motulator.grid.utils import GridPars, plot_grid
 
 nom = NominalValues(U=400, I=14.5, f=50, P=10e3)
 base = BaseValues.from_nominal(nom)
-
 # %%
 # Configure the system model.
 
@@ -43,7 +42,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 # DC-bus parameters
 C_dc = 100e-3
 
-filter_par = FilterPars(L_fc=3.7e-3, L_fg=3.7e-3, C_f=8e-6)
+filter_par = FilterPars(L_fc=0.073*base.L, L_fg=0.073*base.L, C_f=8e-6)
 
 grid_filter = ACFilter(filter_par, grid_par)
 
