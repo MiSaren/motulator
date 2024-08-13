@@ -30,7 +30,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     Sequence,
-    DCBusPars,
 )
 from motulator.drive import model
 import motulator.drive.control.sm as control
@@ -98,7 +97,6 @@ def i_s(psi_s):
 
 # Create the machine model
 
-dc_bus = DCBusPars(u_dc=310)
 mdl_par = SynchronousMachinePars(
     n_p=2, R_s=.2, L_d=4e-3, L_q=17e-3, psi_f=.134)
 machine = model.SynchronousMachine(mdl_par, i_s=i_s, psi_s0=psi_s0)
@@ -109,7 +107,7 @@ machine = model.SynchronousMachine(mdl_par, i_s=i_s, psi_s0=psi_s0)
 # Quadratic load torque profile (corresponding to pumps and fans)
 k = nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.0042, B_L=lambda w_M: k*np.abs(w_M))
-converter = Inverter(dc_bus)
+converter = Inverter(u_dc=310)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%

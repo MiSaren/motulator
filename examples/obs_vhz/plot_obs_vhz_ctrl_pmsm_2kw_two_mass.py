@@ -19,7 +19,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     Sequence,
-    DCBusPars,
 )
 from motulator.drive import model
 import motulator.drive.control.sm as control
@@ -38,7 +37,6 @@ base = BaseValues.from_nominal(nom, n_p=3)
 # %%
 # Configure the system model.
 
-dc_bus = DCBusPars(u_dc=540)
 mdl_par = SynchronousMachinePars(
     n_p=3,
     R_s=3.6,
@@ -49,7 +47,7 @@ mdl_par = SynchronousMachinePars(
 machine = model.SynchronousMachine(mdl_par)
 mdl_mec_par = TwoMassMechanicalSystemPars(J_M=.005, J_L=.005, K_S=700, C_S=.01)
 mechanics = model.TwoMassMechanicalSystem(mdl_mec_par)
-converter = Inverter(dc_bus)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%
