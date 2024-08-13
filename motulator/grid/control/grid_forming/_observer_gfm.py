@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.common.utils import wrap, DCBusPars, FilterPars
+from motulator.common.utils import wrap, FilterPars
 from motulator.grid.control import GridConverterControlSystem
 from motulator.grid.utils import GridPars
 
@@ -20,10 +20,10 @@ class ObserverBasedGFMControlCfg:
     ----------
     grid_par : GridPars
         Grid model parameters.
-    dc_bus_par : DCBusPars
-        DC-bus model parameters.
     filter_par : FilterPars
         Filter model parameters.
+    C_dc : float, optional
+        DC-bus capacitance (F). Default is None.
     T_s : float, optional
         Sampling period of the controller (s). Default is 1/(16e3).
     i_max : float, optional
@@ -42,8 +42,8 @@ class ObserverBasedGFMControlCfg:
     """
 
     grid_par: GridPars
-    dc_bus_par: DCBusPars
     filter_par: FilterPars
+    C_dc: float = None
     T_s: float = 1/(16e3)
     i_max: float = 20
     R_a: float = 4.6
@@ -88,7 +88,12 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
     """
 
     def __init__(self, cfg):
-        super().__init__(cfg.grid_par, cfg.dc_bus_par, cfg.T_s, on_u_dc=False)
+        super().__init__(
+            cfg.grid_par,
+            cfg.C_dc,
+            cfg.T_s,
+            on_u_dc=False,
+        )
         self.cfg = cfg
         self.observer = DisturbanceObserver(
             w_g=cfg.grid_par.w_gN,
