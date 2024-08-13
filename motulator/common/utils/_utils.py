@@ -296,30 +296,3 @@ class FilterPars(ABC):
     R_fc: float = 0
     R_fg: float = 0
     G_f: float = 0
-
-
-# %%
-@dataclass
-class DCBusPars(ABC):
-    """
-    DC bus parameters
-
-    Parameters
-    ----------
-    u_dc : float | callable
-        DC bus voltage (V).
-    C_dc : float, optional
-        DC bus capacitance (F). The default is None.
-    L_dc : float, optional
-        Filter inductance (H). The default is 0.
-    R_dc : float, optional
-        DC bus series resistance (Ω). The default is 0.
-    G_dc : float, optional
-        DC bus conductance (S). The default is 0.
-
-    """
-    u_dc: float
-    C_dc: float = None
-    L_dc: float = 0
-    R_dc: float = 0
-    G_dc: float = 0

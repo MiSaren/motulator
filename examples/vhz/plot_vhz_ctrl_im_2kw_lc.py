@@ -21,7 +21,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     FilterPars,
-    DCBusPars,
 )
 from motulator.drive import model
 import motulator.drive.control.im as control
@@ -40,8 +39,6 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # %%
 # Create the system model. The filter parameters correspond to [#Sal2006]_.
 
-dc_bus = DCBusPars(u_dc=540)
-
 # Filter parameters
 filter_pars = FilterPars(L_fc=8e-3, C_f=9.9e-6, R_fc=.1)
 
@@ -57,7 +54,7 @@ machine = model.InductionMachine(mdl_par)
 # Quadratic load torque profile (corresponding to pumps and fans)
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
-converter = Inverter(dc_bus)
+converter = Inverter(u_dc=540)
 lc_filter = ACFilter(filter_pars)
 mdl = model.DriveWithLCFilter(converter, machine, mechanics, lc_filter)
 mdl.pwm = CarrierComparison()  # Enable the PWM model

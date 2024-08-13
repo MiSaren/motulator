@@ -16,7 +16,10 @@ from motulator.common.model import (
     Inverter,
     DiodeBridge,
 )
-from motulator.common.utils import BaseValues, NominalValues, DCBusPars
+from motulator.common.utils import (
+    BaseValues,
+    NominalValues,
+)
 from motulator.drive import model
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
@@ -54,12 +57,9 @@ grid_par = GridPars(
     u_gN=base.u,
     w_gN=base.w,
 )
-
-# Dc bus parameters
-dc_bus_par = DCBusPars(u_dc=400*np.sqrt(2), L_dc=2e-3, C_dc=235e-6)
 ac_source = StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
-diode_bridge = DiodeBridge(dc_bus_par)
-converter = Inverter(dc_bus_par)
+diode_bridge = DiodeBridge(L_dc=2e-3, )
+converter = Inverter(u_dc=400*np.sqrt(2), C_dc=235e-6)
 
 mdl = model.DriveWithDiodebridge(
     voltage_source=ac_source,
