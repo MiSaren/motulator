@@ -92,7 +92,6 @@ class ObserverBasedGFMControl(GridConverterControlSystem):
             cfg.grid_par,
             cfg.C_dc,
             cfg.T_s,
-            on_u_dc=False,
         )
         self.cfg = cfg
         self.observer = DisturbanceObserver(
