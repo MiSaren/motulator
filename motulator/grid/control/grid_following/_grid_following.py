@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-
 from motulator.common.control import ComplexPIController
 from motulator.common.utils import FilterPars
 
@@ -179,11 +178,11 @@ class CurrentController(ComplexPIController):
 
     """
 
+    # TODO: should the total inductance be used here?
     def __init__(self, cfg):
         k_t = cfg.alpha_c*cfg.filter_par.L_fc
         k_i = cfg.alpha_c*k_t
         k_p = 2*k_t
-        L_f = cfg.filter_par.L_fc
         super().__init__(k_p, k_i, k_t)
 
 
