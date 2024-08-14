@@ -290,9 +290,6 @@ class FilterPars(ABC):
         Converter-side series resistance (Ω). The default is 0.
     R_fg : float, optional
         Grid-side series resistance (Ω). The default is 0.
-    G_f : float, optional
-        Conductance of a resistor in parallel with the filter capacitor (S).
-        The default is 0.
 
     """
     L_fc: float
@@ -300,4 +297,3 @@ class FilterPars(ABC):
     C_f: float = 0
     R_fc: float = 0
     R_fg: float = 0
-    G_f: float = 0

@@ -202,7 +202,6 @@ class LCLFilter(ACFilter):
             L_fg=filter_par.L_fg,
             R_fg=filter_par.R_fg,
             C_f=filter_par.C_f,
-            G_f=filter_par.G_f,
             L_g=grid_par.L_g,
             R_g=grid_par.R_g,
         )
@@ -240,7 +239,7 @@ class LCLFilter(ACFilter):
         # Converter current dynamics
         d_i_cs = (inp.u_cs - state.u_fs - par.R_fc*state.i_cs)/par.L_fc
         # Capacitor voltage dynamics
-        d_u_fs = (state.i_cs - state.i_gs - par.G_f*state.u_fs)/par.C_f
+        d_u_fs = (state.i_cs - state.i_gs)/par.C_f
         # Calculation of the total grid-side impedance
         L_t = par.L_fg + par.L_g
         R_t = par.R_fg + par.R_g
@@ -272,8 +271,6 @@ class LCFilter(ACFilter):
                 Converter-side inductance of the filter (H).
             filter_pars.C_f : float
                 Filter capacitance (F).
-            filter_pars.G_f : float, optional
-                Filter conductance (S). The default is 0.
             filter_pars.R_fc : float, optional
                 Converter-side series resistance (Ω). The default is 0.
    
@@ -285,7 +282,6 @@ class LCFilter(ACFilter):
             L_fc=filter_par.L_fc,
             C_f=filter_par.C_f,
             R_fc=filter_par.R_fc,
-            G_f=filter_par.G_f,
         )
         self.state = SimpleNamespace(i_cs=0, u_fs=0)
         self.sol_states = SimpleNamespace(i_cs=[], u_fs=[])
@@ -299,6 +295,6 @@ class LCFilter(ACFilter):
         """Compute state derivatives."""
         state, inp, par = self.state, self.inp, self.par
         d_i_cs = (inp.u_cs - state.u_fs - par.R_fc*state.i_cs)/par.L_fc
-        d_u_fs = (state.i_cs - inp.i_fs - par.G_f*state.u_fs)/par.C_f
+        d_u_fs = (state.i_cs - inp.i_fs)/par.C_f
 
         return [d_i_cs, d_u_fs]

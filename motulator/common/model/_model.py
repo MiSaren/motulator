@@ -64,7 +64,7 @@ class CarrierComparison:
         Complex switching state space vectors are returned if True. Otherwise
         phase switching states are returned. The default is True.
     level : int, optional
-        Number of inverter levels. The default is 2.
+        Number of inverter levels, either 2 or 3. The default is 2.
 
     Examples
     --------
