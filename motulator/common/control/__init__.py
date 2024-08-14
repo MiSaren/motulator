@@ -6,7 +6,6 @@ from motulator.common.control._control import (
     PWM,
     RateLimiter,
     Clock,
-    ComplexFFPIController,
 )
 
 __all__ = [
@@ -16,5 +15,4 @@ __all__ = [
     "PWM",
     "RateLimiter",
     "Clock",
-    "ComplexFFPIController",
 ]
