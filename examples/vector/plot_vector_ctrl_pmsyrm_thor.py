@@ -11,7 +11,7 @@ magnet synchronous reluctance motor. Control look-up tables are also plotted.
 import numpy as np
 
 from motulator.common.model import Simulation, Inverter
-from motulator.common.utils import BaseValues, NominalValues, DCBusPars
+from motulator.common.utils import BaseValues, NominalValues
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import plot, SynchronousMachinePars
@@ -26,7 +26,6 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # Configure the system model.
 
 # Configure magnetically linear motor model
-dc_bus = DCBusPars(u_dc=310)
 
 mdl_par = SynchronousMachinePars(
     n_p=2,
@@ -39,7 +38,7 @@ machine = model.SynchronousMachine(mdl_par)
 # Quadratic load torque profile
 k = .05*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.0042, B_L=lambda w_M: k*np.abs(w_M))
-converter = Inverter(dc_bus)
+converter = Inverter(u_dc=310)
 mdl = model.Drive(converter, machine, mechanics)
 
 # %%

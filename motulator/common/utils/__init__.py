@@ -8,7 +8,6 @@ from motulator.common.utils._utils import (
     NominalValues,
     BaseValues,
     FilterPars,
-    DCBusPars,
 )
 
 __all__ = [
@@ -20,5 +19,4 @@ __all__ = [
     "NominalValues",
     "BaseValues",
     "FilterPars",
-    "DCBusPars",
 ]

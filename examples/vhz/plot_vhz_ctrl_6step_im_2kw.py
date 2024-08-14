@@ -18,7 +18,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     Sequence,
-    DCBusPars,
 )
 from motulator.drive import model
 import motulator.drive.control.im as control
@@ -38,8 +37,6 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # %%
 # Create the system model.
 
-dc_bus = DCBusPars(u_dc=540)
-
 # Configure the induction machine using its inverse-Γ parameters
 mdl_ig_par = InductionMachineInvGammaPars(
     n_p=2,
@@ -53,7 +50,7 @@ machine = model.InductionMachine(mdl_par)
 # Mechanics with quadratic load torque coefficient
 k = .2*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
-converter = Inverter(dc_bus)
+converter = Inverter(u_dc=540)
 mdl = model.Drive(converter, machine, mechanics)
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 

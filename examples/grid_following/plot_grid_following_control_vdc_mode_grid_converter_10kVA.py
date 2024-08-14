@@ -25,7 +25,6 @@ from motulator.common.utils import (
     BaseValues,
     NominalValues,
     FilterPars,
-    DCBusPars,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
@@ -50,10 +49,10 @@ base = BaseValues.from_nominal(nom)
 grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 
 # Filter parameters
-filter_par = FilterPars(L_fc=10e-3)
+filter_par = FilterPars(L_fc=0.2*base.L)
 
 # DC-bus parameters
-DC_bus_par = DCBusPars(u_dc=600, C_dc=1e-3)
+C_dc = 1e-3
 
 grid_filter = ACFilter(filter_par, grid_par)
 
@@ -63,7 +62,7 @@ e_g_abs_var = lambda t: base.u
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
 
 # Inverter model, u_dc in DC bus parameter is the initial DC voltage
-converter = Inverter(DC_bus_par)
+converter = Inverter(u_dc=600, C_dc=C_dc)
 
 # Create system model
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
@@ -73,9 +72,9 @@ mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 
 # Control parameters
 cfg = control.GFLControlCfg(
-    grid_par,
-    DC_bus_par,
-    filter_par,
+    grid_par=grid_par,
+    C_dc=C_dc,
+    filter_par=filter_par,
     i_max=1.5*base.i,
 )
 ctrl = control.GFLControl(cfg)
