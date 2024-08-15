@@ -52,7 +52,7 @@ grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
 converter = Inverter(u_dc=650)
 
 # Create system model
-mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+mdl = model.GridConverterSystem(converter, grid_filter, grid_model)
 
 # Uncomment line below to enable the PWM model
 #mdl.pwm = CarrierComparison()

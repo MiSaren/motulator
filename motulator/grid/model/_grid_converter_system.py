@@ -10,8 +10,7 @@ from motulator.common.model import Model
 
 
 # %%
-# TODO: rename class to GridConverterSystem?
-class StiffSourceAndGridFilterModel(Model):
+class GridConverterSystem(Model):
     """
     Continuous-time model for a converter connected to grid via output filter.
 
@@ -35,14 +34,6 @@ class StiffSourceAndGridFilterModel(Model):
 
     def interconnect(self, _):
         """Interconnect the subsystems."""
-        # TODO: implement a way to connect signals without having to
-        # list them again in post_process() below. Maybe as a SimpleNamespace-
-        # object where the key corresponds to a signal name and the value is a
-        # list with two subsystems, corresponding to the input and output
-        # e.g. interconnects=SimpleNamespace(i_cs=[self.converter,self.grid_filter], u_cs=[self.grid_filter,self.converter])
-
-        # other possibility: in post_process() call interconnect() again but
-        # replace inp and out with data
         self.converter.inp.i_cs = self.grid_filter.out.i_cs
         self.grid_filter.inp.u_cs = self.converter.out.u_cs
         self.grid_filter.inp.e_gs = self.grid_model.out.e_gs

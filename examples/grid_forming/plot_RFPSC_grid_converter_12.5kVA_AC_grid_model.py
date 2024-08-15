@@ -53,7 +53,7 @@ grid_model = model.FlexSource(
 )
 converter = Inverter(u_dc=650)
 
-mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+mdl = model.GridConverterSystem(converter, grid_filter, grid_model)
 
 # %%
 # Configure the control system.

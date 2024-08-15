@@ -57,7 +57,7 @@ C_dc = 1e-3
 converter = Inverter(u_dc=600, C_dc=C_dc)
 
 # Create system model
-mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+mdl = model.GridConverterSystem(converter, grid_filter, grid_model)
 
 # %%
 # Configure the control system.
