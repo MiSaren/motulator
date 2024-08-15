@@ -11,10 +11,10 @@ parameters in this example yield open-loop V/Hz control.
 import numpy as np
 
 from motulator.common.model import (
-    Simulation,
     CarrierComparison,
-    Inverter,
     DiodeBridge,
+    Inverter,
+    Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
@@ -28,8 +28,6 @@ from motulator.drive.utils import (
     plot,
     plot_extra,
 )
-from motulator.grid.model import StiffSource
-from motulator.grid.utils import GridPars
 
 # %%
 # Compute base values based on the nominal values (just for figures).
@@ -49,25 +47,16 @@ machine = model.InductionMachine(mdl_par)
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 
-# %%
 # Frequency converter with a diode bridge
-
-# Grid parameters
-grid_par = GridPars(
-    u_gN=base.u,
-    w_gN=base.w,
-)
-ac_source = StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
-diode_bridge = DiodeBridge(L_dc=2e-3, )
-converter = Inverter(u_dc=400*np.sqrt(2), C_dc=235e-6)
-
-mdl = model.DriveWithDiodebridge(
-    voltage_source=ac_source,
-    diodebridge=diode_bridge,
+diode_bridge = DiodeBridge(L=2e-3, U_g=nom.U, f_g=nom.f)
+converter = Inverter(u_dc=np.sqrt(2)*nom.U, C_dc=235e-6)
+mdl = model.DriveWithDiodeBridge(
+    diode_bridge=diode_bridge,
     converter=converter,
     machine=machine,
     mechanics=mechanics,
 )
+
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 
 # %%
