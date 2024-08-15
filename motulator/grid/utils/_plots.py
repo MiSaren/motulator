@@ -2,11 +2,12 @@
 
 # %%
 from types import SimpleNamespace
+
 import numpy as np
 import matplotlib.pyplot as plt
 from cycler import cycler
 
-from motulator.common.utils import (complex2abc)
+from motulator.common.utils import complex2abc
 
 # Plotting parameters
 plt.rcParams["axes.prop_cycle"] = cycler(color="brgcmyk")
@@ -32,8 +33,9 @@ def plot_grid(
     base : BaseValues, optional
         Base values for scaling the waveforms.
     plot_pcc_voltage : bool, optional
-        'True' if the user wants to plot the 3-phase waveform at the PCC. This
-        is an optional feature and the grid voltage is plotted by default.
+        'True' if the user wants to plot the 3-phase waveform at the point of
+        common coupling (PCC). This is an optional feature and the grid voltage
+        is plotted by default.
     plot_w : bool, optional
         'True' if the user wants to plot the grid frequency instead of the
         phase angles (by default).
@@ -41,9 +43,6 @@ def plot_grid(
         Time span. The default is (0, sim.ctrl.ref.t[-1]).
 
     """
-    FS = 16  # Font size of the plots axis
-    FL = 16  # Font size of the legends only
-    LW = 2.5  # Line width in plots
 
     mdl = sim.mdl  # Continuous-time data
     ctrl = sim.ctrl.data  # Discrete-time data
@@ -68,8 +67,6 @@ def plot_grid(
     u_g_abc = complex2abc(mdl.grid_filter.data.u_gs).T
 
     # Calculation of active and reactive powers
-    #p_g = 1.5*np.asarray(np.real(ctrl.fbk.u_g*np.conj(ctrl.fbk.i_c)))
-    #q_g = 1.5*np.asarray(np.imag(ctrl.fbk.u_g*np.conj(ctrl.fbk.i_c)))
     p_g = 1.5*np.asarray(
         np.real(mdl.grid_filter.data.e_gs*np.conj(mdl.grid_filter.data.i_gs)))
     q_g = 1.5*np.asarray(
@@ -80,39 +77,43 @@ def plot_grid(
     # %%
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 7))
 
-    if not sim.ctrl.dc_bus_volt_ctrl:
+    if mdl.converter.par.C_dc is None:
         if not plot_pcc_voltage:
             # Subplot 1: Grid voltage
             ax1.plot(
                 mdl.grid_model.data.t,
                 e_g_abc/base.u,
-                linewidth=LW,
-                label=[r"$e_g^a$", r"$e_g^b$", r"$e_g^c$"],
+                label=[
+                    r"$e_\mathrm{ga}$",
+                    r"$e_\mathrm{gb}$",
+                    r"$e_\mathrm{gc}$",
+                ],
             )
         else:
             # Subplot 1: PCC voltage
             ax1.plot(
                 mdl.grid_filter.data.t,
                 u_g_abc/base.u,
-                linewidth=LW,
-                label=[r"$u_g^a$", r"$u_g^b$", r"$u_g^c$"],
+                label=[
+                    r"$u_\mathrm{ga}$",
+                    r"$u_\mathrm{gb}$",
+                    r"$u_\mathrm{gc}$",
+                ],
             )
     else:
         # Subplot 1: DC-bus voltage
         ax1.plot(
             mdl.converter.data.t,
             mdl.converter.data.u_dc.T/base.u,
-            linewidth=LW,
-            label=r"$u_{dc}$",
+            label=r"$u_\mathrm{dc}$",
         )
         ax1.plot(
             ctrl.t,
             ctrl.ref.u_dc/base.u,
             "--",
-            linewidth=LW,
-            label=r"$u_{dc,ref}$",
+            label=r"$u_\mathrm{dc,ref}$",
         )
-    ax1.legend(prop={"size": FL}, loc="upper right")
+    ax1.legend()
     ax1.set_xlim(t_span)
     ax1.set_xticklabels([])
 
@@ -120,10 +121,9 @@ def plot_grid(
     ax2.plot(
         mdl.grid_filter.data.t,
         i_g_abc/base.i,
-        linewidth=LW,
-        label=[r"$i_g^a$", r"$i_g^b$", r"$i_g^c$"],
+        label=[r"$i_\mathrm{ga}$", r"$i_\mathrm{gb}$", r"$i_\mathrm{gc}$"],
     )
-    ax2.legend(prop={"size": FL}, loc="upper right")
+    ax2.legend()
     ax2.set_xlim(t_span)
     ax2.set_xticklabels([])
 
@@ -132,34 +132,30 @@ def plot_grid(
         ax3.plot(
             mdl.grid_model.data.t,
             mdl.grid_model.data.w_g/base.w,
-            linewidth=LW,
-            label=r"$\omega_{g}$",
+            label=r"$\omega_\mathrm{g}$",
         )
         ax3.plot(
             ctrl.t,
             ctrl.fbk.w_c/base.w,
             "--",
-            linewidth=LW,
-            label=r"$\omega_{c}$",
+            label=r"$\omega_\mathrm{c}$",
         )
-        ax3.legend(prop={"size": FL}, loc="upper right")
+        ax3.legend()
         ax3.set_xlim(t_span)
     else:
         # Subplot 3: Phase angles
         ax3.plot(
             mdl.grid_model.data.t,
             mdl.grid_model.data.theta_g,
-            linewidth=LW,
-            label=r"$\theta_{g}$",
+            label=r"$\theta_\mathrm{g}$",
         )
         ax3.plot(
             ctrl.t,
             ctrl.fbk.theta_c,
             "--",
-            linewidth=LW,
-            label=r"$\theta_{c}$",
+            label=r"$\theta_\mathrm{c}$",
         )
-    ax3.legend(prop={"size": FL}, loc="upper right")
+    ax3.legend()
     ax3.set_xlim(t_span)
 
     # Add axis labels
@@ -177,19 +173,6 @@ def plot_grid(
         ax3.set_ylabel("Frequency (rad/s)")
     ax3.set_xlabel("Time (s)")
 
-    # Change font size
-    for item in ([ax1.title, ax1.xaxis.label, ax1.yaxis.label] +
-                 ax1.get_xticklabels() + ax1.get_yticklabels()):
-        item.set_fontsize(FS)
-
-    for item in ([ax2.title, ax2.xaxis.label, ax2.yaxis.label] +
-                 ax2.get_xticklabels() + ax2.get_yticklabels()):
-        item.set_fontsize(FS)
-
-    for item in ([ax3.title, ax3.xaxis.label, ax3.yaxis.label] +
-                 ax3.get_xticklabels() + ax3.get_yticklabels()):
-        item.set_fontsize(FS)
-
     fig.align_ylabels()
     plt.tight_layout()
     plt.grid()
@@ -204,30 +187,26 @@ def plot_grid(
     ax1.plot(
         mdl.grid_filter.data.t,
         p_g/base.p,
-        linewidth=LW,
-        label=r"$p_{g}$",
+        label=r"$p_\mathrm{g}$",
     )
     ax1.plot(
         mdl.grid_filter.data.t,
         q_g/base.p,
-        linewidth=LW,
-        label=r"$q_{g}$",
+        label=r"$q_\mathrm{g}$",
     )
     ax1.plot(
         ctrl.t,
         (p_g_ref/base.p),
         "--",
-        linewidth=LW,
-        label=r"$p_{g,ref}$",
+        label=r"$p_\mathrm{g,ref}$",
     )
     ax1.plot(
         ctrl.t,
         (q_g_ref/base.p),
         "--",
-        linewidth=LW,
-        label=r"$q_{g,ref}$",
+        label=r"$q_\mathrm{g,ref}$",
     )
-    ax1.legend(prop={"size": FL}, loc="upper right")
+    ax1.legend()
     ax1.set_xlim(t_span)
     ax1.set_xticklabels([])
 
@@ -235,31 +214,27 @@ def plot_grid(
     ax2.plot(
         ctrl.t,
         np.real(ctrl.fbk.i_c/base.i),
-        linewidth=LW,
-        label=r"$i_{c}^d$",
+        label=r"$i_\mathrm{cd}$",
     )
     ax2.plot(
         ctrl.t,
         np.imag(ctrl.fbk.i_c/base.i),
-        linewidth=LW,
-        label=r"$i_{c}^q$",
+        label=r"$i_\mathrm{cq}$",
     )
     ax2.plot(
         ctrl.t,
         np.real(ctrl.ref.i_c/base.i),
         "--",
-        linewidth=LW,
-        label=r"$i_{c,ref}^d$",
+        label=r"$i_\mathrm{cd,ref}$",
     )
     ax2.plot(
         ctrl.t,
         np.imag(ctrl.ref.i_c/base.i),
         "--",
-        linewidth=LW,
-        label=r"$i_{c,ref}^q$",
+        label=r"$i_\mathrm{cq,ref}$",
     )
     #ax2.plot(mdl.t, mdl.iL, linewidth=LW) converter-side dc current for debug
-    ax2.legend(prop={"size": FL}, loc="upper right")
+    ax2.legend()
     ax2.set_xlim(t_span)
     ax2.set_xticklabels([])
 
@@ -269,52 +244,39 @@ def plot_grid(
         ax3.plot(
             ctrl.t,
             np.absolute(ctrl.ref.u_c/base.u),
-            linewidth=LW,
-            label=r"$u_{c,ref}$")
+            label=r"$u_\mathrm{c,ref}$",
+        )
         ax3.plot(
             ctrl.t,
             np.absolute(ctrl.fbk.v_c/base.u),
-            linewidth=LW,
-            label=r"$\hat{v}_{c}$")
+            label=r"$\hat{v}_\mathrm{c}$",
+        )
         ax3.plot(
             mdl.grid_model.data.t,
             np.absolute(mdl.grid_model.data.e_gs/base.u),
             "k--",
-            linewidth=LW,
-            label=r"${e}_{g}$")
+            label=r"$e_\mathrm{g}$",
+        )
     else:
         # Subplot 3: Converter voltage reference and grid voltage magnitude
         ax3.plot(
             ctrl.t,
             np.real(ctrl.fbk.u_c/base.u),
-            linewidth=LW,
-            label=r"$u_{c}^d$")
+            label=r"$u_\mathrm{cd}$",
+        )
         ax3.plot(
             ctrl.t,
             np.imag(ctrl.fbk.u_c/base.u),
-            linewidth=LW,
-            label=r"$u_{c}^q$")
+            label=r"$u_\mathrm{cq}$",
+        )
         ax3.plot(
             mdl.grid_model.data.t,
             np.absolute(mdl.grid_model.data.e_gs/base.u),
             "k--",
-            linewidth=LW,
-            label=r"$e_{g}$")
-    ax3.legend(prop={"size": FS}, loc="upper right")
+            label=r"$e_\mathrm{g}$",
+        )
+    ax3.legend()
     ax3.set_xlim(t_span)
-
-    # Change font size
-    for item in ([ax2.title, ax2.xaxis.label, ax2.yaxis.label] +
-                 ax2.get_xticklabels() + ax2.get_yticklabels()):
-        item.set_fontsize(FS)
-
-    for item in ([ax1.title, ax1.xaxis.label, ax1.yaxis.label] +
-                 ax1.get_xticklabels() + ax1.get_yticklabels()):
-        item.set_fontsize(FS)
-
-    for item in ([ax3.title, ax3.xaxis.label, ax3.yaxis.label] +
-                 ax3.get_xticklabels() + ax3.get_yticklabels()):
-        item.set_fontsize(FS)
 
     # Add axis labels
     if pu_vals:
@@ -346,9 +308,6 @@ def plot_voltage_vector(sim, base=None):
         Base values for scaling the waveforms.
 
     """
-    FS = 16  # Font size of the plots axis
-    FL = 16  # Font size of the legends only
-    LW = 2.5  # Line width in plots
 
     mdl = sim.mdl  # Continuous-time data
 
@@ -365,7 +324,6 @@ def plot_voltage_vector(sim, base=None):
     ax.plot(
         mdl.grid_model.data.e_gs.real/base.u,
         mdl.grid_model.data.e_gs.imag/base.u,
-        linewidth=LW,
         label=r"$\boldsymbol{e}_\mathrm{g}^\mathrm{s}$")
     ax.axhline(0, color="k")
     ax.axvline(0, color="k")
@@ -378,11 +336,8 @@ def plot_voltage_vector(sim, base=None):
     else:
         ax.set_xlabel("Real part (V)")
         ax.set_ylabel("Imaginary part (V)")
-    ax.legend(prop={"size": FL})
+    ax.legend()
     ax.set_aspect("equal")
-    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
-                 ax.get_xticklabels() + ax.get_yticklabels()):
-        item.set_fontsize(FS)
 
 
 # %%
