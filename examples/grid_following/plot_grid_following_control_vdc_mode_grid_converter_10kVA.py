@@ -12,7 +12,6 @@ current controller.
 
 # %%
 from motulator.common.model import (
-    ACFilter,
     CarrierComparison,
     Inverter,
     Simulation,
@@ -43,7 +42,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 filter_par = FilterPars(L_fc=0.2*base.L)
 
 # Create AC filter with given parameters
-grid_filter = ACFilter(filter_par, grid_par)
+grid_filter = model.ACFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var = lambda t: base.u

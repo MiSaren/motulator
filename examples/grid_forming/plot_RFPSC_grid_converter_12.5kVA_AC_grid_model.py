@@ -18,11 +18,11 @@ found in [#ENT2013]_.
 """
 
 # %%
-from motulator.common.model import Simulation, Inverter, ACFilter
+from motulator.common.model import Inverter, Simulation
 from motulator.common.utils import (
     BaseValues,
-    NominalValues,
     FilterPars,
+    NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
@@ -43,7 +43,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=20e-3)
 # Filter parameters
 filter_par = FilterPars(L_fc=3e-3, L_fg=3e-3, C_f=10e-6)
 
-grid_filter = ACFilter(filter_par, grid_par)
+grid_filter = model.ACFilter(filter_par, grid_par)
 grid_model = model.FlexSource(
     w_gN=grid_par.w_gN,
     e_g_abs=grid_par.u_gN,

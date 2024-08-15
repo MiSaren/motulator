@@ -11,8 +11,6 @@ from motulator.common.utils import complex2abc, FilterPars
 
 
 # %%
-# TODO: remove this file as LCFilter class has moved to
-# motulator.common.model._ac_filter.py
 class LCFilter(Subsystem):
     """
     LC-filter model.
@@ -20,7 +18,8 @@ class LCFilter(Subsystem):
     Parameters
     ----------
     filter_pars : FilterPars
-        Filter parameters. Machine drive LC-filter uses the following parameters:
+        Filter parameters. Machine drive LC-filter uses the following
+        parameters:
     
             filter_pars.L_fc : float
                 Converter-side inductance of the filter (H).

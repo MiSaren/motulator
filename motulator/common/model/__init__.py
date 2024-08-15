@@ -11,7 +11,6 @@ from motulator.common.model._converter import (
     Inverter,
     DiodeBridge,
 )
-from motulator.common.model._ac_filter import ACFilter
 
 __all__ = [
     "Simulation",
@@ -22,5 +21,4 @@ __all__ = [
     "Subsystem",
     "Inverter",
     "DiodeBridge",
-    "ACFilter",
 ]

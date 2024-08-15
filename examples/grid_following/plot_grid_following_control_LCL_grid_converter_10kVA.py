@@ -11,7 +11,6 @@ PI-based current controller.
 
 # %%
 from motulator.common.model import (
-    ACFilter,
     CarrierComparison,
     Inverter,
     Simulation,
@@ -41,7 +40,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 filter_par = FilterPars(L_fc=0.073*base.L, L_fg=0.073*base.L, C_f=0.043*base.C)
 
 # DC-bus parameters
-grid_filter = ACFilter(filter_par, grid_par)
+grid_filter = model.ACFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var = lambda t: grid_par.u_gN
