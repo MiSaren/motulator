@@ -2,7 +2,7 @@
 from motulator.drive.model._drive import (
     Drive,
     DriveWithLCFilter,
-    DriveWithDiodebridge,
+    DriveWithDiodeBridge,
 )
 from motulator.drive.model._machine import (
     InductionMachine,
@@ -17,10 +17,10 @@ from motulator.drive.model._mechanics import (
 __all__ = [
     "Drive",
     "DriveWithLCFilter",
+    "DriveWithDiodeBridge",
     "InductionMachine",
     "SynchronousMachine",
     "ExternalRotorSpeed",
     "StiffMechanicalSystem",
     "TwoMassMechanicalSystem",
-    "DriveWithDiodebridge",
 ]
