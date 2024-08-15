@@ -10,51 +10,53 @@ PI-based current controller.
 """
 
 # %%
-# Imports.
-
-import time
-
 from motulator.common.model import (
-    Simulation,
-    Inverter,
     ACFilter,
     CarrierComparison,
+    Inverter,
+    Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
-    NominalValues,
     FilterPars,
+    NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 from motulator.grid.utils import GridPars, plot_grid
 
 # %%
-# Compute base values based on the nominal values (just for figures).
+# Compute base values based on the nominal values.
 
 nom = NominalValues(U=400, I=14.5, f=50, P=10e3)
 base = BaseValues.from_nominal(nom)
+
 # %%
 # Configure the system model.
 
+# Grid parameters
 grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 
-# DC-bus parameters
-C_dc = 100e-3
-
+# Filter parameters
 filter_par = FilterPars(L_fc=0.073*base.L, L_fg=0.073*base.L, C_f=0.043*base.C)
 
+# DC-bus parameters
 grid_filter = ACFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var = lambda t: grid_par.u_gN
+
 # AC grid model with constant voltage magnitude and frequency
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
+
 # Inverter model with constant DC voltage
-converter = Inverter(u_dc=650, C_dc=C_dc)
+converter = Inverter(u_dc=650)
 
 # Create system model
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+
+# Uncomment line below to enable the PWM model
+#mdl.pwm = CarrierComparison()
 
 # %%
 # Configure the control system.
@@ -62,11 +64,12 @@ mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 # # Control parameters
 cfg = control.GFLControlCfg(
     grid_par=grid_par,
-    C_dc=C_dc,
     filter_par=filter_par,
     on_u_cap=True,
     i_max=1.5*base.i,
 )
+
+# Create the control system
 ctrl = control.GFLControl(cfg)
 
 # %%
@@ -79,17 +82,13 @@ ctrl.ref.q_g = lambda t: (t > .04)*(4e3)
 # %%
 # Create the simulation object and simulate it.
 
-#mdl.pwm = CarrierComparison()  # Enable the PWM model
-start_time = time.time()
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=.1)
 
-# Print the execution time
-#print('\nExecution time: {:.2f} s'.format((time.time() - start_time)))
-
 # %%
-# Plot results in SI or per unit values.
+# Plot the results.
 
-# By omitting the argument `base` you can plot
-# the results in SI units.
+# By default results are plotted in per-unit values. By omitting the argument
+# `base` you can plot the results in SI units.
+
 plot_grid(sim, base=base, plot_pcc_voltage=True)

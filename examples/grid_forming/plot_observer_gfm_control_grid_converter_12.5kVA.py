@@ -5,25 +5,25 @@
 This example simulates a converter using disturbance observer-based control in
 grid-forming mode. Converter output voltage and active power are directly
 controlled, and grid synchronization is provided by the disturbance observer.
-A transparent current controller is also implemented.
+A transparent current controller is included for current limitation.
 
 """
 
 # %%
 from motulator.common.model import (
-    Simulation,
-    Inverter,
     ACFilter,
     CarrierComparison,
+    Inverter,
+    Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
-    NominalValues,
     FilterPars,
+    NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import plot_grid, GridPars
+from motulator.grid.utils import GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.
@@ -60,7 +60,7 @@ mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 # %%
 # Configure the control system.
 
-# Estimates for the grid parameters, grid inductance estimate is set to 0
+# Estimates for the grid parameters, grid inductance estimate is left at 0
 grid_par_est = GridPars(u_gN=base.u, w_gN=base.w)
 
 # Set the configuration parameters
@@ -78,7 +78,7 @@ ctrl = control.ObserverBasedGFMControl(cfg)
 # %%
 # Set the references for converter output voltage magnitude and active power.
 
-# Converter output voltage magnitude reference (constant)
+# Converter output voltage magnitude reference
 ctrl.ref.v_c = lambda t: grid_par.u_gN
 
 # Active power reference
@@ -89,9 +89,9 @@ ctrl.ref.p_g = lambda t: ((t > .2)*(4.15e3) + (t > .5)*(4.15e3) + (t > .8)*
 #ctrl.ref.p_g = lambda t: ((t > .2) - (t > .7)*2 + (t > 1.2))*12.5e3
 
 # Uncomment lines below to simulate a grid voltage sag with constant p_g,ref
-mdl.grid_model.par.e_g_abs = lambda t: (
-    1 - (t > .2)*(0.8) + (t > 1)*(0.8))*grid_par.u_gN
-ctrl.ref.p_g = lambda t: 12.5e3
+#mdl.grid_model.par.e_g_abs = lambda t: (
+#    1 - (t > .2)*(0.8) + (t > 1)*(0.8))*grid_par.u_gN
+#ctrl.ref.p_g = lambda t: 12.5e3
 
 # %%
 # Create the simulation object and simulate it.
@@ -100,8 +100,9 @@ sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.5)
 
 # %%
-# Plot results in per-unit values.
+# Plot the results.
 
-# By omitting the argument `base` you can plot the results in SI units.
+# By default results are plotted in per-unit values. By omitting the argument
+# `base` you can plot the results in SI units.
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=False)

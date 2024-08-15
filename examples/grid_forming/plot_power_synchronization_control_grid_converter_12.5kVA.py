@@ -11,19 +11,19 @@ the current oscillations.
 
 # %%
 from motulator.common.model import (
-    Simulation,
-    Inverter,
     ACFilter,
     CarrierComparison,
+    Inverter,
+    Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
-    NominalValues,
     FilterPars,
+    NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import plot_grid, GridPars
+from motulator.grid.utils import GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.
@@ -42,6 +42,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=0.74*base.L)
 # Filter parameters
 filter_par = FilterPars(L_fc=0.15*base.L)
 
+# Create AC filter with given parameters
 grid_filter = ACFilter(filter_par, grid_par)
 
 # Grid voltage source with constant frequency and voltage magnitude
@@ -74,7 +75,7 @@ ctrl = control.PSCControl(cfg)
 # %%
 # Set the references for converter output voltage magnitude and active power.
 
-# Converter output voltage magnitude reference (constant)
+# Converter output voltage magnitude reference
 ctrl.ref.U = lambda t: grid_par.u_gN
 
 # Active power reference
@@ -88,9 +89,9 @@ sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.5)
 
 # %%
-# Plot results in per-unit values.
+# Plot the results.
 
-# By omitting the argument `base` you can plot
-# the results in SI units.
+# By default results are plotted in per-unit values. By omitting the argument
+# `base` you can plot the results in SI units.
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=True)

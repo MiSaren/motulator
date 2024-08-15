@@ -10,27 +10,23 @@ current controller.
 """
 
 # %%
-# Imports.
-
-import time
-
 from motulator.common.model import (
-    Simulation,
-    Inverter,
     ACFilter,
     CarrierComparison,
+    Inverter,
+    Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
-    NominalValues,
     FilterPars,
+    NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 from motulator.grid.utils import GridPars, plot_grid, plot_voltage_vector
 
 # %%
-# Compute base values based on the nominal values (just for figures).
+# Compute base values based on the nominal values.
 
 nom = NominalValues(U=400, I=14.5, f=50, P=10e3)
 base = BaseValues.from_nominal(nom)
@@ -38,18 +34,26 @@ base = BaseValues.from_nominal(nom)
 # %%
 # Configure the system model.
 
+# Grid parameters
 grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 
+# Filter parameters
 filter_par = FilterPars(L_fc=0.2*base.L)
 
+# Create AC filter with given parameters
 grid_filter = ACFilter(filter_par, grid_par)
 
 # AC grid model with constant voltage magnitude and frequency
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
+
 # Inverter with constant DC voltage
 converter = Inverter(u_dc=650)
 
+# Create system model
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+
+# Uncomment line below to enable the PWM model
+#mdl.pwm = CarrierComparison()
 
 # %%
 # Configure the control system.
@@ -60,6 +64,8 @@ cfg = control.GFLControlCfg(
     filter_par=filter_par,
     i_max=1.5*base.i,
 )
+
+# Create the control system
 ctrl = control.GFLControl(cfg)
 
 # %%
@@ -75,21 +81,16 @@ ctrl.ref.q_g = lambda t: (t > 0.04)*(4e3)
 # %%
 # Create the simulation object and simulate it.
 
-#mdl.pwm = CarrierComparison()  # Enable the PWM model
-start_time = time.time()
 sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=.1)
 
-# Print the execution time
-#print('\nExecution time: {:.2f} s'.format((time.time() - start_time)))
-
 # %%
-# Plot results per-unit values.
+# Plot the results.
 
-# By omitting the argument `base` you can plot
-# the results in SI units.
+# By default results are plotted in per-unit values. By omitting the argument
+# `base` you can plot the results in SI units.
 
-# Plot the locus of the grid voltage space vector
-plot_voltage_vector(sim=sim, base=base)
+# Uncomment line below to plot locus of the grid voltage space vector
+#plot_voltage_vector(sim=sim, base=base)
 
 plot_grid(sim=sim, base=base, plot_pcc_voltage=True)

@@ -10,15 +10,20 @@ the current oscillations, enhanced with a reference-feedforward term.
 """
 
 # %%
-from motulator.common.model import Simulation, Inverter, ACFilter
+from motulator.common.model import (
+    ACFilter,
+    CarrierComparison,
+    Inverter,
+    Simulation,
+)
 from motulator.common.utils import (
     BaseValues,
-    NominalValues,
     FilterPars,
+    NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import plot_grid, GridPars
+from motulator.grid.utils import GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.
@@ -37,11 +42,20 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=0.74*base.L)
 # Filter parameters
 filter_par = FilterPars(L_fc=0.15*base.L)
 
+# Create AC filter with given parameters
 grid_filter = ACFilter(filter_par, grid_par)
+
+# Grid voltage source with constant frequency and voltage magnitude
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
+
+# Inverter with constant DC voltage
 converter = Inverter(u_dc=650)
 
+# Create system model
 mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+
+# Uncomment line below to enable the PWM model
+#mdl.pwm = CarrierComparison()
 
 # %%
 # Configure the control system.
@@ -50,8 +64,8 @@ mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
 cfg = control.PSCControlCfg(
     grid_par=grid_par,
     filter_par=filter_par,
-    T_s=1/(10e3),
-    on_rf=True,
+    T_s=1/10e3,
+    on_rf=True,  # Enable reference-feedforward
     i_max=1.3*base.i,
     R_a=.2*base.Z,
 )
@@ -62,7 +76,7 @@ ctrl = control.PSCControl(cfg)
 # %%
 # Set the references for converter output voltage magnitude and active power.
 
-# Converter output voltage magnitude reference (constant)
+# Converter output voltage magnitude reference
 ctrl.ref.U = lambda t: grid_par.u_gN
 
 # Active power reference
@@ -76,7 +90,9 @@ sim = Simulation(mdl, ctrl)
 sim.simulate(t_stop=1.5)
 
 # %%
-# Plot results in per-unit values. By omitting the argument `base` you can plot
-# the results in SI units.
+# Plot the results.
+
+# By default results are plotted in per-unit values. By omitting the argument
+# `base` you can plot the results in SI units.
 
 plot_grid(sim, base=base, plot_pcc_voltage=True)
