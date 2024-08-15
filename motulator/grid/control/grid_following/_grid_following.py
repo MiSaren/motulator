@@ -7,8 +7,11 @@ import numpy as np
 
 from motulator.common.control import ComplexPIController
 from motulator.common.utils import FilterPars
-
-from motulator.grid.control import GridConverterControlSystem, PLL, CurrentLimiter
+from motulator.grid.control import (
+    CurrentLimiter,
+    GridConverterControlSystem,
+    PLL,
+)
 from motulator.grid.utils import GridPars
 
 
@@ -28,20 +31,22 @@ class GFLControlCfg:
     T_s : float, optional
         Sampling period (s). The default is 1/(16e3).
     on_u_cap : bool, optional
-        to use the filter capacitance voltage measurement or PCC voltage. The default is False.
+        Use filter capacitance voltage instead of PCC voltage for the feedback.
+        Default is False.
     i_max : float, optional
-        maximum current modulus in A. The default is 20.
+        Maximum current modulus in A. The default is 20.
     alpha_c : float, optional
-        current controller bandwidth. The default is 2*np.pi*400.
+        Current controller bandwidth. The default is 2*pi*400.
     alpha_ff : float, optional
-        low pass filter bandwidth for voltage feedforward term. The default is 2*np.pi*(4*50).
+        Low pass filter bandwidth for voltage feedforward term. The default
+        is 2*pi*(4*50).
     overmodulation : str, optional
-        overmodulation method, either Minimum magnitude error (MME) or Minimum Phase Error "MPE". 
-        The default is Minimum Phase Error "MPE".
+        Overmodulation method for the PWM. Default is Minimum Phase Error
+        "MPE".
         
     Parameters for the Phase Locked Loop (PLL)
     w0_pll : float, optional
-        undamped natural frequency of the PLL. The default is 2*np.pi*20.
+        undamped natural frequency of the PLL. The default is 2*pi*20.
     zeta_pll : float, optional
         damping ratio of the PLL. The default is 1.
     """

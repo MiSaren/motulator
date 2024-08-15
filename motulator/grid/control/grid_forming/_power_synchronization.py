@@ -5,11 +5,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.common.utils import (
-    wrap,
-    FilterPars,
-)
-from motulator.grid.control import GridConverterControlSystem, CurrentLimiter
+from motulator.common.utils import FilterPars, wrap
+from motulator.grid.control import CurrentLimiter, GridConverterControlSystem
 from motulator.grid.utils import GridPars
 
 
@@ -38,7 +35,8 @@ class PSCControlCfg:
     w_b : float, optional
         Current low-pass filter bandwidth (rad/s). Default is 2*pi*5.
     overmodulation : str, optional
-        Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
+        Overmodulation method for the PWM. Default is Minimum Phase Error
+        "MPE".
     """
 
     grid_par: GridPars

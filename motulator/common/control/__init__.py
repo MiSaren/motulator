@@ -1,18 +1,18 @@
 """Common control functions and classes."""
 from motulator.common.control._control import (
-    ControlSystem,
+    Clock,
     ComplexPIController,
+    ControlSystem,
     PIController,
     PWM,
     RateLimiter,
-    Clock,
 )
 
 __all__ = [
-    "ControlSystem",
+    "Clock",
     "ComplexPIController",
+    "ControlSystem",
     "PIController",
     "PWM",
     "RateLimiter",
-    "Clock",
 ]

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from motulator.common.utils import wrap, FilterPars
+from motulator.common.utils import FilterPars, wrap
 from motulator.grid.control import GridConverterControlSystem
 from motulator.grid.utils import GridPars
 
@@ -37,7 +37,8 @@ class ObserverBasedGFMControlCfg:
     alpha_o : float, optional
         Observer gain (rad/s). Default is 2*pi*50.
     overmodulation : str, optional
-        Overmodulation method for the PWM. Default is Minimum Phase Error "MPE".
+        Overmodulation method for the PWM. Default is Minimum Phase Error
+        "MPE".
     
     """
 
