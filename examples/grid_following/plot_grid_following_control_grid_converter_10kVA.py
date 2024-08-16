@@ -10,6 +10,8 @@ current controller.
 """
 
 # %%
+import numpy as np
+
 from motulator.common.model import (
     CarrierComparison,
     Inverter,
@@ -42,7 +44,7 @@ filter_par = FilterPars(L_fc=0.2*base.L)
 grid_filter = model.ACFilter(filter_par, grid_par)
 
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
+grid_model = model.StiffSource(w_g=grid_par.w_gN, e_g_abs=grid_par.u_gN)
 
 # Inverter with constant DC voltage
 converter = Inverter(u_dc=650)
@@ -73,8 +75,10 @@ ctrl = control.GFLControl(cfg)
 ctrl.ref.p_g = lambda t: (t > 0.02)*(5e3)
 ctrl.ref.q_g = lambda t: (t > 0.04)*(4e3)
 
-# Uncomment the following line to simulate a single-phase voltage dip
-#mdl.grid_model.par.e_gb_abs = lambda t: mdl_par.U_gN*(1 - 0.5*(t > 0.05))
+# Uncomment lines below to simulate a nonsymmetric fault (add negative sequence)
+#mdl.grid_model.par.e_g_abs = 0.75*base.u
+#mdl.grid_model.par.e_g_neg_abs = 0.25*base.u
+#mdl.grid_model.par.phi_neg = -np.pi/3
 
 # %%
 # Create the simulation object and simulate it.
@@ -91,4 +95,4 @@ sim.simulate(t_stop=.1)
 # Uncomment line below to plot locus of the grid voltage space vector
 #plot_voltage_vector(sim=sim, base=base)
 
-plot_grid(sim=sim, base=base, plot_pcc_voltage=True)
+plot_grid(sim=sim, base=base, plot_pcc_voltage=False, plot_w=True)
