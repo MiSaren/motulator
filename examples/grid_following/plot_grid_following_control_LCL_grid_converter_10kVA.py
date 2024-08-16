@@ -45,7 +45,7 @@ grid_filter = model.GridFilter(filter_par, grid_par)
 e_g_abs_var = lambda t: grid_par.u_gN
 
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
+grid_model = model.StiffSource(w_g=grid_par.w_gN, e_g_abs=e_g_abs_var)
 
 # Inverter model with constant DC voltage
 converter = Inverter(u_dc=650)

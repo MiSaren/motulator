@@ -9,11 +9,10 @@ from types import SimpleNamespace
 import numpy as np
 
 from motulator.common.model import Subsystem
-from motulator.common.utils import complex2abc, abc2complex, wrap
+from motulator.common.utils import abc2complex, complex2abc, wrap
 
 
 # %%
-# TODO: implement modeling of harmonics
 class StiffSource(Subsystem):
     """
     3-phase voltage source model.
@@ -23,20 +22,21 @@ class StiffSource(Subsystem):
     or a time-dependent function. The grid voltage magnitude e_g_abs can also
     be a function, to simulate voltage dips and symmetrical short circuits. 
     
-    In addition, nonsymmetric faults can be modeled either by giving the
-    negative sequence voltage magnitude e_g_neg_abs, or by specifying any of
-    the phase voltage magnitudes separately (e.g. e_ga_abs).
+    In addition, nonsymmetric faults can be modeled by adding a negative
+    sequence component to the grid voltage, in the form of the magnitude
+    e_g_neg_abs and the phase shift phi_neg.
     
-    A phase shift angle for the grid voltages can also be given as a function,
-    to simulate phase angle jumps. The complex form of the phase A voltage
-    angle (exp_j_theta_p) is used as a state variable.
+    A phase shift angle for the grid voltage vector can also be given, to
+    simulate phase angle jumps. The complex form of the phase A voltage angle
+    (exp_j_theta_p) is used as a state variable.
 
     Parameters
     ----------
-    w_gN : float
-        Grid nominal frequency (rad/s).
+    w_g : float | callable
+        Grid angular frequency (rad/s). 
     e_g_abs : float | callable
-        3-phase grid voltage magnitude, phase-to-ground peak value (V).
+        Grid voltage magnitude (positive sequence), phase-to-ground peak
+        value (V).
     phi : callable, optional
         Phase shift of the grid voltage (rad). Default is 0.
     e_g_neg_abs : float | callable, optional
@@ -44,44 +44,24 @@ class StiffSource(Subsystem):
         Default is None.
     phi_neg : float, optional
         Phase shift of the negative sequence component (rad). Default is 0.
-    w_g : callable, optional
-        Grid frequency (rad/s) as a function of time, `w_g(t)`. If given, w_g
-        will be used to compute grid voltage angle instead of w_gN. Default
-        is None.
-    e_ga_abs : callable, optional
-        Phase A voltage magnitude, phase-to-ground peak value (V). If given,
-        this will be used instead of e_g_abs. Default is None.
-    e_gb_abs : callable, optional
-        Phase B voltage magnitude, phase-to-ground peak value (V). Default is
-        None.
-    e_gc_abs : callable, optional
-        Phase C voltage magnitude, phase-to-ground peak value (V). Default is
-        None.
 
     """
 
     def __init__(
-            self,
-            w_gN,
-            e_g_abs,
-            phi=lambda t: 0,
-            e_g_neg_abs=0,
-            phi_neg=0,
-            w_g=None,
-            e_ga_abs=None,
-            e_gb_abs=None,
-            e_gc_abs=None):
+        self,
+        w_g,
+        e_g_abs,
+        phi=lambda t: 0,
+        e_g_neg_abs=0,
+        phi_neg=0,
+    ):
         super().__init__()
         self.par = SimpleNamespace(
-            w_gN=w_gN,
+            w_g=w_g,
             e_g_abs=e_g_abs,
             phi=phi,
             e_g_neg_abs=e_g_neg_abs,
             phi_neg=phi_neg,
-            w_g=w_g,
-            e_ga_abs=e_ga_abs,
-            e_gb_abs=e_gb_abs,
-            e_gc_abs=e_gc_abs,
         )
         # states
         self.state = SimpleNamespace(exp_j_theta_p=complex(1))
@@ -105,19 +85,9 @@ class StiffSource(Subsystem):
             Grid complex voltage (V).
 
         """
-        # Phase voltage magnitudes
         par = self.par
         e_g_abs = par.e_g_abs(t) if callable(par.e_g_abs) else par.e_g_abs
-        e_ga_abs = par.e_ga_abs(t) if par.e_ga_abs is not None else e_g_abs
-        e_gb_abs = par.e_gb_abs(t) if par.e_gb_abs is not None else e_g_abs
-        e_gc_abs = par.e_gc_abs(t) if par.e_gc_abs is not None else e_g_abs
-
-        # Calculation of the three-phase voltages
-        e_ga = e_ga_abs*np.cos(theta_p - par.phi(t))
-        e_gb = e_gb_abs*np.cos(theta_p - 2*np.pi/3 - par.phi(t))
-        e_gc = e_gc_abs*np.cos(theta_p - 4*np.pi/3 - par.phi(t))
-
-        e_gs = abc2complex([e_ga, e_gb, e_gc])
+        e_gs = e_g_abs*np.exp(1j*(theta_p - par.phi(t)))
 
         # Adding negative sequence component if given
         if par.e_g_neg_abs is not None:
@@ -135,7 +105,7 @@ class StiffSource(Subsystem):
     def set_inputs(self, t):
         """Set input variables."""
         self.inp.w_g = self.par.w_g(t) if callable(
-            self.par.w_g) else self.par.w_gN
+            self.par.w_g) else self.par.w_g
 
     def rhs(self):
         """
@@ -173,7 +143,7 @@ class StiffSource(Subsystem):
         if callable(self.par.w_g):
             self.data.w_g = self.par.w_g(self.data.t)
         else:
-            self.data.w_g = np.full(np.size(self.data.t), self.par.w_gN)
+            self.data.w_g = np.full(np.size(self.data.t), self.par.w_g)
         self.data.theta_p = np.angle(self.data.exp_j_theta_p)
         self.data.e_gs = self.voltages(self.data.t, self.data.theta_p)
         self.data.theta_g = np.angle(self.data.e_gs)

@@ -47,7 +47,7 @@ grid_filter = model.GridFilter(filter_par, grid_par)
 e_g_abs_var = lambda t: base.u
 
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
+grid_model = model.StiffSource(w_g=grid_par.w_gN, e_g_abs=e_g_abs_var)
 
 # DC-bus parameters
 C_dc = 1e-3
