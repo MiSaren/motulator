@@ -17,12 +17,11 @@ from motulator.common.model import (
 )
 from motulator.common.utils import (
     BaseValues,
-    FilterPars,
     NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridPars, plot_grid
+from motulator.grid.utils import FilterPars, GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.

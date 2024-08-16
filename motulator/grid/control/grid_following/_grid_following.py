@@ -6,13 +6,13 @@ from dataclasses import dataclass
 import numpy as np
 
 from motulator.common.control import ComplexPIController
-from motulator.common.utils import FilterPars
+
 from motulator.grid.control import (
     CurrentLimiter,
     GridConverterControlSystem,
     PLL,
 )
-from motulator.grid.utils import GridPars
+from motulator.grid.utils import FilterPars, GridPars
 
 
 # %%
