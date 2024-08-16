@@ -6,6 +6,7 @@ import numpy as np
 
 from motulator.common.model._simulation import Subsystem
 from motulator.common.utils import abc2complex, complex2abc
+from motulator.grid.model import StiffSource
 
 
 # %%
@@ -120,31 +121,42 @@ class Inverter(Subsystem):
             data.u_dc = data.u_dc.real
         data.u_cs = data.q_cs*data.u_dc
 
+    def post_process_with_inputs(self):
+        """Post-process data with inputs."""
+        data = self.data
+        data.i_dc = 1.5*np.real(data.q_cs*np.conj(data.i_cs))
+
 
 # %%
-class DiodeBridge(Subsystem):
+class DiodeBridge(StiffSource):
     """
-    Three-phase diode bridge.
+    Three-phase diode bridge supplied from a stiff grid.
 
     A three-phase diode bridge rectifier with a DC-side inductor is modeled.
-    The inductor current i_L is used as a state variable.
+    The supply voltage is an ideal three-phase voltage source with constant
+    frequency and voltage magnitude. The inductor current i_L is used as a
+    state variable.
 
     Parameters
     ----------
     L_dc : float
         DC-bus inductance (H).
+    U_g : float
+        Grid voltage (V, line-line, rms).
+    f_g : float
+        Grid frequency (Hz).
 
     """
 
-    def __init__(self, L_dc):
-        super().__init__()
-        # TODO: add series resistance for inductor
-        self.par = SimpleNamespace(L=L_dc)
+    def __init__(self, L_dc, U_g, f_g):
+        super().__init__(w_g=2*np.pi*f_g, e_g_abs=np.sqrt(2/3)*U_g)
+        self.par.L = L_dc
         self.state = SimpleNamespace(i_L=0)
         self.sol_states = SimpleNamespace(i_L=[])
 
-    def set_outputs(self, _):
+    def set_outputs(self, t):
         """Set output variables."""
+        self.out.u_gs = self.voltages(t, self.par.w_gN*t)
         self.out.i_L = self.state.i_L.real
 
     def rhs(self):
@@ -157,9 +169,9 @@ class DiodeBridge(Subsystem):
             Time derivative of the complex state vector, [d_i_L].
 
         """
-        state, inp, par = self.state, self.inp, self.par
+        state, inp, out, par = self.state, self.inp, self.out, self.par
         # Output voltage of the diode bridge
-        u_g_abc = complex2abc(inp.u_gs)
+        u_g_abc = complex2abc(out.u_gs)
         u_di = np.amax(u_g_abc, axis=0) - np.amin(u_g_abc, axis=0)
         # State derivatives
         d_i_L = (u_di - inp.u_dc)/par.L
@@ -172,6 +184,7 @@ class DiodeBridge(Subsystem):
     def post_process_states(self):
         """Post-process data."""
         self.data.i_L = self.data.i_L.real
+        self.data.u_gs = self.voltages(self.data.t, self.par.w_gN*self.data.t)
 
     def post_process_with_inputs(self):
         """Post-process data with inputs."""
