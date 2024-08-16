@@ -3,7 +3,7 @@
 from motulator.grid.model._grid_converter_system import GridConverterSystem
 
 from motulator.grid.model._grid_filter import (
-    ACFilter,
+    GridFilter,
     LCLFilter,
     LFilter,
 )
@@ -14,9 +14,9 @@ from motulator.grid.model._grid_volt_source import (
 )
 
 __all__ = [
-    "ACFilter",
     "FlexSource",
     "GridConverterSystem",
+    "GridFilter",
     "LCLFilter",
     "LFilter",
     "StiffSource",

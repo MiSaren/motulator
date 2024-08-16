@@ -39,7 +39,7 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=0.74*base.L)
 filter_par = FilterPars(L_fc=0.15*base.L)
 
 # Create AC filter with given parameters
-grid_filter = model.ACFilter(filter_par, grid_par)
+grid_filter = model.GridFilter(filter_par, grid_par)
 
 # Grid voltage source with constant frequency and voltage magnitude
 grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)

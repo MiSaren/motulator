@@ -14,7 +14,7 @@ from motulator.grid.utils import FilterPars, GridPars
 
 
 # %%
-class ACFilter(Subsystem):
+class GridFilter(Subsystem):
     """
     Base class for converter AC-side filters.
 
@@ -68,7 +68,7 @@ class ACFilter(Subsystem):
 
 
 # %%
-class LFilter(ACFilter):
+class LFilter(GridFilter):
     """
     Dynamic model for an inductive L filter and an inductive-resistive grid.
 
@@ -147,7 +147,7 @@ class LFilter(ACFilter):
 
 
 # %%
-class LCLFilter(ACFilter):
+class LCLFilter(GridFilter):
     """
     Dynamic model for an inductive-capacitive-inductive (LCL) filter and grid.
 
