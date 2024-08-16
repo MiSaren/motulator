@@ -63,10 +63,12 @@ class CarrierComparison:
     return_complex : bool, optional
         Complex switching state space vectors are returned if True. Otherwise
         phase switching states are returned. The default is True.
+    level : int, optional
+        Number of inverter levels. The default is 2.
 
     Examples
     --------
-    >>> from motulator.model import CarrierComparison
+    >>> from motulator.common.model import CarrierComparison
     >>> carrier_cmp = CarrierComparison(return_complex=False)
     >>> # First call gives rising edges
     >>> t_steps, q_c_abc = carrier_cmp(1e-3, [.4, .2, .8])
@@ -103,8 +105,9 @@ class CarrierComparison:
 
     """
 
-    def __init__(self, N=2**12, return_complex=True):
+    def __init__(self, N=2**12, return_complex=True, level=2):
         self.N = N
+        self.level = level
         self.return_complex = return_complex
         self._rising_edge = True  # Stores the carrier direction
 
@@ -136,10 +139,23 @@ class CarrierComparison:
         # Quantize the duty ratios to N levels
         d_c_abc = np.round(self.N*np.asarray(d_c_abc))/self.N
 
-        # Assume falling edge and compute the normalized switching instants:
-        t_n = np.append(0, np.sort(d_c_abc))
-        # Compute the corresponding switching states:
-        q_c_abc = (t_n[:, np.newaxis] < d_c_abc).astype(int)
+        if self.level == 2:
+            # Assume falling edge and compute the normalized switching instants:
+            t_n = np.append(0, np.sort(d_c_abc))
+            # Compute the corresponding switching states:
+            q_c_abc = (t_n[:, np.newaxis] < d_c_abc).astype(int)
+
+        elif self.level == 3:
+            # Assume falling edge and compute the normalized switching instants:
+            t_n = np.append(0, 2*d_c_abc)
+            t_n = t_n - (t_n > 1).astype(float)
+            t_n.sort()
+
+            # Compute the corresponding switching states:
+            q_abc1 = (0.5*t_n[:, np.newaxis] < d_c_abc).astype(int)
+            q_abc2 = (0.5 + 0.5*t_n[:, np.newaxis] < d_c_abc).astype(int)
+
+            q_c_abc = (q_abc1 + q_abc2)/2
 
         # Durations of switching states
         t_steps = T_s*np.diff(t_n, append=1)
