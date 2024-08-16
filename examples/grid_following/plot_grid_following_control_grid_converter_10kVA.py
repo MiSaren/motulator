@@ -95,4 +95,4 @@ sim.simulate(t_stop=.1)
 # Uncomment line below to plot locus of the grid voltage space vector
 #plot_voltage_vector(sim=sim, base=base)
 
-plot_grid(sim=sim, base=base, plot_pcc_voltage=False, plot_w=True)
+plot_grid(sim=sim, base=base, plot_pcc_voltage=True)
