@@ -139,7 +139,7 @@ class DiodeBridge(StiffSource):
 
     Parameters
     ----------
-    L : float
+    L_dc : float
         DC-bus inductance (H).
     U_g : float
         Grid voltage (V, line-line, rms).
@@ -148,10 +148,9 @@ class DiodeBridge(StiffSource):
 
     """
 
-    def __init__(self, L, U_g, f_g):
-        super().__init__(w_gN=2*np.pi*f_g, e_g_abs=np.sqrt(2/3)*U_g)
-        # TODO: add series resistance for inductor
-        self.par.L = L
+    def __init__(self, L_dc, U_g, f_g):
+        super().__init__(w_g=2*np.pi*f_g, e_g_abs=np.sqrt(2/3)*U_g)
+        self.par.L = L_dc
         self.state = SimpleNamespace(i_L=0)
         self.sol_states = SimpleNamespace(i_L=[])
 

@@ -48,7 +48,7 @@ machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
 
 # Frequency converter with a diode bridge
-diode_bridge = DiodeBridge(L=2e-3, U_g=400, f_g=50)
+diode_bridge = DiodeBridge(L_dc=2e-3, U_g=400, f_g=50)
 converter = Inverter(u_dc=np.sqrt(2)*400, C_dc=235e-6)
 mdl = model.DriveWithDiodeBridge(
     diode_bridge=diode_bridge,

@@ -48,7 +48,7 @@ k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 
 # Frequency converter with a diode bridge
-diode_bridge = DiodeBridge(L=2e-3, U_g=nom.U, f_g=nom.f)
+diode_bridge = DiodeBridge(L_dc=2e-3, U_g=nom.U, f_g=nom.f)
 converter = Inverter(u_dc=np.sqrt(2)*nom.U, C_dc=235e-6)
 mdl = model.DriveWithDiodeBridge(
     diode_bridge=diode_bridge,
