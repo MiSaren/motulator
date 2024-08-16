@@ -12,20 +12,18 @@ current controller.
 
 # %%
 from motulator.common.model import (
-    ACFilter,
     CarrierComparison,
     Inverter,
     Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
-    FilterPars,
     NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
 from motulator.grid.control import DCBusVoltageController
-from motulator.grid.utils import GridPars, plot_grid
+from motulator.grid.utils import FilterPars, GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.
@@ -43,13 +41,13 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 filter_par = FilterPars(L_fc=0.2*base.L)
 
 # Create AC filter with given parameters
-grid_filter = ACFilter(filter_par, grid_par)
+grid_filter = model.GridFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var = lambda t: base.u
 
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
+grid_model = model.StiffSource(w_g=grid_par.w_gN, e_g_abs=e_g_abs_var)
 
 # DC-bus parameters
 C_dc = 1e-3
@@ -58,7 +56,7 @@ C_dc = 1e-3
 converter = Inverter(u_dc=600, C_dc=C_dc)
 
 # Create system model
-mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+mdl = model.GridConverterSystem(converter, grid_filter, grid_model)
 
 # %%
 # Configure the control system.

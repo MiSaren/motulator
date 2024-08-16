@@ -11,19 +11,17 @@ PI-based current controller.
 
 # %%
 from motulator.common.model import (
-    ACFilter,
     CarrierComparison,
     Inverter,
     Simulation,
 )
 from motulator.common.utils import (
     BaseValues,
-    FilterPars,
     NominalValues,
 )
 from motulator.grid import model
 import motulator.grid.control.grid_following as control
-from motulator.grid.utils import GridPars, plot_grid
+from motulator.grid.utils import FilterPars, GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.
@@ -41,19 +39,19 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w)
 filter_par = FilterPars(L_fc=0.073*base.L, L_fg=0.073*base.L, C_f=0.043*base.C)
 
 # DC-bus parameters
-grid_filter = ACFilter(filter_par, grid_par)
+grid_filter = model.GridFilter(filter_par, grid_par)
 
 # AC-voltage magnitude (to simulate voltage dips or short-circuits)
 e_g_abs_var = lambda t: grid_par.u_gN
 
 # AC grid model with constant voltage magnitude and frequency
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=e_g_abs_var)
+grid_model = model.StiffSource(w_g=grid_par.w_gN, e_g_abs=e_g_abs_var)
 
 # Inverter model with constant DC voltage
 converter = Inverter(u_dc=650)
 
 # Create system model
-mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+mdl = model.GridConverterSystem(converter, grid_filter, grid_model)
 
 # Uncomment line below to enable the PWM model
 #mdl.pwm = CarrierComparison()

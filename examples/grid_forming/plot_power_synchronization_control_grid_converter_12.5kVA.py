@@ -11,19 +11,15 @@ the current oscillations.
 
 # %%
 from motulator.common.model import (
-    ACFilter,
     CarrierComparison,
     Inverter,
     Simulation,
 )
-from motulator.common.utils import (
-    BaseValues,
-    FilterPars,
-    NominalValues,
-)
+from motulator.common.utils import BaseValues, NominalValues
+
 from motulator.grid import model
 import motulator.grid.control.grid_forming as control
-from motulator.grid.utils import GridPars, plot_grid
+from motulator.grid.utils import FilterPars, GridPars, plot_grid
 
 # %%
 # Compute base values based on the nominal values.
@@ -43,16 +39,16 @@ grid_par = GridPars(u_gN=base.u, w_gN=base.w, L_g=0.74*base.L)
 filter_par = FilterPars(L_fc=0.15*base.L)
 
 # Create AC filter with given parameters
-grid_filter = ACFilter(filter_par, grid_par)
+grid_filter = model.GridFilter(filter_par, grid_par)
 
 # Grid voltage source with constant frequency and voltage magnitude
-grid_model = model.StiffSource(w_gN=grid_par.w_gN, e_g_abs=grid_par.u_gN)
+grid_model = model.StiffSource(w_g=grid_par.w_gN, e_g_abs=grid_par.u_gN)
 
 # Inverter with constant DC voltage
 converter = Inverter(u_dc=650)
 
 # Create system model
-mdl = model.StiffSourceAndGridFilterModel(converter, grid_filter, grid_model)
+mdl = model.GridConverterSystem(converter, grid_filter, grid_model)
 
 # Uncomment line below to enable the PWM model
 #mdl.pwm = CarrierComparison()

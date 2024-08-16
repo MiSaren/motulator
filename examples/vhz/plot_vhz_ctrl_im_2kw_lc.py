@@ -14,15 +14,15 @@ import matplotlib.pyplot as plt
 from motulator.common.model import (
     Simulation,
     Inverter,
-    ACFilter,
     CarrierComparison,
 )
 from motulator.common.utils import (
     BaseValues,
     NominalValues,
-    FilterPars,
 )
+
 from motulator.drive import model
+
 import motulator.drive.control.im as control
 from motulator.drive.utils import (
     InductionMachinePars,
@@ -39,9 +39,6 @@ base = BaseValues.from_nominal(nom, n_p=2)
 # %%
 # Create the system model. The filter parameters correspond to [#Sal2006]_.
 
-# Filter parameters
-filter_pars = FilterPars(L_fc=8e-3, C_f=9.9e-6, R_fc=.1)
-
 mdl_ig_par = InductionMachineInvGammaPars(
     n_p=2,
     R_s=3.7,
@@ -55,7 +52,7 @@ machine = model.InductionMachine(mdl_par)
 k = 1.1*nom.tau/(base.w/base.n_p)**2
 mechanics = model.StiffMechanicalSystem(J=.015, B_L=lambda w_M: k*np.abs(w_M))
 converter = Inverter(u_dc=540)
-lc_filter = ACFilter(filter_pars)
+lc_filter = model.LCFilter(L_f=8e-3, C_f=9.9e-6, R_f=.1)
 mdl = model.DriveWithLCFilter(converter, machine, mechanics, lc_filter)
 mdl.pwm = CarrierComparison()  # Enable the PWM model
 
