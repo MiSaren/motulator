@@ -13,7 +13,6 @@ current controller.
 import numpy as np
 
 from motulator.common.model import (
-    CarrierComparison,
     Inverter,
     Simulation,
 )

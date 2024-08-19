@@ -1,8 +1,5 @@
 """Common functions and classes for continuous-time system models."""
-from motulator.common.model._converter import (
-    DiodeBridge,
-    Inverter,
-)
+
 from motulator.common.model._simulation import (
     CarrierComparison,
     Delay,
@@ -10,6 +7,10 @@ from motulator.common.model._simulation import (
     Simulation,
     Subsystem,
     zoh,
+)
+from motulator.common.model._converter import (
+    DiodeBridge,
+    Inverter,
 )
 
 __all__ = [
