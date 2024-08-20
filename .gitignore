@@ -7,12 +7,17 @@ __pycache__/
 
 # Environments
 .venv
+.vscode
 
 # Sphinx documentation
 docs/source/_build/
 docs/source/auto_examples/
+docs/source/drive_examples/
+docs/source/grid_examples/
 docs/build/
 docs/source/autoapi/
 docs/source/sg_execution_times.rst
 
+# Other file types
 *.json
+*.DS_Store
