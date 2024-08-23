@@ -1,4 +1,4 @@
-"""Common control functions and classes for for induction machine drives."""
+"""Observer functions and classes for for induction machine drives."""
 
 from types import SimpleNamespace
 from dataclasses import dataclass, field, InitVar

@@ -21,7 +21,7 @@ from motulator.drive.utils import (
     TwoMassMechanicalSystemPars)
 
 # %%
-# Compute base values based on the nominal values (just for figures).
+# Compute base values based on the nominal values.
 
 nom = NominalValues(U=370, I=4.3, f=75, P=2.2e3, tau=14)
 base = BaseValues.from_nominal(nom, n_p=3)

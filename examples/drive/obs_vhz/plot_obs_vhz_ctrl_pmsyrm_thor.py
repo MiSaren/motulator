@@ -33,7 +33,7 @@ from motulator.drive.utils import (
     import_syre_data, plot_flux_vs_current, plot_flux_map)
 
 # %%
-# Compute base values based on the nominal values (just for figures).
+# Compute base values based on the nominal values.
 
 nom = NominalValues(U=220, I=15.6, f=85, P=5.07e3, tau=19)
 base = BaseValues.from_nominal(nom, n_p=2)

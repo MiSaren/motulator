@@ -16,7 +16,7 @@ from motulator.drive.utils import (
     BaseValues, NominalValues, plot, SynchronousMachinePars)
 
 # %%
-# Compute base values based on the nominal values (just for figures).
+# Compute base values based on the nominal values.
 
 nom = NominalValues(U=220, I=15.6, f=85, P=5.07e3, tau=19)
 base = BaseValues.from_nominal(nom, n_p=2)

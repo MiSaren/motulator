@@ -10,7 +10,7 @@ import numpy as np
 
 from motulator.drive.control import DriveControlSystem, SpeedController
 from motulator.common.control import ComplexPIController
-from motulator.drive.control.im._common import Observer, ObserverCfg
+from motulator.drive.control.im._observer import Observer, ObserverCfg
 from motulator.drive.utils import InductionMachineInvGammaPars
 
 
