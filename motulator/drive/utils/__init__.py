@@ -1,5 +1,5 @@
 """This module contains utility functions for machine drives."""
-from motulator.drive.utils._helpers import (
+from motulator.drive.utils._utils import (
     InductionMachineInvGammaPars,
     InductionMachinePars,
     SynchronousMachinePars,
@@ -15,11 +15,13 @@ from motulator.drive.utils._flux_maps import (
     plot_flux_vs_current,
     plot_torque_map,
 )
+from motulator.common.utils._helpers import (
+    Sequence,
+    Step,
+)
 from motulator.common.utils._utils import (
     BaseValues,
     NominalValues,
-    Sequence,
-    Step,
 )
 
 __all__ = [

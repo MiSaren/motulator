@@ -1,5 +1,5 @@
 """Common utilities."""
-from motulator.common.utils._utils import (
+from motulator.common.utils._helpers import (
     abc2complex,
     complex2abc,
     Sequence,

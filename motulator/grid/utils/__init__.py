@@ -1,9 +1,12 @@
 """This module contains utility functions for grid converters."""
 
+from motulator.common.utils._helpers import (
+    Sequence,
+    Step,
+)
 from motulator.common.utils._utils import (
     BaseValues,
     NominalValues,
-    Step,
 )
 from motulator.grid.utils._plots import (
     plot,
@@ -21,5 +24,6 @@ __all__ = [
     "NominalValues",
     "plot",
     "plot_voltage_vector",
+    "Sequence",
     "Step",
 ]
