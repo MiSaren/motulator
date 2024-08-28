@@ -106,7 +106,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
             "--",
             label=r"$u_\mathrm{dc,ref}$",
             ds="steps-post")
-    ax1.legend()
+    ax1.legend(loc="right")
     ax1.set_xlim(t_span)
     ax1.set_xticklabels([])
 
@@ -115,7 +115,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
         mdl.ac_filter.data.t,
         i_g_abc/base.i,
         label=[r"$i_\mathrm{ga}$", r"$i_\mathrm{gb}$", r"$i_\mathrm{gc}$"])
-    ax2.legend()
+    ax2.legend(loc="right")
     ax2.set_xlim(t_span)
     ax2.set_xticklabels([])
 
@@ -145,7 +145,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
             "--",
             label=r"$\theta_\mathrm{c}$",
             ds="steps-post")
-    ax3.legend()
+    ax3.legend(loc="right")
     ax3.set_xlim(t_span)
 
     # Add axis labels
@@ -188,7 +188,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
         "--",
         label=r"$q_\mathrm{g,ref}$",
         ds="steps-post")
-    ax1.legend()
+    ax1.legend(loc="right")
     ax1.set_xlim(t_span)
     ax1.set_xticklabels([])
 
@@ -215,7 +215,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
         "--",
         label=r"$i_\mathrm{cq,ref}$",
         ds="steps-post")
-    ax2.legend()
+    ax2.legend(loc="right")
     ax2.set_xlim(t_span)
     ax2.set_xticklabels([])
 
@@ -254,7 +254,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
             np.abs(mdl.ac_source.data.e_gs)/base.u,
             "k--",
             label=r"$e_\mathrm{g}$")
-    ax3.legend()
+    ax3.legend(loc="right")
     ax3.set_xlim(t_span)
 
     # Add axis labels
