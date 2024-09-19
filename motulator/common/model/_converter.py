@@ -99,6 +99,98 @@ class VoltageSourceConverter(Subsystem):
         data.i_dc_int = 1.5*np.real(data.q_cs*np.conj(data.i_cs))
 
 
+class ThreeLevelConverter(VoltageSourceConverter):
+    """
+    Lossless three-phase, three-level voltage-source converter.
+
+    Parameters
+    ----------
+    u_dc : float
+        DC-bus voltage (V). This value is used as an initial condition for the
+        voltage across both capacitors.
+    C_dc1 : float
+        DC-bus capacitance (F), positive side.
+    C_dc2 : float
+        DC-bus capacitance (F), negative side.
+    i_dc : callable
+        External current (A) fed to the DC bus.
+
+    """
+
+    def __init__(self, u_dc, C_dc1, C_dc2, i_dc):
+        super().__init__(u_dc)
+        self.par = SimpleNamespace(C_dc1=C_dc1, C_dc2=C_dc2)
+        self.state = SimpleNamespace(u_dc1=u_dc/2, u_dc2=u_dc/2)
+        self.sol_states = SimpleNamespace(u_dc1=[], u_dc2=[])
+        self.i_dc = i_dc
+        self.inp.q_p, self.inp.q_o = []
+        self.inp.i_dc = i_dc(0)
+
+    @property
+    def u_dc(self):
+        """DC-bus voltage (V)."""
+        return self.state.u_dc1.real + self.state.u_dc2.real
+
+    @property
+    def u_cs(self):
+        """AC-side voltage (V)."""
+        state, inp = self.state, self.inp
+        u_a = (inp.q_p[0] + inp.q_o[0])*state.u_dc1 + inp.q_o[0]*state.u_dc2
+        u_b = (inp.q_p[1] + inp.q_o[1])*state.u_dc1 + inp.q_o[1]*state.u_dc2
+        u_c = (inp.q_p[2] + inp.q_o[2])*state.u_dc1 + inp.q_o[2]*state.u_dc2
+        return abc2complex([u_a, u_b, u_c])
+
+    @property
+    def i_p(self):
+        """Converter-side positive DC current (A)."""
+        i_abc = complex2abc(self.inp.i_cs)
+        q_p = self.inp.q_p
+        return (q_p[0] == 1)*i_abc[0] + (q_p[1] == 1)*i_abc[1] + (
+            q_p[2] == 1)*i_abc[2]
+
+    @property
+    def i_o(self):
+        """Converter-side neutral-point current (A)."""
+        i_abc = complex2abc(self.inp.i_cs)
+        q_o = self.inp.q_o
+        return (q_o[0] == .5)*i_abc[0] + (q_o[1] == .5)*i_abc[1] + (
+            q_o[2] == .5)*i_abc[2]
+
+    def set_outputs(self, _):
+        """Set output variables."""
+        self.out.u_cs = self.u_cs
+        self.out.u_dc = self.u_dc
+
+    def set_inputs(self, t):
+        """Set input variables."""
+        # External DC-bus current
+        self.inp.i_dc = self.i_dc(t)
+        # Switching state vectors for DC-bus positive and neutral points
+        q_abc = self.inp.q_cs
+        self.inp.q_p = [q_abc[0] == 1, q_abc[1] == 1, q_abc[2] == 1]
+        self.inp.q_o = [q_abc[0] == .5, q_abc[1] == .5, q_abc[2] == .5]
+
+    def rhs(self):
+        """Compute the state derivatives."""
+        d_u_dc1 = (self.inp.i_dc - self.i_p)/self.par.C_dc1
+        d_u_dc2 = (self.inp.i_dc - self.i_p - self.i_o)/self.par.C_dc2
+        return [d_u_dc1, d_u_dc2]
+
+    def post_process_states(self):
+        """Post-process data."""
+        data = self.data
+        data.u_dc1, data.u_dc2 = data.u_dc1.real, data.u_dc2.real
+        u_a = (data.q_cs[0] == 1)*data.u_dc1 - (data.q_cs[0] == .5)*data.u_dc2
+        u_b = (data.q_cs[1] == 1)*data.u_dc1 - (data.q_cs[1] == .5)*data.u_dc2
+        u_c = (data.q_cs[2] == 1)*data.u_dc1 - (data.q_cs[2] == .5)*data.u_dc2
+        data.u_cs = abc2complex([u_a, u_b, u_c])
+
+    def post_process_with_inputs(self):
+        """Post-process data with inputs."""
+        data = self.data
+        #data.i_o =
+
+
 # %%
 class FrequencyConverter(VoltageSourceConverter):
     """
