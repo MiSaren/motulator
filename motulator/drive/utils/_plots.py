@@ -302,11 +302,11 @@ def plot_extra(sim, base=None, t_span=None):
 
     # Plots the DC bus and grid-side variables (if exist)
     try:
-        mdl.converter.data.i_L
+        mdl.converter.data.i_gs
     except AttributeError:
-        mdl.converter.data.i_L = None
+        mdl.converter.data.i_gs = None
 
-    if mdl.converter.data.i_L is not None:
+    if mdl.converter.data.i_gs is not None:
         fig2, (ax1, ax2) = plt.subplots(2, 1)
 
         # Subplot 1: voltages
@@ -329,7 +329,7 @@ def plot_extra(sim, base=None, t_span=None):
         # Subplot 2: currents
         ax2.plot(
             mdl.converter.data.t,
-            mdl.converter.data.i_L/base.i,
+            mdl.converter.data.i_dc/base.i,
             label=r"$i_\mathrm{L}$")
         ax2.plot(
             mdl.converter.data.t,

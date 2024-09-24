@@ -7,6 +7,8 @@ drive, equipped with a diode bridge rectifier.
 
 """
 # %%
+import time
+
 from motulator.drive import model
 import motulator.drive.control.sm as control
 from motulator.drive.utils import (
@@ -28,7 +30,10 @@ machine = model.SynchronousMachine(mdl_par)
 mechanics = model.StiffMechanicalSystem(J=.015)
 
 # Frequency converter with a diode bridge
-converter = model.FrequencyConverter(C_dc=235e-6, L_dc=2e-3, U_g=400, f_g=50)
+# converter = model.FrequencyConverter(C_dc=235e-6, L_dc=2e-3, U_g=400, f_g=50)
+# TODO: Testing the FrequencyConverterWithACInductor model
+converter = model.FrequencyConverterWithACInductor(
+    C_dc=235e-6, L_g=1e-3, U_g=400, f_g=50, G_dc=1e-3, i_thr=.05)
 mdl = model.Drive(converter, machine, mechanics)
 
 mdl.pwm = model.CarrierComparison()  # Enable the PWM model
@@ -53,10 +58,16 @@ mdl.mechanics.tau_L = lambda t: (t > .6)*nom.tau
 # %%
 # Create the simulation object and simulate it.
 
+start_time = time.time()
+
 # Simulate the system
 sim = model.Simulation(mdl, ctrl)
 sim.simulate(t_stop=1)
 
+stop_time = time.time()
+print(f"Simulation time: {stop_time-start_time:.2f} s")
+
 # Plot results in per-unit values
 plot(sim, base)
 plot_extra(sim, base, t_span=(.8, .825))
+# plot_extra(sim, base, t_span=(.1, .125))

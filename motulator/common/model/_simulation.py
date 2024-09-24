@@ -253,9 +253,17 @@ class Simulation:
                     state0 = self.mdl.get_initial_values()
 
                     # Integrate over t_span
+                    # TODO: Improve the user interface
                     t_span = (self.mdl.t0, self.mdl.t0 + t_step)
                     sol = solve_ivp(
-                        self.mdl.rhs, t_span, state0, max_step=max_step)
+                        self.mdl.rhs,
+                        t_span,
+                        state0,
+                        max_step=max_step,
+                        method="RK23",  # For testing purposes, was "RK45"
+                        rtol=1e-4,
+                        atol=1e-6,
+                        t_eval=t_span)
 
                     # Set the new initial time
                     self.mdl.t0 = t_span[-1]

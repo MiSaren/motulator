@@ -1,9 +1,9 @@
 """
 Continuous-time models for converters.
 
-A three-phase voltage-source inverter with optional DC-bus dynamics is
-modelled, along with a six-pulse diode bridge rectifier supplied from a stiff
-grid. Complex space vectors are used also for duty ratios and switching states,
+A three-phase voltage-source inverter with optional DC-bus dynamics is modeled, 
+along with a six-pulse diode bridge rectifier supplied from a stiff grid. 
+Complex space vectors are used also for duty ratios and switching states,
 wherever applicable.
 
 """
@@ -27,14 +27,16 @@ class VoltageSourceConverter(Subsystem):
         used as the initial condition.
     C_dc : float, optional
         DC-bus capacitance (F). The default is None.
+    G_dc : float, optional
+        Conductance (S) of the DC-bus resistor. The default is 0.
     i_dc : callable, optional
         External current (A) fed to the DC bus. Needed if `C_dc` is not None.
 
     """
 
-    def __init__(self, u_dc, C_dc=None, i_dc=lambda t: None):
+    def __init__(self, u_dc, C_dc=None, G_dc=0, i_dc=lambda t: None):
         super().__init__()
-        self.par = SimpleNamespace(u_dc=u_dc, C_dc=C_dc)
+        self.par = SimpleNamespace(u_dc=u_dc, C_dc=C_dc, G_dc=G_dc)
         self.inp = SimpleNamespace(q_cs=None, i_cs=0j)
         if C_dc is not None:
             self.state = SimpleNamespace(u_dc=u_dc)
@@ -73,7 +75,9 @@ class VoltageSourceConverter(Subsystem):
     def rhs(self):
         """Compute the state derivatives."""
         if self.par.C_dc is not None:
-            d_u_dc = (self.inp.i_dc - self.i_dc_int)/self.par.C_dc
+            d_u_dc = (
+                self.inp.i_dc - self.i_dc_int -
+                self.par.G_dc*self.out.u_dc)/self.par.C_dc
             return [d_u_dc]
         return []
 
@@ -102,7 +106,7 @@ class VoltageSourceConverter(Subsystem):
 # %%
 class FrequencyConverter(VoltageSourceConverter):
     """
-    Frequency converter with a six-pulse diode bridge.
+    Frequency converter with a six-pulse diode bridge and a stiff grid.
 
     A three-phase diode bridge rectifier with a DC-bus inductor is modeled. The
     diode bridge is connected to the voltage-source inverter. The inductance of
@@ -118,13 +122,19 @@ class FrequencyConverter(VoltageSourceConverter):
         Grid voltage (V, line-line, rms).
     f_g : float
         Grid frequency (Hz).
+    G_dc : float, optional
+        Conductance (S) of the DC-bus resistor. The default is 0.
 
     """
 
-    def __init__(self, C_dc, L_dc, U_g, f_g):
+    def __init__(self, C_dc, L_dc, U_g, f_g, G_dc=0):
         super().__init__(np.sqrt(2)*U_g, C_dc)
         self.par = SimpleNamespace(
-            L_dc=L_dc, C_dc=C_dc, w_g=2*np.pi*f_g, u_g=np.sqrt(2/3)*U_g)
+            L_dc=L_dc,
+            C_dc=C_dc,
+            G_dc=G_dc,
+            w_g=2*np.pi*f_g,
+            u_g=np.sqrt(2/3)*U_g)
         self.state.i_L = 0
         self.state.exp_j_theta_g = complex(1)
         self.sol_states.i_L, self.sol_states.exp_j_theta_g = [], []
@@ -134,8 +144,8 @@ class FrequencyConverter(VoltageSourceConverter):
         super().set_outputs(t)
         self.out.i_L = self.state.i_L.real
 
-    def set_inputs(self, t):
-        """Set output variables."""
+    def set_inputs(self, _):
+        """Set input variables."""
         self.inp.i_dc = self.out.i_L
         self.inp.u_dc = self.out.u_dc
 
@@ -174,3 +184,94 @@ class FrequencyConverter(VoltageSourceConverter):
             (np.amin(data.u_g_abc, axis=0) == data.u_g_abc).astype(int))
         # Grid current space vector
         data.i_gs = abc2complex(data.q_g_abc)*data.i_L
+        data.i_dc = data.i_L  # For plotting compatibility
+
+
+# %%
+class FrequencyConverterWithACInductor(VoltageSourceConverter):
+    """
+    Frequency converter with a six-pulse diode bridge and an AC-side inductor.
+
+    A three-phase diode bridge rectifier with an AC-side inductor is modeled 
+    [#DiG2010]_. The diode bridge is connected to the voltage-source inverter. 
+
+    Parameters
+    ----------
+    C_dc : float
+        DC-bus capacitance (F).
+    L_g : float
+        AC-side inductance (H).
+    U_g : float
+        Grid voltage (V, line-line, rms).
+    f_g : float
+        Grid frequency (Hz).
+    G_dc : float, optional
+        Conductance (S) of the DC-bus resistor. The default is 0. 
+    R_g : float, optional
+        Series resistance (Ω) of the AC-side inductance. The default is 0.
+    i_thr : float, optional
+        Threshold current (A) for the diode bridge switching function, defined 
+        as `0.5 + (1/pi)*atan(i/i_thr)`. The default is 0.01.
+
+    References
+    ----------
+    .. [#DiG2008] Di Gerlando, Foglia, Iacchetti, Perini, "Analytical model and 
+       implementation by equations of three-phase diode bridge rectifiers 
+       operation," Proc. ICEM, 2010, 
+       https://doi.org/10.1109/ICELMACH.2010.5608272 
+
+    """
+
+    def __init__(self, C_dc, L_g, U_g, f_g, G_dc=0, R_g=0, i_thr=.01):
+        super().__init__(np.sqrt(2)*U_g, C_dc)
+        self.par = SimpleNamespace(
+            L_g=L_g,
+            R_g=R_g,
+            C_dc=C_dc,
+            G_dc=G_dc,
+            w_g=2*np.pi*f_g,
+            u_g=np.sqrt(2/3)*U_g,
+            i_thr=i_thr)
+        self.state.i_gs = 0j
+        self.state.exp_j_theta_g = complex(1)
+        self.sol_states.i_gs, self.sol_states.exp_j_theta_g = [], []
+
+    def _q(self, i):
+        """Switching function for the diode bridge."""
+        return .5 + (1/np.pi)*np.atan(i/self.par.i_thr)
+        #return .5 + .5*np.sign(i)
+
+    def set_outputs(self, t):
+        """Set output variables."""
+        super().set_outputs(t)
+        # Diode bridge switching-state space vector
+        i_g_abc = complex2abc(self.state.i_gs)
+        self.out.q_gs = abc2complex([self._q(i) for i in i_g_abc])
+        # DC current at the output of the diode bridge
+        self.out.i_dc = 1.5*np.real(self.out.q_gs*np.conj(self.state.i_gs))
+        print(t)
+
+    def set_inputs(self, _):
+        """Set input variables."""
+        self.inp.i_dc = self.out.i_dc
+        self.inp.u_dc = self.out.u_dc
+
+    def rhs(self):
+        """Compute the state derivatives."""
+        par, out, state = self.par, self.out, self.state
+        # Grid voltage
+        u_gs = par.u_g*self.state.exp_j_theta_g
+        # State derivatives
+        d_exp_j_theta_g = 1j*par.w_g*self.state.exp_j_theta_g
+        d_i_gs = (u_gs - par.R_g*state.i_gs - out.q_gs*self.inp.u_dc)/par.L_g
+        return super().rhs() + [d_i_gs, d_exp_j_theta_g]
+
+    def post_process_with_inputs(self):
+        """Post-process data with inputs."""
+        super().post_process_with_inputs()
+        data = self.data
+        data.u_gs = self.par.u_g*data.exp_j_theta_g
+        data.u_g_abc = complex2abc(data.u_gs)
+        data.i_g_abc = complex2abc(data.i_gs)
+        data.i_dc = sum(self._q(i)*i for i in data.i_g_abc)
+        data.u_di = data.u_dc  # For plotting compatibility

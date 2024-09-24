@@ -8,6 +8,7 @@ parameters in this example yield open-loop V/Hz control.
 """
 # %%
 
+import time
 import numpy as np
 
 from motulator.drive import model
@@ -60,8 +61,13 @@ mdl.mechanics.tau_L = lambda t: (t > 1)*.2*nom.tau
 # %%
 # Create the simulation object and simulate it.
 
+start_time = time.time()
+
 sim = model.Simulation(mdl, ctrl)
-sim.simulate(t_stop=1.5)
+sim.simulate(t_stop=1.5)  # 1.5
+
+stop_time = time.time()
+print(f"Simulation time: {stop_time-start_time:.2f} s")
 
 # %%
 # Plot results in per-unit values.
