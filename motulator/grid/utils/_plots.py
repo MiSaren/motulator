@@ -164,8 +164,8 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
     ax3.set_xlabel("Time (s)")
 
     fig.align_ylabels()
-    plt.tight_layout()
-    plt.grid()
+    #plt.tight_layout()
+    #plt.grid()
     ax3.grid()
     #plt.show()
 
@@ -270,9 +270,54 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
     ax3.set_xlabel("Time (s)")
 
     fig.align_ylabels()
+    ax3.grid()
+
+    # %%
+    # Third figure (only if three-level converter is used)
+    try:
+        i_o = mdl.converter.data.i_o
+
+        fig, (ax1, ax2) = plt.subplots(2, 1)
+
+        # Subplot 1: Capacitor voltages
+        ax1.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.u_dc1/base.u,
+            label=r"$u_\mathrm{dc1}$")
+        ax1.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.u_dc2/base.u,
+            label=r"$u_\mathrm{dc2}$")
+        ax1.legend()
+        ax1.set_xlim(t_span)
+        ax1.set_xticklabels([])
+
+        # Subplot 2: Converter dc-side currents
+        ax2.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.i_P/base.i,
+            label=r"$i_\mathrm{P}$")
+        ax2.plot(mdl.converter.data.t, i_o/base.i, label=r"$i_\mathrm{o}$")
+        ax2.legend()
+        ax2.set_xlim(t_span)
+
+        # Add axis labels
+        if pu_vals:
+            ax1.set_ylabel("Voltage (p.u.)")
+            ax2.set_ylabel("Current (p.u.)")
+        else:
+            ax1.set_ylabel("Voltage (V)")
+            ax2.set_ylabel("Current (A)")
+        ax2.set_xlabel("Time (s)")
+
+        fig.align_ylabels()
+        ax2.grid()
+
+    except AttributeError:
+        pass
+
     plt.tight_layout()
     plt.grid()
-    ax3.grid()
     plt.show()
 
 
