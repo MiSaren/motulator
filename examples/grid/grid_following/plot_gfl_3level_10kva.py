@@ -31,12 +31,12 @@ par = ACFilterPars(L_fc=.2*base.L)
 ac_filter = model.ACFilter(par)
 ac_source = model.ThreePhaseVoltageSource(w_g=base.w, abs_e_g=base.u)
 # Inverter with constant DC voltage
-converter = model.VoltageSourceConverter(u_dc=650, C_dc=1e-3)
+converter = model.ThreeLevelConverter(u_dc=650, C_dc1=.5e-3, C_dc2=.5e-3)
 
 # Create system model
 mdl = model.GridConverterSystem(converter, ac_filter, ac_source)
 mdl.pwm = model.CarrierComparison(
-    return_complex=True)  # Uncomment to enable the PWM model
+    return_complex=False, level=3)  # Uncomment to enable the PWM model
 
 # %%
 # Configure the control system.
