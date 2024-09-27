@@ -30,6 +30,8 @@ class PWM:
         Select one of the following overmodulation methods: minimum-magnitude-
         error ("MME"); minimum-phase-error ("MPE"); six-step ("six_step"). The
         default is "MME".
+    level : int, optional
+        Number of voltage levels in the converter. The default is 2.
 
     References
     ----------
@@ -43,9 +45,10 @@ class PWM:
 
     """
 
-    def __init__(self, k_comp=1.5, u_cs0=0, overmodulation="MME"):
+    def __init__(self, k_comp=1.5, u_cs0=0, overmodulation="MME", level=2):
         self.k_comp = k_comp
         self.overmodulation = overmodulation
+        self.level = level
         self.realized_voltage = u_cs0
         self._old_u_cs = u_cs0
 
@@ -125,6 +128,14 @@ class PWM:
         # Zero-sequence voltage resulting in space-vector PWM
         u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
         u_abc -= u_0
+
+        # Add another zero-sequence voltage in case of a multi-level inverter
+        if self.level >= 3:
+            shift = u_abc >= (u_dc/2)
+            u_abc = np.mod(u_abc, u_dc/2)
+            u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
+            u_abc = u_abc + u_dc/(2*self.level - 2) - u_0
+            u_abc = u_abc + shift*u_dc/2
 
         if self.overmodulation == "MPE":
             m = (2./u_dc)*np.amax(u_abc)
@@ -471,6 +482,8 @@ class ControlSystem(ABC):
     ----------
     T_s : float
         Sampling period (s).
+    level : int, optional
+        Number of voltage levels in the converter. The default is 2.
 
     Attributes
     ----------
@@ -483,11 +496,11 @@ class ControlSystem(ABC):
 
     """
 
-    def __init__(self, T_s):
+    def __init__(self, T_s, level=2):
         self.clock = Clock()
         self._data = SimpleNamespace()  # Private data
         self.data = SimpleNamespace()  # Public data
-        self.pwm = PWM()
+        self.pwm = PWM(level=level)
         self.T_s = T_s
 
     @abstractmethod
