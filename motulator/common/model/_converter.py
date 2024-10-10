@@ -294,3 +294,42 @@ class FrequencyConverter(VoltageSourceConverter):
             (np.amin(data.u_g_abc, axis=0) == data.u_g_abc).astype(int))
         # Grid current space vector
         data.i_gs = abc2complex(data.q_g_abc)*data.i_L
+
+
+class DCPowerSource(Subsystem):
+    """
+    Constant DC power source.
+
+    A constant DC power source is modeled as a voltage-controlled current
+    source. The output power p_dc=u_dc*i_dc is kept constant.
+
+    Parameters
+    ----------
+    p_dc : float | callable
+        Output power (W).
+    u_dc : float
+        DC-bus voltage (V). Needed to set the initial value of current.
+    
+    """
+
+    def __init__(self, p_dc, u_dc):
+        super().__init__()
+        self.p_dc = p_dc
+        self.inp.p_dc = p_dc(0) if callable(p_dc) else p_dc
+        self.inp.u_dc = u_dc
+
+    def set_inputs(self, t):
+        """Set input variables."""
+        self.inp.p_dc = self.p_dc(t) if callable(self.p_dc) else self.p_dc
+
+    def set_outputs(self, _):
+        """Set output variables."""
+        self.out.i_dc = self.inp.p_dc/self.inp.u_dc
+
+    def post_process_direct_feedthrough(self):
+        """Post-process direct feedthrough data."""
+        if callable(self.p_dc):
+            self.data.p_dc = self.p_dc(self.data.t)
+        else:
+            self.data.p_dc = np.full(np.size(self.data.t), self.p_dc)
+        self.data.i_dc = self.data.p_dc/self.data.u_dc

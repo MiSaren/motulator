@@ -405,6 +405,12 @@ class Model(ABC):
             if hasattr(subsystem, "post_process_states"):
                 subsystem.post_process_states()
 
+    def post_process_direct_feedthrough(self):
+        """Post-process the direct feedthrough data."""
+        for subsystem in self.subsystems:
+            if hasattr(subsystem, "post_process_direct_feedthrough"):
+                subsystem.post_process_direct_feedthrough()
+
     def post_process_with_inputs(self):
         """Post-process after the inputs have been added."""
         for subsystem in self.subsystems:
