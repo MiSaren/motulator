@@ -263,7 +263,7 @@ class Simulation:
             t_steps, q_cs = self.mdl.pwm(T_s, d_c_abc)
 
             # Select the solver
-            if kwargs.get("method") == ("Radau" or "LSODA"):
+            if kwargs.get("method") in ["Radau", "LSODA"]:
                 solver = self.complex_ode
             else:
                 solver = solve_ivp

@@ -249,7 +249,6 @@ class FrequencyConverterWithACInductor(VoltageSourceConverter):
         self.out.q_gs = abc2complex([self._q(i) for i in i_g_abc])
         # DC current at the output of the diode bridge
         self.out.i_dc = 1.5*np.real(self.out.q_gs*np.conj(self.state.i_gs))
-        print(t)
 
     def set_inputs(self, _):
         """Set input variables."""
