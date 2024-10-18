@@ -33,7 +33,7 @@ mechanics = model.StiffMechanicalSystem(J=.015)
 # converter = model.FrequencyConverter(C_dc=235e-6, L_dc=2e-3, U_g=400, f_g=50)
 # TODO: Testing the FrequencyConverterWithACInductor model
 converter = model.FrequencyConverterWithACInductor(
-    C_dc=235e-6, L_g=1e-3, U_g=400, f_g=50, G_dc=1e-3, i_thr=.05)
+    C_dc=235e-6, L_g=1e-3, U_g=400, f_g=50, G_dc=0, i_thr=.05)
 mdl = model.Drive(converter, machine, mechanics)
 
 mdl.pwm = model.CarrierComparison()  # Enable the PWM model
@@ -59,10 +59,9 @@ mdl.mechanics.tau_L = lambda t: (t > .6)*nom.tau
 # Create the simulation object and simulate it.
 
 start_time = time.time()
-
 # Simulate the system
 sim = model.Simulation(mdl, ctrl)
-sim.simulate(t_stop=1)
+sim.simulate(t_stop=1, method='Radau', atol=1e-4, rtol=1e-3)
 
 stop_time = time.time()
 print(f"Simulation time: {stop_time-start_time:.2f} s")

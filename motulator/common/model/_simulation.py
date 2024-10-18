@@ -203,7 +203,14 @@ class Simulation:
         self.mdl = mdl
         self.ctrl = ctrl
 
-    def simulate(self, t_stop=1, max_step=np.inf):
+    def simulate(
+            self,
+            t_stop=1,
+            max_step=np.inf,
+            method="RK45",
+            atol=1e-6,
+            rtol=1e-3,
+            t_eval=None):
         """
         Solve the continuous-time system model and call the control system.
 
@@ -213,15 +220,28 @@ class Simulation:
             Simulation stop time. The default is 1.
         max_step : float, optional
             Max step size of the solver. The default is inf.
+        method : str, optional RK45 | RK23 | BDF | LSODA | Radau
+            Integration method. The default is "RK45". For stiff systems, Radau or LSODA are recommended. More information can be found in the `solve_ivp` documentation. Please note that the `complex_ode` method is used for the Radau and LSODA methods, that is, the complex-valued ODE is solved using a real-valued solver.
+        atol : float, optional
+            Absolute tolerance. The default is 1e-6.
+        rtol : float, optional
+            Relative tolerance. The default is 1e-3.
+        t_eval : array_like, optional
+            Times at which to store the computed solution, must be sorted and lie within t_span. If None (default), use points selected by the solver.
 
         Notes
         -----
-        Other options of `solve_ivp` could be easily used if needed, but, for
-        simplicity, only `max_step` is included as an option of this method.
+        Other options of `solve_ivp` could be easily used if needed, but, for simplicity, only `max_step`, `method`, `atol, and `rtol` are included as an option of this method.
 
         """
         try:
-            self._simulation_loop(t_stop, max_step)
+            self._simulation_loop(
+                t_stop,
+                max_step=max_step,
+                method=method,
+                rtol=rtol,
+                atol=atol,
+                t_eval=t_eval)
         except FloatingPointError:
             print(f"Invalid value encountered at {self.mdl.t0:.2f} seconds.")
         # Post-process the solution data
@@ -229,7 +249,7 @@ class Simulation:
         self.ctrl.post_process()
 
     @np.errstate(invalid="raise")
-    def _simulation_loop(self, t_stop, max_step):
+    def _simulation_loop(self, t_stop, **kwargs):
         """Run the main simulation loop."""
         while self.mdl.t0 <= t_stop:
 
@@ -242,6 +262,12 @@ class Simulation:
             # Carrier comparison
             t_steps, q_cs = self.mdl.pwm(T_s, d_c_abc)
 
+            # Select the solver
+            if kwargs.get("method") == ("Radau" or "LSODA"):
+                solver = self.complex_ode
+            else:
+                solver = solve_ivp
+
             # Loop over the sampling period T_s
             for i, t_step in enumerate(t_steps):
 
@@ -253,17 +279,10 @@ class Simulation:
                     state0 = self.mdl.get_initial_values()
 
                     # Integrate over t_span
-                    # TODO: Improve the user interface
                     t_span = (self.mdl.t0, self.mdl.t0 + t_step)
-                    sol = solve_ivp(
-                        self.mdl.rhs,
-                        t_span,
-                        state0,
-                        max_step=max_step,
-                        method="RK23",  # For testing purposes, was "RK45"
-                        rtol=1e-4,
-                        atol=1e-6,
-                        t_eval=t_span)
+
+                    # Solve the ODE
+                    sol = solver(self.mdl.rhs, t_span, state0, **kwargs)
 
                     # Set the new initial time
                     self.mdl.t0 = t_span[-1]
@@ -284,6 +303,63 @@ class Simulation:
         """
         savemat(name + "_mdl_data" + ".mat", self.mdl.data)
         savemat(name + "_ctrl_data" + ".mat", self.ctrl.data)
+
+    def complex_ode(self, rhs, t_span, y0, **kwargs):
+        """
+        Solve a complex-valued ODE using a real-valued solver.
+
+        Parameters
+        ----------
+        rhs : callable
+            Right-hand side of the ODE. Must accept (t, y) and return dy/dt.
+        t_span : tuple
+            Interval of integration (t0, tf).
+        y0 : array_like
+            Initial state.
+        kwargs : dict
+            Additional arguments to pass to solve_ivp.
+
+        Returns
+        -------
+        sol : Bunch object with the following fields defined:
+            t : ndarray, shape (n_points,)
+                Time points.
+            y : ndarray, shape (n, n_points)
+                Solution values at t.
+        """
+
+        # Separate the real and imaginary parts of the initial state
+        y0 = np.asarray(y0)
+        y0_real = np.concatenate([y0.real, y0.imag])
+
+        def real_rhs(t, y):
+            # Combine the real and imaginary parts of the state
+            n = len(y) // 2
+            y_complex = np.empty(n, dtype=np.complex128)
+            y_complex.real = y[:n]
+            y_complex.imag = y[n:]
+
+            # Compute the complex derivative
+            dy_complex = np.asarray(rhs(t, y_complex))
+
+            # Separate the real and imaginary parts of the derivative
+            dy_real = np.empty(2*n, dtype=np.float64)
+            dy_real[:n] = dy_complex.real
+            dy_real[n:] = dy_complex.imag
+            return dy_real
+
+        # Solve the real-valued system
+        sol = solve_ivp(real_rhs, t_span, y0_real, **kwargs)
+
+        # Combine the real and imaginary parts of the solution
+        n = sol.y.shape[0] // 2
+        y_complex = np.empty((n, sol.y.shape[1]), dtype=np.complex128)
+        y_complex.real = sol.y[:n]
+        y_complex.imag = sol.y[n:]
+
+        # Create a new solution object with the complex solution
+        sol.y = y_complex
+        return sol
 
 
 # %%
