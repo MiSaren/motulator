@@ -210,7 +210,7 @@ class Simulation:
             method="RK45",
             atol=1e-6,
             rtol=1e-3,
-            t_eval=None):
+            N_eval=None):
         """
         Solve the continuous-time system model and call the control system.
 
@@ -226,12 +226,11 @@ class Simulation:
             Absolute tolerance. The default is 1e-6.
         rtol : float, optional
             Relative tolerance. The default is 1e-3.
-        t_eval : array_like, optional
-            Times at which to store the computed solution, must be sorted and lie within t_span. If None (default), use points selected by the solver.
-
+        eval_points : integer, optional
+            Defines how many points are stored between the time steps. If None (default), points selected by the solver are stored.
         Notes
         -----
-        Other options of `solve_ivp` could be easily used if needed, but, for simplicity, only `max_step`, `method`, `atol, and `rtol` are included as an option of this method.
+        Other options of `solve_ivp` could be easily used if needed, but, for simplicity, only `max_step`, `method`, `atol, `rtol` , and `eval_points` are included as an option of this method.
 
         """
         try:
@@ -241,7 +240,7 @@ class Simulation:
                 method=method,
                 rtol=rtol,
                 atol=atol,
-                t_eval=t_eval)
+                N_eval=N_eval)
         except FloatingPointError:
             print(f"Invalid value encountered at {self.mdl.t0:.2f} seconds.")
         # Post-process the solution data
@@ -249,7 +248,7 @@ class Simulation:
         self.ctrl.post_process()
 
     @np.errstate(invalid="raise")
-    def _simulation_loop(self, t_stop, **kwargs):
+    def _simulation_loop(self, t_stop, max_step, method, rtol, atol, N_eval):
         """Run the main simulation loop."""
         while self.mdl.t0 <= t_stop:
 
@@ -263,7 +262,7 @@ class Simulation:
             t_steps, q_cs = self.mdl.pwm(T_s, d_c_abc)
 
             # Select the solver
-            if kwargs.get("method") in ["Radau", "LSODA"]:
+            if method in ["Radau", "LSODA"]:
                 solver = self.complex_ode
             else:
                 solver = solve_ivp
@@ -281,8 +280,23 @@ class Simulation:
                     # Integrate over t_span
                     t_span = (self.mdl.t0, self.mdl.t0 + t_step)
 
+                    # Generate n points between t_span[0] and t_span[1], excluding the last point
+                    if N_eval:
+                        t_eval = np.linspace(t_span[0], t_span[1],
+                                             N_eval + 1)[:-1]
+                    else:
+                        t_eval = None
+
                     # Solve the ODE
-                    sol = solver(self.mdl.rhs, t_span, state0, **kwargs)
+                    sol = solver(
+                        self.mdl.rhs,
+                        t_span,
+                        state0,
+                        max_step=max_step,
+                        method=method,
+                        rtol=rtol,
+                        atol=atol,
+                        t_eval=t_eval)
 
                     # Set the new initial time
                     self.mdl.t0 = t_span[-1]

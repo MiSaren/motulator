@@ -61,7 +61,7 @@ mdl.mechanics.tau_L = lambda t: (t > .6)*nom.tau
 start_time = time.time()
 # Simulate the system
 sim = model.Simulation(mdl, ctrl)
-sim.simulate(t_stop=1, method='Radau', atol=1e-5, rtol=1e-3)
+sim.simulate(t_stop=1, method='Radau', atol=1e-5, rtol=1e-3, N_eval=1)
 
 stop_time = time.time()
 print(f"Simulation time: {stop_time-start_time:.2f} s")
