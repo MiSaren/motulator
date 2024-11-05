@@ -127,23 +127,23 @@ class PWM:
 
         # Zero-sequence voltage resulting in space-vector PWM
         u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
-        u_abc -= u_0
+        u_abc = u_abc + u_dc/2 - u_0
 
         # Add another zero-sequence voltage in case of a multi-level inverter
-        if self.level >= 3:
+        if self.level == 3:
             shift = u_abc >= (u_dc/2)
             u_abc = np.mod(u_abc, u_dc/2)
             u_0 = .5*(np.amax(u_abc) + np.amin(u_abc))
-            u_abc = u_abc + u_dc/(2*self.level - 2) - u_0
+            u_abc = u_abc + u_dc/4 - u_0
             u_abc = u_abc + shift*u_dc/2
 
         if self.overmodulation == "MPE":
-            m = (2./u_dc)*np.amax(u_abc)
+            m = (2./u_dc)*np.amax(u_abc - u_dc/2)
             if m > 1:
-                u_abc = u_abc/m
+                u_abc = (u_abc - u_dc/2)/m + u_dc/2
 
         # Duty ratios
-        d_abc = u_abc/u_dc + .5
+        d_abc = u_abc/u_dc
 
         # MME overmodulation (does nothing if MPE already used)
         d_abc = np.clip(d_abc, 0, 1)

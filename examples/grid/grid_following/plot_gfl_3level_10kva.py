@@ -30,13 +30,16 @@ base = BaseValues.from_nominal(nom)
 par = ACFilterPars(L_fc=.2*base.L)
 ac_filter = model.ACFilter(par)
 ac_source = model.ThreePhaseVoltageSource(w_g=base.w, abs_e_g=base.u)
-# Inverter with constant DC voltage
-converter = model.ThreeLevelConverter(u_dc=650, C_dc1=.5e-3, C_dc2=.5e-3)
+dc_source = model.DCPowerSource(p_dc=lambda t: (t > .02)*5e3, u_dc=650)
+
+# converter = model.VoltageSourceConverter(u_dc=650)
+converter = model.ThreeLevelConverter(
+    u_dc=650)  #, C_dc1=2e-3, C_dc2=2e-3, G_dc=0.0*base.Z)
 
 # Create system model
-mdl = model.GridConverterSystem(converter, ac_filter, ac_source)
-mdl.pwm = model.CarrierComparison(
-    return_complex=False, level=3)  # Uncomment to enable the PWM model
+mdl = model.GridConverterWithDCSource(
+    converter, ac_filter, ac_source, dc_source)
+mdl.pwm = model.CarrierComparison(return_complex=False, level=3)
 
 # %%
 # Configure the control system.
@@ -44,20 +47,22 @@ mdl.pwm = model.CarrierComparison(
 cfg = control.GridFollowingControlCfg(
     L=.2*base.L, nom_u=base.u, nom_w=base.w, max_i=1.5*base.i)
 ctrl = control.GridFollowingControl(cfg)
+ctrl.pwm.level = 2
 
 # Add the DC-bus voltage controller to the control system
-ctrl.dc_bus_voltage_ctrl = control.DCBusVoltageController(
-    C_dc=1e-3, alpha_dc=2*np.pi*30, max_p=base.p)
+# ctrl.dc_bus_voltage_ctrl = control.DCBusVoltageController(
+#     C_dc=1e-3, alpha_dc=2*np.pi*30, max_p=base.p)
 
 # %%
 # Set the time-dependent reference and disturbance signals.
 
 # Set the references for DC-bus voltage and reactive power
-ctrl.ref.u_dc = lambda t: 650
+# ctrl.ref.u_dc = lambda t: 650
+ctrl.ref.p_g = lambda t: (t > .02)*5e3
 ctrl.ref.q_g = lambda t: (t > .04)*4e3
 
 # Set the external current fed to the DC bus
-mdl.converter.i_dc = lambda t: (t > .06)*10
+# mdl.converter.i_dc = lambda t: (t > .06)*10
 
 # Uncomment lines below to simulate an unbalanced fault (add negative sequence)
 # mdl.ac_source.par.abs_e_g = .75*base.u
@@ -84,4 +89,4 @@ print(time.time() - start_time)
 
 # Uncomment line below to plot locus of the grid voltage space vector
 # plot_voltage_vector(sim, base)
-plot(sim, base, plot_pcc_voltage=False)
+plot(sim, plot_pcc_voltage=True)

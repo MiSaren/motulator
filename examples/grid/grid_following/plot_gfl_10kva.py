@@ -34,7 +34,7 @@ converter = model.VoltageSourceConverter(u_dc=650)
 
 # Create system model
 mdl = model.GridConverterSystem(converter, ac_filter, ac_source)
-# mdl.pwm = model.CarrierComparison()  # Uncomment to enable the PWM model
+mdl.pwm = model.CarrierComparison()  # Uncomment to enable the PWM model
 
 # %%
 # Configure the control system.
@@ -69,4 +69,4 @@ sim.simulate(t_stop=.1)
 
 # Uncomment line below to plot locus of the grid voltage space vector
 # plot_voltage_vector(sim, base)
-plot(sim, base, plot_pcc_voltage=False)
+plot(sim, plot_pcc_voltage=False)

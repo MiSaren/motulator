@@ -31,9 +31,11 @@ ac_filter = model.ACFilter(par)
 ac_source = model.ThreePhaseVoltageSource(w_g=base.w, abs_e_g=base.u)
 # Converter model with the DC-bus dynamics
 converter = model.VoltageSourceConverter(u_dc=600, C_dc=1e-3)
+dc_source = model.DCPowerSource(p_dc=6.5e3, u_dc=600)
 
 # Create system model
-mdl = model.GridConverterSystem(converter, ac_filter, ac_source)
+mdl = model.GridConverterWithDCSource(
+    converter, ac_filter, ac_source, dc_source)
 
 # %%
 # Configure the control system.
@@ -55,7 +57,7 @@ ctrl.ref.u_dc = lambda t: 600 + (t > .02)*50
 ctrl.ref.q_g = lambda t: (t > .04)*4e3
 
 # Set the external current fed to the DC bus
-mdl.converter.i_dc = lambda t: (t > .06)*10
+# mdl.converter.i_dc = lambda t: (t > .06)*10
 
 # %%
 # Create the simulation object and simulate it.

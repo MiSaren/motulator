@@ -114,20 +114,22 @@ class ThreeLevelConverter(VoltageSourceConverter):
     C_dc2 : float, optional
         DC-bus capacitance (F), negative side. The default is None.
     i_dc : callable, optional
-        External current (A) fed to the DC bus. Needed if `C_dc1` and `C_dc2`
-        are not None.
+        External current (A) fed to the DC bus. The default is 0.
+    G_dc : float, optional
+        DC-bus conductance (S). The default is 0.
 
     """
 
-    def __init__(self, u_dc, C_dc1=None, C_dc2=None, i_dc=lambda t: None):
+    def __init__(self, u_dc, C_dc1=None, C_dc2=None, i_dc=lambda t: 0, G_dc=0):
         super().__init__(u_dc)
         self.par.C_dc1 = C_dc1
         self.par.C_dc2 = C_dc2
+        self.par.G_dc = G_dc
         if not (C_dc1 is None or C_dc2 is None):
             self.state = SimpleNamespace(u_dc1=u_dc/2, u_dc2=u_dc/2)
             self.sol_states = SimpleNamespace(u_dc1=[], u_dc2=[])
-            self.i_dc = i_dc
             self.inp.i_dc = i_dc(0)
+        self.i_dc = i_dc
         self.inp.q_P = [0, 0, 0]
         self.inp.q_o = [0, 0, 0]
 
@@ -184,8 +186,12 @@ class ThreeLevelConverter(VoltageSourceConverter):
     def rhs(self):
         """Compute the state derivatives."""
         if not (self.par.C_dc1 is None or self.par.C_dc2 is None):
-            d_u_dc1 = (self.inp.i_dc - self.i_P)/self.par.C_dc1
-            d_u_dc2 = (self.inp.i_dc - self.i_P - self.i_o)/self.par.C_dc2
+            d_u_dc1 = (
+                self.inp.i_dc - self.i_P -
+                self.par.G_dc*self.state.u_dc1)/self.par.C_dc1
+            d_u_dc2 = (
+                self.inp.i_dc - self.i_P - self.i_o -
+                self.par.G_dc*self.u_dc)/self.par.C_dc2
             return [d_u_dc1, d_u_dc2]
         return []
 
@@ -196,8 +202,8 @@ class ThreeLevelConverter(VoltageSourceConverter):
             data.u_dc1, data.u_dc2 = data.u_dc1.real, data.u_dc2.real
             data.u_dc = data.u_dc1 + data.u_dc2
         else:
-            data.u_dc = self.par.u_dc
-            data.u_dc1 = data.u_dc2 = data.u_dc/2
+            data.u_dc = np.full(np.size(self.data.t), self.u_dc)
+            data.u_dc1 = data.u_dc2 = data.u_dc*0.5
         u_aN = ((data.q_cs[:, 0] == 1) +
                 (data.q_cs[:, 0] == .5))*data.u_dc1 + (
                     data.q_cs[:, 0] == .5)*data.u_dc2
