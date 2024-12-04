@@ -27,12 +27,19 @@ par.L_g = 0  # Uncomment this line to simulate a strong grid
 ac_filter = model.ACFilter(par)
 # Grid voltage source with constant frequency and voltage magnitude
 ac_source = model.ThreePhaseVoltageSource(w_g=base.w, abs_e_g=base.u)
-# Inverter with constant DC voltage
-converter = model.VoltageSourceConverter(u_dc=650)
+
+dc_source = model.DCPowerSource(
+    p_dc=lambda t: ((t > .2)/3 + (t > .5)/3 + (t > .8)/3 - (t > 1.2))*nom.P,
+    u_dc=650)
+dc_source.p_dc = 0
+# converter = model.VoltageSourceConverter(u_dc=650)
+converter = model.ThreeLevelConverter(
+    u_dc=650)  #, C_dc1=1e-3, C_dc2=1e-3)  #, G_dc=0.0*base.Z)
 
 # Create system model
-mdl = model.GridConverterSystem(converter, ac_filter, ac_source)
-mdl.pwm = model.CarrierComparison()
+mdl = model.GridConverterWithDCSource(
+    converter, ac_filter, ac_source, dc_source)
+mdl.pwm = model.CarrierComparison(return_complex=False, level=3)
 
 # %%
 # Configure the control system.
@@ -48,6 +55,7 @@ cfg = control.PowerSynchronizationControlCfg(
 
 # Create the control system
 ctrl = control.PowerSynchronizationControl(cfg)
+ctrl.pwm.level = 2
 
 # %%
 # Set the references for converter output voltage magnitude and active power.

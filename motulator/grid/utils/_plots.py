@@ -316,6 +316,32 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
     except AttributeError:
         pass
 
+    # Duty ratios (for debugging)
+    fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
+    t_span1 = (0, 0.1)
+
+    # Subplot 1: Duty ratio a
+    ax1.plot(ctrl.t, ctrl.ref.d_abc[:, 0], label=r"$d_\mathrm{a}$")
+    ax1.legend()
+    ax1.set_xlim(t_span1)
+    ax1.set_xticklabels([])
+
+    # Subplot 1: Duty ratio b
+    ax2.plot(ctrl.t, ctrl.ref.d_abc[:, 1], label=r"$d_\mathrm{b}$")
+    ax2.legend()
+    ax2.set_xlim(t_span1)
+    ax2.set_xticklabels([])
+
+    # Subplot 1: Duty ratio c
+    ax3.plot(ctrl.t, ctrl.ref.d_abc[:, 2], label=r"$d_\mathrm{c}$")
+    ax3.legend()
+    ax3.set_xlim(t_span1)
+
+    # Add axis labels
+    ax3.set_xlabel("Time (s)")
+
+    ax3.grid()
+
     plt.tight_layout()
     plt.grid()
     plt.show()
