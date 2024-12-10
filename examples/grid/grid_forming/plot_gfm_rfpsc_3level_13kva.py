@@ -24,6 +24,7 @@ base = BaseValues.from_nominal(nom)
 # Filter and grid
 par = ACFilterPars(L_fc=.15*base.L, R_fc=.05*base.Z, L_g=.74*base.L)
 par.L_g = 0  # Uncomment this line to simulate a strong grid
+# par.L_g = 0.1*base.L
 ac_filter = model.ACFilter(par)
 # Grid voltage source with constant frequency and voltage magnitude
 ac_source = model.ThreePhaseVoltageSource(w_g=base.w, abs_e_g=base.u)
@@ -34,7 +35,7 @@ dc_source = model.DCPowerSource(
 dc_source.p_dc = 0
 # converter = model.VoltageSourceConverter(u_dc=650)
 converter = model.ThreeLevelConverter(
-    u_dc=650)  #, C_dc1=1e-3, C_dc2=1e-3)  #, G_dc=0.0*base.Z)
+    u_dc=650, C_dc1=1, C_dc2=1)  #, G_dc=0.0*base.Z)
 
 # Create system model
 mdl = model.GridConverterWithDCSource(
@@ -55,7 +56,7 @@ cfg = control.PowerSynchronizationControlCfg(
 
 # Create the control system
 ctrl = control.PowerSynchronizationControl(cfg)
-ctrl.pwm.level = 2
+ctrl.pwm.level = 3
 
 # %%
 # Set the references for converter output voltage magnitude and active power.

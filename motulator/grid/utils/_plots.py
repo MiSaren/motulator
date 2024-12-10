@@ -274,8 +274,7 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
 
     # %%
     # Third figure (only if three-level converter is used)
-    try:
-        i_o = mdl.converter.data.i_o
+    if hasattr(mdl.converter.data, "i_o"):
 
         fig, (ax1, ax2) = plt.subplots(2, 1)
 
@@ -297,7 +296,10 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
             mdl.converter.data.t,
             mdl.converter.data.i_P/base.i,
             label=r"$i_\mathrm{P}$")
-        ax2.plot(mdl.converter.data.t, i_o/base.i, label=r"$i_\mathrm{o}$")
+        ax2.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.i_o/base.i,
+            label=r"$i_\mathrm{o}$")
         ax2.legend()
         ax2.set_xlim(t_span)
 
@@ -313,27 +315,64 @@ def plot(sim, base=None, plot_pcc_voltage=True, plot_w=False, t_span=None):
         fig.align_ylabels()
         ax2.grid()
 
-    except AttributeError:
-        pass
+        # Leg voltages (for debugging)
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
 
-    # Duty ratios (for debugging)
+        # Subplot 1: Phase a
+        ax1.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.u_aN,
+            label=r"$u_\mathrm{aN}$")
+        ax1.legend()
+        ax1.set_xticklabels([])
+
+        # Subplot 1: Phase b
+        ax2.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.u_bN,
+            label=r"$u_\mathrm{bN}$")
+        ax2.legend()
+        ax2.set_xticklabels([])
+
+        # Subplot 1: Phase c
+        ax3.plot(
+            mdl.converter.data.t,
+            mdl.converter.data.u_cN,
+            label=r"$u_\mathrm{cN}$")
+        ax3.legend()
+
+        # Add axis labels
+        ax3.set_xlabel("Time (s)")
+
+        ax3.grid()
+
+    # Duty ratios and switch states (for debugging)
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
-    t_span1 = (0, 0.1)
+    t_span1 = (0, 0.04)
 
-    # Subplot 1: Duty ratio a
+    q_cs = mdl.converter.data.q_cs
+    if mdl.pwm.return_complex:
+        [q_a, q_b, q_c] = complex2abc(q_cs)
+    else:
+        [q_a, q_b, q_c] = [q_cs[:, 0], q_cs[:, 1], q_cs[:, 2]]
+
+    # Subplot 1: Phase a
     ax1.plot(ctrl.t, ctrl.ref.d_abc[:, 0], label=r"$d_\mathrm{a}$")
+    ax1.plot(mdl.converter.data.t, q_a, label=r"$q_\mathrm{a}$")
     ax1.legend()
     ax1.set_xlim(t_span1)
     ax1.set_xticklabels([])
 
-    # Subplot 1: Duty ratio b
+    # Subplot 1: Phase b
     ax2.plot(ctrl.t, ctrl.ref.d_abc[:, 1], label=r"$d_\mathrm{b}$")
+    ax2.plot(mdl.converter.data.t, q_b, label=r"$q_\mathrm{b}$")
     ax2.legend()
     ax2.set_xlim(t_span1)
     ax2.set_xticklabels([])
 
-    # Subplot 1: Duty ratio c
+    # Subplot 1: Phase c
     ax3.plot(ctrl.t, ctrl.ref.d_abc[:, 2], label=r"$d_\mathrm{c}$")
+    ax3.plot(mdl.converter.data.t, q_c, label=r"$q_\mathrm{c}$")
     ax3.legend()
     ax3.set_xlim(t_span1)
 

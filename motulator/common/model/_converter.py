@@ -130,8 +130,6 @@ class ThreeLevelConverter(VoltageSourceConverter):
             self.sol_states = SimpleNamespace(u_dc1=[], u_dc2=[])
             self.inp.i_dc = i_dc(0)
         self.i_dc = i_dc
-        self.inp.q_P = [0, 0, 0]
-        self.inp.q_o = [0, 0, 0]
 
     @property
     def u_dc(self):
@@ -143,31 +141,32 @@ class ThreeLevelConverter(VoltageSourceConverter):
     @property
     def u_cs(self):
         """AC-side voltage (V)."""
-        #TODO: remove q_P, q_o and do comparison to inp.q_cs directly?
-        inp = self.inp
         if not (self.par.C_dc1 is None or self.par.C_dc2 is None):
             u_dc1 = self.state.u_dc1
             u_dc2 = self.state.u_dc2
         else:
             u_dc1 = u_dc2 = self.par.u_dc/2
-        u_aN = ((inp.q_P[0]) + (inp.q_o[0]))*u_dc1 + inp.q_o[0]*u_dc2
-        u_bN = ((inp.q_P[1]) + (inp.q_o[1]))*u_dc1 + inp.q_o[1]*u_dc2
-        u_cN = ((inp.q_P[2]) + (inp.q_o[2]))*u_dc1 + inp.q_o[2]*u_dc2
+        q_abc = self.inp.q_cs
+        u_aN = (q_abc[0] == 1)*(u_dc1 + u_dc2) + (q_abc[0] == .5)*u_dc2
+        u_bN = (q_abc[1] == 1)*(u_dc1 + u_dc2) + (q_abc[1] == .5)*u_dc2
+        u_cN = (q_abc[2] == 1)*(u_dc1 + u_dc2) + (q_abc[2] == .5)*u_dc2
         return abc2complex([u_aN, u_bN, u_cN])
 
     @property
     def i_P(self):
         """Converter-side positive DC current (A)."""
         i_abc = complex2abc(self.inp.i_cs)
-        q_P = self.inp.q_P
-        return q_P[0]*i_abc[0] + q_P[1]*i_abc[1] + q_P[2]*i_abc[2]
+        q_abc = self.inp.q_cs
+        return (q_abc[0] == 1)*i_abc[0] + (q_abc[1] == 1)*i_abc[1] + (
+            q_abc[2] == 1)*i_abc[2]
 
     @property
     def i_o(self):
         """Converter-side neutral-point current (A)."""
         i_abc = complex2abc(self.inp.i_cs)
-        q_o = self.inp.q_o
-        return q_o[0]*i_abc[0] + q_o[1]*i_abc[1] + q_o[2]*i_abc[2]
+        q_abc = self.inp.q_cs
+        return (q_abc[0] == .5)*i_abc[0] + (q_abc[1] == .5)*i_abc[1] + (
+            q_abc[2] == .5)*i_abc[2]
 
     def set_outputs(self, _):
         """Set output variables."""
@@ -178,10 +177,6 @@ class ThreeLevelConverter(VoltageSourceConverter):
         """Set input variables."""
         # External DC-bus current
         self.inp.i_dc = self.i_dc(t)
-        # Switching state vectors for DC-bus positive and neutral points
-        q_abc = self.inp.q_cs
-        self.inp.q_P = [q_abc[0] == 1, q_abc[1] == 1, q_abc[2] == 1]
-        self.inp.q_o = [q_abc[0] == .5, q_abc[1] == .5, q_abc[2] == .5]
 
     def rhs(self):
         """Compute the state derivatives."""
@@ -204,16 +199,13 @@ class ThreeLevelConverter(VoltageSourceConverter):
         else:
             data.u_dc = np.full(np.size(self.data.t), self.u_dc)
             data.u_dc1 = data.u_dc2 = data.u_dc*0.5
-        u_aN = ((data.q_cs[:, 0] == 1) +
-                (data.q_cs[:, 0] == .5))*data.u_dc1 + (
-                    data.q_cs[:, 0] == .5)*data.u_dc2
-        u_bN = ((data.q_cs[:, 1] == 1) +
-                (data.q_cs[:, 1] == .5))*data.u_dc1 + (
-                    data.q_cs[:, 1] == .5)*data.u_dc2
-        u_cN = ((data.q_cs[:, 2] == 1) +
-                (data.q_cs[:, 2] == .5))*data.u_dc1 + (
-                    data.q_cs[:, 2] == .5)*data.u_dc2
-        data.u_cs = abc2complex([u_aN, u_bN, u_cN])
+        data.u_aN = (data.q_cs[:, 0]
+                     == 1)*data.u_dc + (data.q_cs[:, 0] == .5)*data.u_dc2
+        data.u_bN = (data.q_cs[:, 1]
+                     == 1)*data.u_dc + (data.q_cs[:, 1] == .5)*data.u_dc2
+        data.u_cN = (data.q_cs[:, 2]
+                     == 1)*data.u_dc + (data.q_cs[:, 2] == .5)*data.u_dc2
+        data.u_cs = abc2complex([data.u_aN, data.u_bN, data.u_cN])
 
     def post_process_with_inputs(self):
         """Post-process data with inputs."""
