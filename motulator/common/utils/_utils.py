@@ -2,8 +2,12 @@
 
 # %%
 from dataclasses import dataclass
-
+from datetime import datetime
 import numpy as np
+import os
+from scipy.io import savemat
+from types import SimpleNamespace
+import pandas as pd
 
 
 # %%
@@ -269,3 +273,142 @@ class BaseValues:
             return cls(
                 u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L, C=C, tau=tau, n_p=n_p)
         return cls(u=u, i=i, w=w, psi=psi, p=p, Z=Z, L=L, C=C)
+
+
+# %%
+class DataExporter:
+    @staticmethod
+    def namespace_to_dict(obj):
+        """
+        Convert a SimpleNamespace object or any object with __dict__ to a dictionary,
+        filtering out None values and private attributes
+        
+        Parameters:
+            obj: SimpleNamespace object or any object with attributes
+        Returns:
+            dict: Dictionary containing the object's valid attributes
+        """
+       
+        if hasattr(obj, '__dict__'):
+            return {key: value for key, value in obj.__dict__.items() 
+                    if not key.startswith('_') and value is not None}
+        return {}
+
+    def _flatten_dict(self, d, parent_key='', sep='_'):
+        """
+        Flatten a nested dictionary structure into a single-level dictionary
+        
+        Args:
+            d: dict to flatten
+            parent_key: string to prepend to keys
+            sep: separator between nested keys
+        Returns:
+            dict: Flattened dictionary
+        """
+        items = []
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(self._flatten_dict(v, new_key, sep=sep).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
+
+    def save_mat(self, filename=None):
+        """
+        Export simulation data to MATLAB format, organizing mdl data by subsystems
+        
+        Parameters:
+            filename: optional, str
+            Output .mat filename
+        """  
+        def add_to_matlab_data(attr, name, target_dict):
+            if hasattr(attr, '__dict__'):
+                attr_dict = self.namespace_to_dict(attr)
+                if attr_dict:
+                    target_dict[name] = attr_dict
+
+        ctrl = self.ctrl.data
+        mdl = self.mdl
+        matlab_data = {}
+        timestamp = datetime.now().strftime('%Y%m%d_%H:%M_')
+
+        # Export control data
+        add_to_matlab_data(ctrl.ref, 'ctrl_ref', matlab_data)
+        add_to_matlab_data(ctrl.fbk, 'ctrl_fbk', matlab_data)
+
+        # Export model data organized by subsystems
+        mdl_dict = {}
+        for subsys_name in dir(mdl):
+            if not subsys_name.startswith('_'):
+                subsys = getattr(mdl, subsys_name)
+                subsys_dict = {}
+                if hasattr(subsys, 'data'):
+                    add_to_matlab_data(subsys.data, 'data', subsys_dict)
+                if hasattr(subsys, 'par'):
+                    add_to_matlab_data(subsys.par, 'par', subsys_dict)
+                if subsys_dict:
+                    mdl_dict[subsys_name] = subsys_dict
+
+        if mdl_dict:
+            matlab_data['mdl'] = mdl_dict
+
+        try:
+            savemat(timestamp + filename + '.mat', matlab_data)
+            print(f"Data successfully exported to {timestamp + filename}")
+        except Exception as e:
+            print(f"Error saving data: {str(e)}")
+            for key, value in matlab_data.items():
+                if value is None:
+                    print(f"Found None value for key: {key}")
+
+        return matlab_data
+
+    def save_csv(self, base_filename=None, separate_files=True):
+        """
+        Export simulation data to CSV format
+        
+        Parameters:
+            base_filename: str, base name for the CSV file(s)
+            separate_files: bool, if True, creates separate CSV files for different data types
+                          if False, creates a single CSV with flattened structure
+        """
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M_')
+        matlab_data = self.save_mat(filename=None)  # Get the structured data without saving
+        
+        if separate_files:
+            # Create a directory to store CSV files if it doesn't exist
+            directory = f"{timestamp+base_filename}_csv"
+            os.makedirs(directory, exist_ok=True)
+            
+            # Save different components to separate CSV files
+            for main_key, data in matlab_data.items():
+                if isinstance(data, dict):
+                    flat_data = self._flatten_dict(data)
+                    # Ensure all values in flat_data are iterables
+                    for key, value in flat_data.items():
+                        if not isinstance(value, (list, np.ndarray)):
+                            flat_data[key] = [value]
+                    df = pd.DataFrame.from_dict(flat_data, orient='index').T
+                    
+                    # Save to CSV
+                    filename = os.path.join(directory, f"{main_key}.csv")
+                    df.to_csv(filename, index=False)
+                    print(f"Data exported to {filename}")
+        
+        else:
+            # Flatten the entire structure into a single dictionary
+            flat_data = self._flatten_dict(matlab_data)
+
+            # Ensure all values in flat_data are iterables
+            for key, value in flat_data.items():
+                if not isinstance(value, (list, np.ndarray)):
+                    flat_data[key] = [value]
+            
+            # Convert to DataFrame
+            df = pd.DataFrame.from_dict(flat_data, orient='index').T
+            
+            # Save to single CSV
+            filename = f"{timestamp+base_filename}.csv"
+            df.to_csv(filename, index=False)
+            print(f"Data exported to {filename}")

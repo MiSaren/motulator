@@ -2,12 +2,9 @@
 
 from abc import ABC, abstractmethod
 from types import SimpleNamespace
-
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.io import savemat
-
-from motulator.common.utils import abc2complex
+from motulator.common.utils import abc2complex, DataExporter
 
 
 # %%
@@ -202,6 +199,9 @@ class Simulation:
     def __init__(self, mdl=None, ctrl=None):
         self.mdl = mdl
         self.ctrl = ctrl
+        self.exporter = DataExporter()
+        self.exporter.ctrl = ctrl 
+        self.exporter.mdl = mdl
 
     def simulate(
             self,
@@ -305,19 +305,17 @@ class Simulation:
                     sol.q_cs = len(sol.t)*[q_cs[i]]
                     self.mdl.save(sol)
 
-    def save_mat(self, name="sim"):
-        """
-        Save the simulation data into MATLAB .mat files.
 
-        Parameters
-        ----------
-        name : str, optional
-            Name for the simulation instance. The default is `sim`.
+    # %%
+    def save_mat(self, filename='sim'):
+        return self.exporter.save_mat(filename)
 
-        """
-        savemat(name + "_mdl_data" + ".mat", self.mdl.data)
-        savemat(name + "_ctrl_data" + ".mat", self.ctrl.data)
+    # %%
+    def save_csv(self, base_filename='sim', separate_files=True):
+        return self.exporter.save_csv(base_filename, separate_files)
+   
 
+    # %%
     def complex_ode(self, rhs, t_span, y0, **kwargs):
         """
         Solve a complex-valued ODE using a real-valued solver.

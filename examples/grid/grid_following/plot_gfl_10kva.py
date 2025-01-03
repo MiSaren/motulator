@@ -59,7 +59,9 @@ ctrl.ref.q_g = lambda t: (t > .04)*4e3
 # Create the simulation object and simulate it.
 
 sim = model.Simulation(mdl, ctrl)
-sim.simulate(t_stop=.1)
+sim.simulate(t_stop=.1,N_eval=1)
+#sim.save_mat()
+sim.save_csv()
 
 # %%
 # Plot the results.

@@ -3,6 +3,7 @@
 from motulator.common.model._simulation import (
     CarrierComparison, Delay, Model, Subsystem, zoh)
 
+
 __all__ = [
     "CarrierComparison",
     "Delay",
